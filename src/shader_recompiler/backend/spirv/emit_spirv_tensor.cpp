@@ -242,6 +242,17 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
         const auto and_ = [&](Id a, u32 b) { return ctx.OpBitwiseAnd(u32ty, a, imm(b)); };
         const auto unpack = [&](Id v) { return ctx.OpUnpackHalf2x16(ctx.F32[2], v); };
         const auto round_half = [&](Id value) {
+            if (program.info.uses_fp16) {
+                // A round trip through a half: the conversion rounds to nearest even, keeps half
+                // subnormals and overflows to infinity, as the bit operations below do, in two
+                // instructions (RADV fuses it into the last FMA). NoContraction keeps the pair
+                // exact so it is not folded away.
+                const Id half = ctx.OpFConvert(ctx.F16[1], value);
+                ctx.Decorate(half, spv::Decoration::NoContraction);
+                const Id widened = ctx.OpFConvert(f32ty, half);
+                ctx.Decorate(widened, spv::Decoration::NoContraction);
+                return widened;
+            }
             // Do not express the intermediate rounding as unpack(pack(value)): drivers may
             // eliminate that round trip. Round normal significands explicitly, ties to even;
             // half subnormals lie on the exactly representable 2^-24 grid.
@@ -268,11 +279,11 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
         const Id matrix_c = ctx.OpFunctionParameter(ctx.U32[2]);
         ctx.AddLabel();
         const Id counter = ctx.AddLocalVariable(ctx.TypePointer(spv::StorageClass::Function, u32ty),
-                                           spv::StorageClass::Function);
+                                                spv::StorageClass::Function);
         std::array<Id, 4> accumulators;
         for (auto& acc : accumulators)
             acc = ctx.AddLocalVariable(ctx.TypePointer(spv::StorageClass::Function, f32ty),
-                                 spv::StorageClass::Function);
+                                       spv::StorageClass::Function);
         std::array<Id, 8> inputs;
         for (u32 i = 0; i < 4; ++i)
             inputs[i] = ctx.OpCompositeExtract(u32ty, matrix_a, i);
@@ -288,6 +299,12 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
         ctx.OpStore(counter, imm(0));
         const Id lane = ctx.OpLoad(u32ty, ctx.subgroup_local_invocation_id);
         const Id warp_base = and_(lane, ~31U);
+        // A comes from lane `component` of this lane's own quad: a quad broadcast with a constant
+        // index (a DPP move on AMD), which hosts do without a general (LDS) shuffle.
+        const bool quad = ctx.profile.support_quad_shuffles;
+        if (quad) {
+            ctx.AddCapability(spv::Capability::GroupNonUniformQuad);
+        }
         const Id row_base = and_(lane, 28);
         const Id col_base = ctx.OpShiftLeftLogical(u32ty, and_(lane, 3), imm(3));
         const Id a_base = add(warp_base, row_base);
@@ -302,9 +319,12 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
                     bs[col] = unpack(ctx.OpGroupNonUniformShuffle(
                         u32ty, imm(3), b, add(b_base, imm(component + col * 4))));
                 for (u32 row = 0; row < 2; ++row) {
-                    const Id as = unpack(ctx.OpGroupNonUniformShuffle(
-                        u32ty, imm(3), pick(inputs[row], inputs[row + 2]),
-                        add(a_base, imm(component))));
+                    const Id a_reg = pick(inputs[row], inputs[row + 2]);
+                    const Id as = unpack(
+                        quad ? ctx.OpGroupNonUniformQuadBroadcast(u32ty, imm(3), a_reg,
+                                                                  imm(component))
+                             : ctx.OpGroupNonUniformShuffle(u32ty, imm(3), a_reg,
+                                                            add(a_base, imm(component))));
                     for (u32 col = 0; col < 2; ++col) {
                         Id value = ctx.OpLoad(f32ty, accumulators[row * 2 + col]);
                         for (u32 half = 0; half < 2; ++half) {
@@ -343,7 +363,8 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
         std::array<Id, 2> packed;
         for (u32 row = 0; row < 2; ++row)
             packed[row] = ctx.OpPackHalf2x16(u32ty, ctx.OpCompositeConstruct(ctx.F32[2],
-                ctx.OpLoad(f32ty, accumulators[row * 2]), ctx.OpLoad(f32ty, accumulators[row * 2 + 1])));
+                ctx.OpLoad(f32ty, accumulators[row * 2]),
+                ctx.OpLoad(f32ty, accumulators[row * 2 + 1])));
         ctx.OpReturnValue(ctx.OpCompositeConstruct(ctx.U32[2], packed[0], packed[1]));
         ctx.OpFunctionEnd();
     }
