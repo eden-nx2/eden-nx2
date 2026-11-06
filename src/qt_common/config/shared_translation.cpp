@@ -341,6 +341,10 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent) {
               "falls back to Full when that cannot be proven.\nFull marks the whole binding (up to "
               "8 MiB), the original behaviour: it can delay the game's own writes to nearby memory "
               "(flickering effects) and copy far more data back from the GPU."));
+    INSERT(Settings, frames_ahead, tr("Present a frame ahead:"),
+           tr("Lets the CPU start the next frame while the GPU finishes the current one.\nRaises "
+              "the frame rate in GPU-heavy games at the cost of one frame of input latency.\nAuto "
+              "picks per game."));
     INSERT(Settings, use_asynchronous_shaders, tr("Enable asynchronous shader compilation"),
            tr("May reduce shader stutter."));
     INSERT(Settings, gpu_clock, tr("GPU Clocks"),
@@ -604,6 +608,12 @@ std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QObject* parent) {
                               PAIR(GpuFenceBehavior, Immediate, tr("Immediate")),
                               PAIR(GpuFenceBehavior, Balanced, tr("Balanced")),
                               PAIR(GpuFenceBehavior, Accurate, tr("Accurate")),
+                          }});
+    translations->insert({Settings::EnumMetadata<Settings::FramesAhead>::Index(),
+                          {
+                              PAIR(FramesAhead, Auto, tr("Auto")),
+                              PAIR(FramesAhead, Off, tr("Off")),
+                              PAIR(FramesAhead, On, tr("On")),
                           }});
     translations->insert(
         {Settings::EnumMetadata<Settings::CpuAccuracy>::Index(),
