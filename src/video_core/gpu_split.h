@@ -470,6 +470,13 @@ private:
                !back_running.load(std::memory_order_acquire);
     }
 
+    /// Whether the back is done with the Vulkan scheduler until it gets more work: set after its
+    /// idle hook ran, cleared before it executes entries.
+    [[nodiscard]] bool BackQuiet() const {
+        return back_quiet.load(std::memory_order_acquire) ||
+               !back_running.load(std::memory_order_acquire);
+    }
+
     static GpuSplit instance;
     static inline thread_local bool on_back_thread{};
     static inline thread_local bool on_gpu_thread{};
