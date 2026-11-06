@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <algorithm>
+#include <atomic>
 #include <utility>
 #include <vector>
 
@@ -16,6 +17,8 @@
 #include "common/common_types.h"
 #include "common/literals.h"
 #include "video_core/nx2_stutter_trace.h"
+#include "common/logging.h"
+#include "video_core/nx2_profile.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_staging_buffer_pool.h"
 #include "video_core/vulkan_common/vulkan_device.h"
@@ -25,6 +28,10 @@ namespace Vulkan {
 namespace {
 
 using namespace Common::Literals;
+
+// EDEN_NX2_GPU_PROFILE: bytes held in pooled staging buffers, logged as they grow.
+std::atomic<u64> g_staging_bytes{};
+std::atomic<u64> g_staging_logged{};
 
 // Maximum potential alignment of a Vulkan buffer
 constexpr VkDeviceSize MAX_ALIGNMENT = 256;
@@ -265,6 +272,14 @@ StagingBufferRef StagingBufferPool::CreateStagingBuffer(size_t size, MemoryUsage
         .tick = deferred ? (std::numeric_limits<u64>::max)() : scheduler.CurrentTick(),
         .deferred = deferred,
     });
+    if (VideoCommon::Nx2Profile::Enabled()) {
+        const u64 bytes = g_staging_bytes.fetch_add(u64{1} << log2_size) + (u64{1} << log2_size);
+        if ((bytes >> 27) > (g_staging_logged.load() >> 27)) {
+            g_staging_logged.store(bytes);
+            LOG_INFO(Render_Vulkan, "Staging buffers: {} MiB pooled (new {} KiB, usage {})",
+                     bytes >> 20, (u64{1} << log2_size) >> 10, static_cast<u32>(usage));
+        }
+    }
     return entry.Ref();
 }
 
@@ -331,6 +346,12 @@ void StagingBufferPool::ReleaseLevel(StagingBuffersCache& cache, size_t log2) {
     entries.erase(std::remove_if(begin, end, is_deletable), end);
 
     const size_t new_size = entries.size();
+    if (VideoCommon::Nx2Profile::Enabled() && new_size < old_size) {
+        g_staging_bytes.fetch_sub(u64{old_size - new_size} << log2);
+        if (g_staging_bytes.load() < g_staging_logged.load()) {
+            g_staging_logged.store(g_staging_bytes.load());
+        }
+    }
     staging.delete_index += deletions_per_tick;
     if (staging.delete_index >= new_size) {
         staging.delete_index = 0;
