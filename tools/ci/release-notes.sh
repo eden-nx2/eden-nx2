@@ -95,6 +95,6 @@ EOF2
   fi
 
   if [[ -n "$x_pgo$a_pgo$w_pgo" ]]; then
-    echo "The PGO builds are the same programs compiled with profile-guided optimization (clang plus Eglantine's profile); prefer them when your CPU supports it."
+    echo "The PGO builds are the same programs compiled with profile-guided optimization (clang plus Eglantine's PGO profile); prefer them when your CPU supports it."
   fi
 } > "$out"

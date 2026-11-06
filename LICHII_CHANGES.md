@@ -22,11 +22,36 @@ Takoroka's Eden NX2  ──►  Djihads80/Eglantine (nx2)  ──►  zortos293/
   * Tooling (`tools/`): 41 files, +12.6k lines
   * Docs, CI and markdown: 56 files
 
+## Branding in this mirror
+
+Branch `main` carries the original **Eden** branding. Every functional Lichii change is kept.
+Branch `lichii-nx2` is Lichii exactly as published, with Lichii branding.
+
+* App name, window titles, dialogs, About box and Discord text say **Eden**. The executables
+  are `eden` / `eden.exe` / `eden.app` (plus `eden-cli`).
+* Eden's original logo files are restored: `eden.ico`, `eden.icns`, the 256px `eden.png`
+  and the `dev.eden_emu.eden` SVG, desktop and metainfo files. Eglantine had replaced their
+  contents and Lichii had added its own. The Lichii artwork, the icon generator and the
+  unused `eglantine.icns` are removed. Translations already used "Eden" and now match the
+  source strings again.
+* The updater is off unless `-DENABLE_UPDATE_CHECKER=ON`. Lichii's hard-coded
+  `zortos293/Lichii` is replaced by the `EDEN_UPDATE_REPO` CMake option. Release assets
+  are named `eden-<platform>`. Lichii's `LICHII_BUILD_TAG` / `LICHII_BUILD_PLATFORM` are
+  now `EDEN_BUILD_TAG` / `EDEN_BUILD_PLATFORM`. The release workflow passes
+  `${{ github.repository }}`, builds on pushes to `main`, and publishes `eden-*` files.
+* The README is rewritten for Eden. Lichii's crypto donation addresses are removed and
+  Lichii is credited. The Arch package is renamed `eden-nx2-git`: set `_repo_url` in its
+  PKGBUILD.
+* Left unchanged on purpose: internal identifiers that users never see
+  (`EGLANTINE_STREAMLINE`, `EGLANTINE_*` env vars, `eglantine.profdata`,
+  `dist/eglantine.entitlements`), `cpmfile.json`'s prebuilt FFmpeg download from
+  Djihads80/Eglantine, and developer notes in `docs/` and `AGENTS.md`.
+
 ## How to use the deliverables
 
 | File | What it is |
 |---|---|
-| `eden-nx2-lichii.bundle` | Full git mirror. Branch `main` is Lichii + this file, branch `lichii-nx2` is exact Lichii, tag `eden-nx2-base` is the Eden NX2 base. |
+| `eden-nx2-lichii.bundle` | Full git mirror. Branch `main` is Lichii with Eden branding + this file, branch `lichii-nx2` is exact Lichii, tag `eden-nx2-base` is the Eden NX2 base. |
 | `lichii-vs-eden-nx2-base.diff` | One combined patch: base → Lichii. Verified to apply cleanly to `e736dfde9`, and the result is byte-identical to Lichii's tree (`df0288618…`). |
 | `reference-patches/` | 141 per-commit patches. These are for reading. They do **not** replay in order with `git am`, because Lichii wrote many of them on older bases and merged them in. Use the combined diff or the bundle to apply. |
 
@@ -154,7 +179,7 @@ macOS ARM release builds and signing: `4941b0eee`, `9a4600916`, `25239eecd`, `5b
 `9c3493975` (#8, includes a real AVX-512 CLZ bug fix), `5868088c3`, `2801b3323`,
 `a8421cebb`, `0239f29a7`. CI: `18297d7dd`, `7d7dc8d5f`, `29571ea9d`, `f176172f4`.
 
-### 9. Branding and docs (not emulator behaviour)
+### 9. Branding and docs (not emulator behaviour; replaced by Eden branding on `main`)
 `219ed4ff6` rebrands the desktop app to **Lichii**, and `c505c7f68` fixes the build after
 it. `2818f85a8` and `7daab0992` add an updater that checks **Lichii's** GitHub releases.
 README, AGENTS.md and donation edits. `62d852508` removes upstream `.github` policy files.

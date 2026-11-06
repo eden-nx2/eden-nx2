@@ -7,30 +7,30 @@
 -->
 
 <p align="center">
-  <img src="dist/branding/lichii_icon_with_logo.png" alt="Lichii" width="600">
+  <img src="dist/qt_themes/default/icons/256x256/eden.png" alt="Eden" width="200">
 </p>
 
-# Lichii
+# Eden (NX2)
 
-Lichii is an experimental, open-source Nintendo Switch and Switch 2 emulator written in C++. It builds on Eglantine, Eden, yuzu and Sudachi, preserving their contributions while developing this fork's game compatibility and renderer fixes.
+Eden is an experimental, open-source Nintendo Switch and Switch 2 emulator written in C++, derived from yuzu and Sudachi.
 
-This is an independent fork, not an official release of those upstream projects. Lichii is not affiliated with Nintendo.
+This repository is Eden NX2 with every change from the [Lichii](https://github.com/zortos293/Lichii) fork applied on top: its performance work, game fixes, shader recompiler and Vulkan fixes, and tooling. [LICHII_CHANGES.md](LICHII_CHANGES.md) lists all of them. It is not an official Eden release and is not affiliated with Nintendo.
 
 ## Downloads and setup
 
-Published builds belong on this fork's [releases page](https://github.com/zortos293/Eglantine/releases). The repository still uses its historical Eglantine name; the desktop application is now Lichii.
+Builds are published on this repository's releases page by the `release-binaries` workflow.
 
-On Windows, extract the entire build archive and run **lichii.exe**. Only use games and system files you have legally obtained. Games, keys and firmware are not included.
+On Windows, extract the entire build archive and run **eden.exe** (or **eden-cli.exe** from a terminal). Only use games and system files you have legally obtained. Games, keys and firmware are not included.
 
 ### Existing saves and settings
 
-The rebrand intentionally retains the existing Eden/Eglantine data directories and configuration keys. It does not move or delete saves, settings or shader caches. Back up your saves before testing experimental builds.
+Eden's usual data directories and configuration keys are used, so existing Eden saves, settings and shader caches carry over. Back up your saves before testing experimental builds.
 
 ## Compatibility and issue reports
 
-Compatibility and performance vary by game, hardware and driver. Rendering errors, stutters and crashes remain possible. Passing automated tests does not establish that a game renders correctly, and this project makes no universal frame-rate guarantee.
+Compatibility and performance vary by game, hardware and driver. Rendering errors, stutters and crashes remain possible. Passing automated tests does not establish that a game renders correctly.
 
-When [reporting an issue](https://github.com/zortos293/Eglantine/issues), include:
+When reporting an issue, include:
 
 - The exact build, game version, CPU, GPU and driver version.
 - Relevant settings and steps to reproduce the problem.
@@ -40,50 +40,12 @@ Do not upload game files, keys, firmware or private account information.
 
 ## Building and contributing
 
-See the [build guide](docs/Build.md), [user documentation](docs/user/README.md) and [coding guidelines](docs/Coding.md). Some inherited documentation and internal build target names still use upstream names. The GUI build target remains `yuzu`; its output is `lichii.exe` on Windows and `lichii` on other desktop platforms.
+See the [build guide](docs/Build.md), [user documentation](docs/user/README.md) and [coding guidelines](docs/Coding.md). The GUI build target remains `yuzu`; its output is `eden.exe` on Windows and `eden` on other desktop platforms.
 
-Keep changes focused and distinguish code-level checks from actual gameplay testing.
-
-## Artwork
-Art created by YOB (yobslab)
-The supplied Lichii logo, icon and library artwork are in [dist/branding](dist/branding). Windows, Linux and macOS icon resources are generated from that artwork by [Generate-LichiiIcons.ps1](tools/Generate-LichiiIcons.ps1).
-
-## Support Lichii
-
-Lichii is free and stays free. If you want to help, you can donate in crypto. Donations help pay for the AI tools and build machines used to develop this open-source project faster.
-
-**Solana (SOL)**
-```text
-JepEjfyWjGjhJvHSrqj52KtLjcbbbmUh1iGqerYBF4w
-```
-
-**Ethereum (ETH)**
-```text
-0x055ABa1b80Bc35C836Ce7E9F47c2b3d6C75b5534
-```
-
-**Bitcoin (BTC)**
-```text
-bc1qcvxdpf4qvdhqp8ee4s355cjmxrzsphsdwpl8w4
-```
-
-**BNB Smart Chain (BNB)**
-```text
-0x055ABa1b80Bc35C836Ce7E9F47c2b3d6C75b5534
-```
-
-**Polygon**
-```text
-0x055ABa1b80Bc35C836Ce7E9F47c2b3d6C75b5534
-```
-
-Send each coin on its matching network. Coins sent on the wrong network can't be recovered.
-
-> [!NOTE]
-> Donations are voluntary gifts and are non-refundable. A donation does not buy any product, service, perk, early access, exclusive build, priority support or say in the project. Every release stays free and public for everyone.
+Release builds pass `-DEDEN_BUILD_TAG=build-N`, `-DEDEN_BUILD_PLATFORM=<platform>` and `-DEDEN_UPDATE_REPO=<owner/repo>` so the update checker (`-DENABLE_UPDATE_CHECKER=ON`) follows this repository's `build-N` releases. Local builds leave these empty and never check for updates.
 
 ## Credits and license
 
-Lichii inherits the work of the Eglantine, Eden, yuzu and Sudachi projects and their contributors, including Eglantine's original developer Camille LaVey. Original copyright notices and third-party licenses are retained.
+This project inherits the work of the Eden, yuzu and Sudachi projects, the Eden NX2 work by Takoroka and the Eglantine contributors, and the Lichii fork by zortos293 and its contributors. Original copyright notices and third-party licenses are retained.
 
 See [LICENSE.txt](LICENSE.txt) and the source files for applicable license terms.
