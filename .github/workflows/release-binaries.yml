@@ -7,6 +7,10 @@ on:
         description: Publish the binaries as a GitHub release
         type: boolean
         default: true
+      android_optimized:
+        description: Also build the Eden Optimized APK (adds build time)
+        type: boolean
+        default: false
   push:
     branches:
       - main
@@ -622,13 +626,102 @@ jobs:
           compression-level: 0
           retention-days: 7
 
+  # Android: the standard APK on every run, installed as "Eden Nightly" (package
+  # dev.eden.eden_emulator.nightly) so it sits next to an official Eden install instead of clashing
+  # with it. On manual runs, "Also build the Eden Optimized APK" adds Eden's genshinSpoof variant
+  # (package com.miHoYo.Yuanshen), which some GPU drivers run at higher clocks. Without an
+  # ANDROID_KEYSTORE_* secret both APKs are signed with the debug key in the source tree, which
+  # Android installs but the Play Store would not accept.
+  android:
+    name: android-arm64 apk
+    needs: prepare-release
+    runs-on: ubuntu-24.04
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: 2000M
+      # Gradle's .cxx build folders are named by a config hash; relative paths keep hits stable.
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      GIT_TAG_NAME: build-${{ github.run_number }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Free disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost
+          df -h /
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      # The runner image has the SDK; add the NDK, CMake and platform the Gradle build asks for,
+      # and glslangValidator for the host shaders.
+      - name: Install Android packages
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends glslang-tools ccache
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" "cmake;3.31.5" > /dev/null
+
+      - name: Cache CPM downloads
+        uses: actions/cache@v5
+        with:
+          path: .cache/cpm
+          key: cpm-android-${{ hashFiles('cpmfile.json', 'CMakeLists.txt', 'src/**/CMakeLists.txt') }}
+          restore-keys: |
+            cpm-android-
+
+      - name: Cache compiler objects
+        uses: actions/cache@v5
+        with:
+          path: .ccache
+          key: objects-android-arm64-${{ github.sha }}
+          restore-keys: |
+            objects-android-arm64-
+
+      - name: Build APKs
+        shell: bash
+        working-directory: src/android
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon -Pnightly=true "-PYUZU_ANDROID_ARGS=-DUSE_CCACHE=ON" \
+            assembleMainlineRelease
+          apk=$(find app/build/outputs/apk/mainline/release -name '*.apk' | head -1)
+          cp "$apk" "$GITHUB_WORKSPACE/eden-${GITHUB_SHA}-android-arm64.apk"
+          if [ '${{ inputs.android_optimized }}' = 'true' ]; then
+            ./gradlew --no-daemon "-PYUZU_ANDROID_ARGS=-DUSE_CCACHE=ON" \
+              assembleGenshinSpoofRelease
+            apk=$(find app/build/outputs/apk/genshinSpoof/release -name '*.apk' | head -1)
+            cp "$apk" "$GITHUB_WORKSPACE/eden-${GITHUB_SHA}-android-arm64-optimized.apk"
+          fi
+          ccache --show-stats || true
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v7
+        with:
+          name: eden-android-arm64-${{ github.sha }}
+          path: eden-${{ github.sha }}-android-arm64*.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
   # Publishes every binary as a GitHub pre-release once every platform built: on pushes to
   # nx2-experimental, and on manual runs unless "Publish the binaries as a GitHub release" is
   # unticked.
+  # Android is best-effort: the release goes out when the desktop builds succeed, with the APKs
+  # attached only if the Android job succeeded too.
   release:
     name: Publish release
-    needs: build
-    if: github.event_name == 'push' || inputs.publish_release
+    needs: [build, android]
+    if: always() && needs.build.result == 'success' && (github.event_name == 'push' || inputs.publish_release)
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -652,6 +745,10 @@ jobs:
             if compgen -G "$artifact*.AppImage" > /dev/null; then
               # Linux: ship the AppImage and the tar.gz as they are.
               for file in "$artifact"*.AppImage "$artifact"*.tar.gz; do
+                cp "$file" "dist/$(strip_sha "$(basename "$file")")"
+              done
+            elif compgen -G "$artifact*.apk" > /dev/null; then
+              for file in "$artifact"*.apk; do
                 cp "$file" "dist/$(strip_sha "$(basename "$file")")"
               done
             elif compgen -G "$artifact*.zip" > /dev/null; then
@@ -707,6 +804,22 @@ jobs:
 
           The PGO builds are the same programs compiled with profile-guided optimization (clang plus Eglantine's profile); prefer them when your CPU supports it.
           EOF
+
+          if [ -e dist/eden-android-arm64.apk ]; then
+            cat >> notes.md <<EOF
+
+          ## Android
+
+          | Build Type | APK | Notes |
+          | --- | --- | --- |
+          | arm64 | [APK](${base}/eden-android-arm64.apk) | Android 13 or newer. Installs as "Eden Nightly", next to any official Eden |
+          EOF
+            if [ -e dist/eden-android-arm64-optimized.apk ]; then
+              cat >> notes.md <<EOF
+          | arm64 (Optimized) | [APK](${base}/eden-android-arm64-optimized.apk) | Android 15 or newer. Installs as "Eden Optimized" under Genshin Impact's package name, which some GPU drivers run at higher clocks. Cannot be installed alongside Genshin Impact or an official Eden Optimized |
+          EOF
+            fi
+          fi
 
           gh release create "${tag}" dist/* \
             --repo "${GITHUB_REPOSITORY}" \
