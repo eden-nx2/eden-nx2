@@ -138,6 +138,7 @@ ENUM(RendererBackend, OpenGL_GLSL, Vulkan, Null, OpenGL_GLASM, OpenGL_SPIRV);
 ENUM(GpuAccuracy, Low, High);
 ENUM(DmaAccuracy, Default, Unsafe, Safe);
 ENUM(GpuFenceBehavior, Default, Immediate, Balanced, Accurate);
+ENUM(SceneMemoryCap, Auto, Off, On);
 ENUM(NativeComputeWriteMark, Auto, Full);
 ENUM(FramesAhead, Auto, Off, On);
 ENUM(CpuBackend, Dynarmic, Nce);

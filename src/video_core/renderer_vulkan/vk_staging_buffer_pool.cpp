@@ -18,6 +18,7 @@
 #include "common/literals.h"
 #include "video_core/nx2_stutter_trace.h"
 #include "common/logging.h"
+#include "common/settings.h"
 #include "video_core/nx2_profile.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_staging_buffer_pool.h"
@@ -154,8 +155,11 @@ void StagingBufferPool::TickFrame() {
     ReleaseCache(MemoryUsage::Upload);
     ReleaseCache(MemoryUsage::Download);
     // Upload buffers of 16 MiB and up mostly carry a scene load's textures; visited one level a
-    // frame, Ocarina of Time kept ~500 MiB of them after loading. Free them once the GPU is done.
-    // (Download buffers that size are reused fence after fence by the copy-back.)
+    // frame, Ocarina of Time kept ~500 MiB of them after loading. Free them once the GPU is done
+    // (scene_memory_cap). Download buffers that size are reused fence after fence by the copy-back.
+    if (!Settings::SceneMemoryCapEnabled()) {
+        return;
+    }
     for (size_t level = 24; level < NUM_LEVELS; ++level) {
         if (level != current_delete_level) {
             ReleaseLevel(device_local_cache, level);
@@ -217,7 +221,8 @@ StagingBufferRef StagingBufferPool::GetStagingBuffer(size_t size, MemoryUsage us
     // Past the cap, wait for the GPU and reuse or free what it is done with.
     // (Download buffers are kept: the copy-back reuses them fence after fence.)
     static constexpr u64 MaxPooledBytes = u64{256} << 20;
-    if (usage != MemoryUsage::Download && !deferred) {
+    // scene_memory_cap: games that stream textures would wait for the GPU here all the time.
+    if (usage != MemoryUsage::Download && !deferred && Settings::SceneMemoryCapEnabled()) {
         StagingBuffersCache& cache = GetCache(usage);
         u64 pooled = 0;
         for (size_t level = 0; level < NUM_LEVELS; ++level) {
@@ -362,12 +367,8 @@ void StagingBufferPool::ReleaseLevel(StagingBuffersCache& cache, size_t log2) {
     // swept every 64 frames, so after a pause each upload over 8 MiB (past the stream buffer's
     // regions) got a new dedicated allocation, written to for the first time (16 MiB on an
     // RTX 4080, idle system: 0.4 ms to create, 1.2 ms more for the first write).
-#ifdef __ANDROID__
-    // Phones share RAM with the GPU: free uploads of 16 MiB and up as soon as they are idle.
-    constexpr size_t KeepMaxLog2 = 23;
-#else
-    constexpr size_t KeepMaxLog2 = 25;
-#endif
+    // With scene_memory_cap, uploads of 16 MiB and up are freed as soon as they are idle.
+    const size_t KeepMaxLog2 = Settings::SceneMemoryCapEnabled() ? 23 : 25;
     constexpr size_t KeepPerLevel = 2;
     if (&cache == &upload_cache && log2 <= KeepMaxLog2) {
         size_t idle = 0;
