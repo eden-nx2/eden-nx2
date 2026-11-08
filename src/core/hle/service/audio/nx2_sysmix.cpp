@@ -189,7 +189,17 @@ bool SysmixOutput::IsFormatSupported(u32 sample_type, u32 channels, u32 rate) {
 
 /// Accept 48 kHz S16 or F32 microphone capture with one or two guest channels.
 bool SysmixOutput::IsInputFormatSupported(u32 sample_type, u32 channels, u32 rate) {
+#ifdef __ANDROID__
+    // SDL's Android recording waits for a RECORD_AUDIO answer that only SDL's own activity
+    // delivers, so opening the microphone hung Ocarina of Time at boot. Games see none, as before
+    // microphone capture.
+    static_cast<void>(sample_type);
+    static_cast<void>(channels);
+    static_cast<void>(rate);
+    return false;
+#else
     return (channels == 1 || channels == 2) && IsFormatSupported(sample_type, 2, rate);
+#endif
 }
 
 bool SysmixOutput::IsInput() const {
