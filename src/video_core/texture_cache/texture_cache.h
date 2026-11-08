@@ -331,9 +331,12 @@ void TextureCache<P>::ApplyThresholdOverrides(bool log) {
     const u64 budget_critical = critical_memory;
     const u64 budget_expected = expected_memory;
     u64 max_critical = MaxCriticalMemory;
+#ifndef __ANDROID__
+    // Not on phones, whose budget is the RAM the game and Android also need.
     if constexpr (requires { runtime.GetDeviceMemoryBudget(); }) {
         max_critical = (std::max)(max_critical, runtime.GetDeviceMemoryBudget() / 8 * 5);
     }
+#endif
     critical_memory = (std::min)(critical_memory, max_critical);
     expected_memory =
         (std::min)(expected_memory, critical_memory - (std::min)(critical_memory, u64{768_MiB}));

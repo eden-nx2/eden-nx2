@@ -362,7 +362,12 @@ void StagingBufferPool::ReleaseLevel(StagingBuffersCache& cache, size_t log2) {
     // swept every 64 frames, so after a pause each upload over 8 MiB (past the stream buffer's
     // regions) got a new dedicated allocation, written to for the first time (16 MiB on an
     // RTX 4080, idle system: 0.4 ms to create, 1.2 ms more for the first write).
+#ifdef __ANDROID__
+    // Phones share RAM with the GPU: free uploads of 16 MiB and up as soon as they are idle.
+    constexpr size_t KeepMaxLog2 = 23;
+#else
     constexpr size_t KeepMaxLog2 = 25;
+#endif
     constexpr size_t KeepPerLevel = 2;
     if (&cache == &upload_cache && log2 <= KeepMaxLog2) {
         size_t idle = 0;
