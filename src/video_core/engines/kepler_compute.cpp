@@ -1413,8 +1413,16 @@ bool KeplerCompute::ScaleDlssRenderRegion(GPUVAddr constants,
 
 bool KeplerCompute::TryFireEmblemUpscale(bool allow_history) {
     using namespace VideoCommon::FireEmblemUpscale;
+    // Temporal (FSR 3.1 with the game's motion vectors and depth) by default on Android, where
+    // nothing else upscales: the spatial upscale shows the camera jitter and aliasing of a 960x540
+    // render at 0.5x. EDEN_NX2_DLSS_REPLACEMENT picks it everywhere else.
     static const bool requested_history = [] {
         const char* const option = std::getenv("EDEN_NX2_DLSS_REPLACEMENT");
+#ifdef __ANDROID__
+        if (option == nullptr) {
+            return true;
+        }
+#endif
         return option && (std::string_view{option} == "fsr" || std::string_view{option} == "dlss");
     }();
     const bool use_history = allow_history && requested_history;
