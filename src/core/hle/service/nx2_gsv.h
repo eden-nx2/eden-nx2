@@ -261,8 +261,11 @@ private:
         const u32 syncpoint = ~cmd_buf[3];
         const u64 value = u64{cmd_buf[4]} | (u64{cmd_buf[5]} << 32);
         const u32 mode = cmd_buf[6];
-        LOG_DEBUG(Service, "nx2:syncpt TIPC 201 slot={:#x} syncpoint={} value={:#x} mode={}", slot,
-                  syncpoint, value, mode);
+        LOG_DEBUG(Service, "nx2:syncpt TIPC 201 slot={:#x} syncpoint={} value={:#x} mode={} now={:#x}",
+                  slot, syncpoint, value, mode,
+                  syncpoint < HostSyncpoints
+                      ? system.Host1x().GetSyncpointManager().GetGuestSyncpointValue(syncpoint)
+                      : 0);
         auto*& event = m_events[slot];
         if (event == nullptr) {
             event = m_context.CreateEvent(fmt::format("nx2:syncpt:Slot{:x}", slot));

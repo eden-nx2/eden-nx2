@@ -514,7 +514,7 @@ NvResult nvhost_gpu::SubmitGPFIFOImpl(IoctlSubmitGpfifo& params, Tegra::CommandL
     }
 
     if (g_nx2_driver) {
-        LOG_TRACE(Service_NVDRV,
+        LOG_DEBUG(Service_NVDRV,
                  "nx2 SubmitGPFIFO entries={} flags={:#x} fence_out=({}, {}) guest_value={}",
                  params.num_entries, flags.raw, params.fence.id, params.fence.value,
                  system.Host1x().GetSyncpointManager().GetGuestSyncpointValue(params.fence.id));
