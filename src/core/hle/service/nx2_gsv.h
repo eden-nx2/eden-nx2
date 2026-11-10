@@ -1922,14 +1922,17 @@ private:
         // Ocarina waited ~12 ms a frame on its previous frame's fence here (#161). Pokemon Pokopia
         // waited ~20 ms of its ~30 ms frames, its GPU and GPU thread taking turns: a frame ahead,
         // ~24 ms frames on a Galaxy S26 (33 -> 41 FPS outdoors at 0.5x).
+        // Fire Emblem: Fortune's Weave on a Galaxy S26 was much smoother a frame ahead.
         constexpr u64 OcarinaOfTimeProgramId = 0x0400486024DEC000ULL;
         constexpr u64 PokemonPokopiaProgramId = 0x0400A3A01EE4C000ULL;
+        constexpr u64 FireEmblemFortunesWeaveProgramId = 0x04007EF01F8AE000ULL;
         int frames_ahead = frames_ahead_setting;
         const u64 app_program_id = system.GetApplicationProcessProgramID();
         if (frames_ahead == -1 && app_program_id == DonkeyKongBananzaProgramId) {
             frames_ahead = 0;
         } else if (frames_ahead == -1 && (app_program_id == OcarinaOfTimeProgramId ||
-                                          app_program_id == PokemonPokopiaProgramId)) {
+                                          app_program_id == PokemonPokopiaProgramId ||
+                                          app_program_id == FireEmblemFortunesWeaveProgramId)) {
             frames_ahead = 1;
         }
         const auto entered = std::chrono::steady_clock::now();
