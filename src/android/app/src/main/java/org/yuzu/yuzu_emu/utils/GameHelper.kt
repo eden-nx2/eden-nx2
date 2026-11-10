@@ -76,6 +76,9 @@ object GameHelper {
             if (isValid) {
                 val scanDepth = if (gameDir.deepScan) 3 else 1
                 val files = FileUtil.listFiles(gameDirUri)
+                if (gameDir.type == DirectoryType.GAME) {
+                    addNoMedia(gameDirUri, files)
+                }
 
                 addGamesRecursive(
                     games,
@@ -120,6 +123,38 @@ object GameHelper {
 
         cachedGameList = games.toMutableList()
         return games.toList()
+    }
+
+    private const val NO_MEDIA = ".nomedia"
+
+    // Android's shared folders: a .nomedia in or under one would hide the user's own media.
+    private val mediaFolders = setOf(
+        "alarms", "audiobooks", "dcim", "documents", "download", "movies", "music",
+        "notifications", "pictures", "podcasts", "recordings", "ringtones"
+    )
+
+    // Keeps the media scanner out of a game folder. A loose dump holds hundreds of thousands of
+    // files, and while the scanner indexes them every folder listing waits, the library's too.
+    private fun addNoMedia(treeUri: Uri, files: Array<MinimalDocumentFile>) {
+        if (files.any { it.filename == NO_MEDIA }) {
+            return
+        }
+        try {
+            val treeId = DocumentsContract.getTreeDocumentId(treeUri)
+            val segments = treeId.substringAfter(':').split('/').filter { it.isNotEmpty() }
+            if (segments.isEmpty() || segments.any { it.lowercase() in mediaFolders }) {
+                return
+            }
+            val folderUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, treeId)
+            DocumentsContract.createDocument(
+                YuzuApplication.appContext.contentResolver,
+                folderUri,
+                "application/octet-stream",
+                NO_MEDIA
+            )
+        } catch (e: Exception) {
+            Log.warning("[GameHelper] Could not create $NO_MEDIA in a game folder: ${e.message}")
+        }
     }
 
     private fun addLibraryExeFSGames(games: MutableList<Game>, gameDir: GameDir) {
