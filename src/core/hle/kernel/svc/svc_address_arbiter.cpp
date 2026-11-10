@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "common/scope_exit.h"
 #include "core/core.h"
 #include "core/hle/kernel/k_hardware_timer.h"
 #include "core/hle/kernel/k_memory_layout.h"
@@ -11,6 +12,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/svc.h"
 #include "core/hle/kernel/svc_results.h"
+#include "core/hle/kernel/wait_trace.h"
 #include "core/hle/kernel/svc_types.h"
 
 namespace Kernel::Svc {
@@ -68,6 +70,18 @@ Result WaitForAddress(Core::System& system, u64 address, ArbitrationType arb_typ
     } else {
         timeout = timeout_ns;
     }
+
+    KThread& thread = GetCurrentThread(system.Kernel());
+    const bool traced = WaitTrace::Enabled() && WaitTrace::IsLongWait(timeout_ns);
+    if (traced) {
+        WaitTrace::Begin(thread, fmt::format("address {:#x} (type {}, value {:#x})", address,
+                                                static_cast<u32>(arb_type), value));
+    }
+    SCOPE_EXIT {
+        if (traced) {
+            WaitTrace::End(thread);
+        }
+    };
 
     R_RETURN(
         GetCurrentProcess(system.Kernel()).WaitAddressArbiter(address, arb_type, value, timeout));

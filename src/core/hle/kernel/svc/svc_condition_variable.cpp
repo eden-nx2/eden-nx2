@@ -4,6 +4,7 @@
 // SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "common/scope_exit.h"
 #include "core/core.h"
 #include "core/hle/kernel/k_hardware_timer.h"
 #include "core/hle/kernel/k_memory_layout.h"
@@ -11,6 +12,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/svc.h"
 #include "core/hle/kernel/svc_results.h"
+#include "core/hle/kernel/wait_trace.h"
 
 namespace Kernel::Svc {
 
@@ -39,6 +41,18 @@ Result WaitProcessWideKeyAtomic(Core::System& system, u64 address, u64 cv_key, u
     } else {
         timeout = timeout_ns;
     }
+
+    KThread& thread = GetCurrentThread(system.Kernel());
+    const bool traced = WaitTrace::Enabled() && WaitTrace::IsLongWait(timeout_ns);
+    if (traced) {
+        WaitTrace::Begin(thread, fmt::format("condition variable key={:#x} mutex={:#x}",
+                                                cv_key, address));
+    }
+    SCOPE_EXIT {
+        if (traced) {
+            WaitTrace::End(thread);
+        }
+    };
 
     // Wait on the condition variable.
     R_RETURN(

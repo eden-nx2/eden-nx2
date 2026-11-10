@@ -12,6 +12,7 @@
 #include "core/hle/kernel/k_readable_event.h"
 #include "core/hle/kernel/svc.h"
 #include "core/hle/kernel/svc_results.h"
+#include "core/hle/kernel/wait_trace.h"
 
 namespace Kernel::Svc {
 
@@ -93,6 +94,23 @@ Result WaitSynchronization(Core::System& system, int32_t* out_index, u64 user_ha
     } else {
         timeout = timeout_ns;
     }
+
+    KThread& thread = GetCurrentThread(system.Kernel());
+    const bool traced = WaitTrace::Enabled() && WaitTrace::IsLongWait(timeout_ns);
+    if (traced) {
+        std::string what;
+        for (auto i = 0; i < num_handles; ++i) {
+            what += fmt::format("{}{} (handle {:#x})", i == 0 ? "" : ", ",
+                                WaitTrace::Describe(objs[i]), handles[i]);
+        }
+        WaitTrace::Begin(thread, num_handles == 0 ? std::string{"no objects (until cancelled)"}
+                                                  : std::move(what));
+    }
+    SCOPE_EXIT {
+        if (traced) {
+            WaitTrace::End(thread);
+        }
+    };
 
     // Wait on the objects.
     Result res = KSynchronizationObject::Wait(system.Kernel(), out_index, objs.data(), num_handles, timeout);

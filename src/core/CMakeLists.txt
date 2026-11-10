@@ -392,6 +392,8 @@ add_library(core STATIC
     hle/kernel/svc/svc_session.cpp
     hle/kernel/svc/svc_shared_memory.cpp
     hle/kernel/svc/svc_synchronization.cpp
+    hle/kernel/wait_trace.cpp
+    hle/kernel/wait_trace.h
     hle/kernel/svc/svc_thread.cpp
     hle/kernel/svc/svc_thread_profiler.cpp
     hle/kernel/svc/svc_tick.cpp
