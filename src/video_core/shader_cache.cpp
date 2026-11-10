@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <exception>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_set>
 #include <fmt/ranges.h>
@@ -294,6 +295,20 @@ const ShaderInfo* ShaderCache::ComputeShader() {
         } catch (const Shader::Exception&) {
             RememberRejection(*cpu_shader_addr);
             throw;
+        }
+    }
+    // EDEN_NX2_COMPUTE_KEYS=1 logs each native compute program's native key with its shader hash
+    // once: frame dumps name dispatches by shader hash, pass recognition (fire_emblem_upscale.h,
+    // oot_network.h) by native key.
+    if (static const bool log_keys = std::getenv("EDEN_NX2_COMPUTE_KEYS") != nullptr;
+        log_keys && shader->lowered_native) {
+        static std::mutex seen_mutex;
+        static std::unordered_set<u64> seen;
+        std::scoped_lock lk{seen_mutex};
+        if (seen.insert(shader->lowered_native->native_program_key).second) {
+            LOG_INFO(HW_GPU, "Compute program native_key={:016x} shader={:016x} at {:#x}",
+                     shader->lowered_native->native_program_key, shader->unique_hash,
+                     program_base + qmd.program_start);
         }
     }
     // Check both warm and cold shader paths, before selecting a disk-cached pipeline.
