@@ -16,6 +16,8 @@ constexpr u64 ProgramId = 0x04007EF01F8AE000ULL;
 // NativeProgramKey of the captured DLSS final output pass, not its lowered shader hash.
 constexpr u64 OutputProgramKey = 0x14b4222bbe23abeeULL;
 constexpr u64 PrepassProgramKey = 0x4cbf6eff32525aecULL;
+// The prepass of the 131072 update (the output pass is unchanged).
+constexpr u64 PrepassProgramKeyUpdate = 0x5e8d8dc58bed8ba4ULL;
 constexpr u64 StarFoxProgramId = 0x0400E88025B1A000ULL;
 constexpr u64 StarFoxPrepassProgramKey = 0xd686ca0b9fad9e6dULL;
 constexpr u64 StarFoxOutputProgramKey = 0x7d3764ff101bec27ULL;
@@ -36,11 +38,16 @@ struct Passes {
     // The game renders a varying region of a target the size of the output, and the network's
     // constants give that region.
     bool render_region = false;
+    u64 prepass_update{};
+
+    constexpr bool IsPrepass(u64 native_key) const {
+        return native_key == prepass || (prepass_update != 0 && native_key == prepass_update);
+    }
 };
 
 constexpr std::optional<Passes> CapturedPasses(u64 program_id) {
     if (program_id == ProgramId) {
-        return Passes{PrepassProgramKey, OutputProgramKey, false};
+        return Passes{PrepassProgramKey, OutputProgramKey, false, false, PrepassProgramKeyUpdate};
     }
     if (program_id == StarFoxProgramId) {
         return Passes{StarFoxPrepassProgramKey, StarFoxOutputProgramKey, true};
