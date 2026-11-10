@@ -191,6 +191,11 @@ object GameHelper {
 
         files.forEach {
             if (it.isDirectory) {
+                // A loose dump's romfs and exefs hold no game files, and a romfs can hold
+                // thousands of entries that are slow to list through content URIs.
+                if (it.filename.lowercase() in looseDumpContentDirs) {
+                    return@forEach
+                }
                 addGamesRecursive(
                     games,
                     gamesByProgramId,
@@ -302,6 +307,7 @@ object GameHelper {
     private const val NPDM_MAGIC = 0x4154454D // "META"
     private const val ACI0_MAGIC = 0x30494341 // "ACI0"
     private val exeFSSkippedDirs = setOf("romfs", "dlc")
+    private val looseDumpContentDirs = setOf("romfs", "exefs")
     private val exeFSNonTitleDirs = setOf("exefs", "base", "updates", "update")
     private val exeFSStorageLevels = setOf("base", "update", "updates")
 
@@ -388,7 +394,7 @@ object GameHelper {
                 continue
             }
             val name = child.name.lowercase()
-            if (name in exeFSSkippedDirs && depth > 0) {
+            if (name == "romfs" || (name in exeFSSkippedDirs && depth > 0)) {
                 continue
             }
             if (name == "exefs") {
