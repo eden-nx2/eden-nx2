@@ -757,6 +757,20 @@ PipelineCache::PipelineCache(Tegra::MaxwellDeviceMemoryManager& device_memory_,
 }
 
 namespace {
+// Ocarina of Time's native task/mesh draws stall mobile GPUs (first seen on Xclipse): on Android,
+// build its task/mesh pipelines for the compute emulation, which draws them, so the game draws
+// the same way on every phone. Desktop GPUs keep their native mesh draws. (From Hokkaido.)
+bool ForceMeshEmulation() {
+#ifdef __ANDROID__
+    static constexpr u64 OcarinaOfTime = 0x0400486024DEC000ULL;
+    return Settings::GetCurrentProgramID() == OcarinaOfTime;
+#else
+    return false;
+#endif
+}
+} // Anonymous namespace
+
+namespace {
 // Pipelines the last two sessions used are built at boot. Each holds ~0.45 MB of driver memory:
 // title 1 built 4,800 from eight sessions, 1.5 GB more than building them on first use (but that
 // stalled frames 4x as often), while one session of its title screen uses ~1,500.
@@ -2332,7 +2346,7 @@ std::unique_ptr<GraphicsPipeline> PipelineCache::CreateGraphicsPipeline(
         // so the skipped pipeline's needs can be reported below.
         if ((env.ShaderStage() == Shader::Stage::Task ||
              env.ShaderStage() == Shader::Stage::Mesh) &&
-            !device.IsExtMeshShaderSupported()) {
+            (!device.IsExtMeshShaderSupported() || ForceMeshEmulation())) {
             static std::atomic<bool> logged{};
             if (!logged.exchange(true, std::memory_order_relaxed)) {
                 LOG_WARNING(Render_Vulkan,
