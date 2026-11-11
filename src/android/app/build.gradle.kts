@@ -377,6 +377,10 @@ fun getGitVersion(): String {
         listOf(
             "git",
             "describe",
+            // Release tags are lightweight; android-latest moves with every test build.
+            "--tags",
+            "--match",
+            "android-[0-9]*",
             "--always",
             "--long"
         )
