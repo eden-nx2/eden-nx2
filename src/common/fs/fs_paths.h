@@ -8,7 +8,8 @@
 
 // yuzu data directories
 
-#define EDEN_DIR "lichii"
+#define EDEN_DIR "eden"
+// Profile importer slot for an older Eden data folder; unused while EDEN_DIR is "eden".
 #define EDEN_LEGACY_DIR "eden"
 #define PORTABLE_DIR "user"
 

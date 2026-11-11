@@ -1,6 +1,6 @@
 # Arch Linux development package
 
-This directory contains a draft `lichii-git` PKGBUILD, adapted from Eglantine's
+This directory contains a draft `eden-nx2-git` PKGBUILD, adapted from Eglantine's
 packaging request in [issue #167](https://github.com/Djihads80/Eglantine/issues/167).
 It builds the `nx2` branch from source against Arch's system Qt, SDL3 and FFmpeg.
 That avoids shipping Ubuntu-linked binaries to a rolling-release distribution
@@ -10,7 +10,7 @@ Wayland when `qt6-wayland` is installed.
 ## Local build
 
 On an up-to-date Arch Linux system, install the dependencies listed in
-`PKGBUILD`, then run:
+`PKGBUILD`, then set `_repo` in `PKGBUILD` to your mirror, then run:
 
 ```sh
 makepkg --syncdeps --cleanbuild

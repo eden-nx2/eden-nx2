@@ -48,7 +48,7 @@
 #include "yuzu/shader_warm_dialog.h"
 #include "yuzu/whats_new_dialog.h"
 #include "video_core/shader_warm/shader_warm_builder.h"
-#ifdef LICHII_NX_TOOLS
+#ifdef EDEN_NX_TOOLS
 #include "core/file_sys/registered_cache.h"
 #include "yuzu/nx_tools.h"
 #endif
@@ -411,13 +411,12 @@ MainWindow::MainWindow(bool has_broken_vulkan)
 
     default_theme_paths = QIcon::themeSearchPaths();
 
-    // The first launch after an interface update switches to Lichii Dark and explains what moved.
+    // The first launch after an interface update explains what moved. The theme stays the
+    // user's choice (Eden Dark is available under Configure > UI).
     const bool whats_new_pending =
         UISettings::values.whats_new_version.GetValue() < WhatsNewDialog::Version;
     if (whats_new_pending) {
         UISettings::values.whats_new_version = WhatsNewDialog::Version;
-        UISettings::values.theme =
-            UISettings::themes[static_cast<size_t>(UISettings::Theme::LichiiDark)].second;
     }
     UpdateUITheme();
 
@@ -1343,7 +1342,7 @@ void MainWindow::InitializeHotkeys() {
     hotkey_registry.LoadHotkeys();
 
     LinkActionShortcut(ui->action_Load_File, QStringLiteral("Load File"));
-    LinkActionShortcut(ui->action_Exit, QStringLiteral("Exit Eglantine"));
+    LinkActionShortcut(ui->action_Exit, QStringLiteral("Exit Eden"));
     LinkActionShortcut(ui->action_Restart, QStringLiteral("Restart Emulation"));
     LinkActionShortcut(ui->action_Pause, QStringLiteral("Continue/Pause Emulation"));
     LinkActionShortcut(ui->action_Stop, QStringLiteral("Stop Emulation"));
@@ -1529,7 +1528,7 @@ void MainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::ExtractNupRequested, this, &MainWindow::OnGameListExtractNup);
     connect(game_list, &GameList::EditNupMetadataRequested, this,
             &MainWindow::OnGameListEditNupMetadata);
-#ifdef LICHII_NX_TOOLS
+#ifdef EDEN_NX_TOOLS
     nx_tools = new NxTools(QtCommon::vfs, this);
     connect(nx_tools, &NxTools::RunningChanged, game_list, &GameList::SetNxToolRunning);
     connect(nx_tools, &NxTools::ArchivesChanged, this, &MainWindow::OnGameListRefresh);
@@ -1991,7 +1990,7 @@ bool MainWindow::LoadROM(const QString& filename, Service::AM::FrontendAppletPar
         case Core::SystemResultStatus::ErrorMemoryAllocation:
             QMessageBox::critical(
                 this, tr("Not enough memory to start the game"),
-                tr("Lichii could not allocate the game's memory. Close other applications and "
+                tr("Eden could not allocate the game's memory. Close other applications and "
                    "check that your system has enough available memory and paging-file space, "
                    "then try again."));
             break;
@@ -2056,7 +2055,7 @@ bool MainWindow::SelectAndSetCurrentUser(
 
 void MainWindow::BootGame(const QString& filename, Service::AM::FrontendAppletParameters params,
                           StartGameType type) {
-#ifdef LICHII_NX_TOOLS
+#ifdef EDEN_NX_TOOLS
     if (nx_metadata_write_in_progress) {
         QMessageBox::information(this, tr("NX Archive"),
                                  tr("Wait for the NX metadata edit to finish before starting a game."));
@@ -2102,7 +2101,7 @@ void MainWindow::BootGame(const QString& filename, Service::AM::FrontendAppletPa
     if (close_pending) {
         return;
     }
-    LOG_INFO(Frontend, "Lichii starting...");
+    LOG_INFO(Frontend, "Eden starting...");
     report_session.reset();
     game_list->SetReportableProgramId(0);
 
@@ -2238,7 +2237,7 @@ void MainWindow::BootGame(const QString& filename, Service::AM::FrontendAppletPa
         }
         session.mods = CompatibilityReporting::SummarizeEnabledAddons(mods);
         session.updates = CompatibilityReporting::SummarizeEnabledAddons(updates);
-        session.build = QStringLiteral("Lichii %1 (%2)")
+        session.build = QStringLiteral("Eden %1 (%2)")
                             .arg(QString::fromUtf8(Common::g_build_version),
                                  QString::fromUtf8(Common::g_scm_rev).left(12));
 #ifdef ARCHITECTURE_x86_64
@@ -4382,7 +4381,7 @@ void MainWindow::OnGameListRefresh() {
     SetFirmwareVersion();
 }
 
-#ifdef LICHII_NX_TOOLS
+#ifdef EDEN_NX_TOOLS
 void MainWindow::OnGameListEditNxMetadata(const std::string& game_path) {
     const auto can_edit = [this] {
         if (boot_in_progress || close_pending || nx_metadata_write_in_progress) {
@@ -5002,7 +5001,7 @@ void MainWindow::OnEmulatorUpdateAvailable() {
     const auto result = update_future.result();
     if (result.failure == UpdateChecker::Failure::RateLimited) {
         statusBar()->showMessage(
-            tr("Could not check for updates: GitHub rate limit reached. Lichii will try again at "
+            tr("Could not check for updates: GitHub rate limit reached. Eden will try again at "
                "the next start."),
             15000);
         return;
@@ -5527,7 +5526,7 @@ void MainWindow::OnCheckGraphicsBackend() {
         UISettings::values.gui_force_x11.SetValue(true);
         GraphicsBackend::SetForceX11(true);
         QMessageBox::information(this, tr("Restart Required"),
-                                 tr("Restart Lichii to apply the X11 backend."));
+                                 tr("Restart Eden to apply the X11 backend."));
     }
 }
 #endif
@@ -5646,8 +5645,8 @@ bool MainWindow::ConfirmClose() {
         UISettings::values.confirm_before_stopping.GetValue() == ConfirmStop::Ask_Based_On_Game)
         return true;
 
-    const auto text = tr("Are you sure you want to close Lichii?");
-    return question(this, tr("Lichii"), text);
+    const auto text = tr("Are you sure you want to close Eden?");
+    return question(this, tr("Eden"), text);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
@@ -5753,7 +5752,7 @@ bool MainWindow::ConfirmChangeGame() {
 
     // Use custom question to link controller navigation
     return question(
-        this, tr("Lichii"),
+        this, tr("Eden"),
         tr("Are you sure you want to stop the emulation? Any unsaved progress will be lost."),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
 }
@@ -5762,10 +5761,10 @@ bool MainWindow::ConfirmForceLockedExit() {
     if (QtCommon::emu_thread == nullptr)
         return true;
 
-    const auto text = tr("The currently running application has requested Lichii to not exit.\n\n"
+    const auto text = tr("The currently running application has requested Eden to not exit.\n\n"
                          "Would you like to bypass this and exit anyway?");
 
-    return question(this, tr("Lichii"), text);
+    return question(this, tr("Eden"), text);
 }
 
 void MainWindow::RequestGameExit() {
@@ -5784,7 +5783,7 @@ void MainWindow::filterBarSetChecked(bool state) {
 static void AdjustLinkColor() {
     QPalette new_pal(qApp->palette());
 
-    if (UISettings::values.theme == "lichii")
+    if (UISettings::values.theme == "eden_dark")
         new_pal.setColor(QPalette::Link, QColor(0xf4, 0x5a, 0x85));
     else if (UISettings::IsDarkTheme())
         new_pal.setColor(QPalette::Link, QColor(0, 190, 255, 255));
@@ -5795,9 +5794,9 @@ static void AdjustLinkColor() {
         qApp->setPalette(new_pal);
 }
 
-// Lichii Dark styles most widgets through its stylesheet; the palette covers what Qt draws
+// Eden Dark styles most widgets through its stylesheet; the palette covers what Qt draws
 // without one: item view text, disabled text, links and the native parts of dialogs.
-static QPalette LichiiPalette() {
+static QPalette EdenPalette() {
     QPalette palette;
     const QColor window(0x17, 0x18, 0x1b);
     const QColor surface(0x20, 0x21, 0x25);
@@ -5900,13 +5899,13 @@ void MainWindow::UpdateUITheme() {
     if (current_theme.isEmpty())
         current_theme = default_theme;
 
-    static bool lichii_palette = false;
-    if (current_theme == QStringLiteral("lichii")) {
-        qApp->setPalette(LichiiPalette());
-        lichii_palette = true;
-    } else if (lichii_palette) {
+    static bool eden_palette = false;
+    if (current_theme == QStringLiteral("eden")) {
+        qApp->setPalette(EdenPalette());
+        eden_palette = true;
+    } else if (eden_palette) {
         qApp->setPalette(QPalette());
-        lichii_palette = false;
+        eden_palette = false;
     }
 
 #ifdef _WIN32

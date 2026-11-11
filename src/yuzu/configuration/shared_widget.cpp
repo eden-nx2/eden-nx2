@@ -107,7 +107,7 @@ QPushButton* Widget::CreateRestoreGlobalButton(bool using_global, QWidget* paren
     restore_button_count++;
 
     QPushButton* restore_button =
-        new QPushButton(QIcon(QStringLiteral(":/lichii/icons/reset.png")), QString(), parent);
+        new QPushButton(QIcon(QStringLiteral(":/eden_dark/icons/reset.png")), QString(), parent);
     restore_button->setObjectName(QStringLiteral("RestoreButton%1").arg(restore_button_count));
     restore_button->setProperty("restore", true);
     restore_button->setToolTip(

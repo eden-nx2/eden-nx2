@@ -17,8 +17,8 @@ QIcon PageIcon(const QString& name) {
     if (name.isEmpty()) {
         return icon;
     }
-    const QString normal = QStringLiteral(":/lichii/icons/%1.png").arg(name);
-    const QString active = QStringLiteral(":/lichii/icons/%1_active.png").arg(name);
+    const QString normal = QStringLiteral(":/eden_dark/icons/%1.png").arg(name);
+    const QString active = QStringLiteral(":/eden_dark/icons/%1_active.png").arg(name);
     icon.addFile(normal, {}, QIcon::Normal, QIcon::Off);
     icon.addFile(active, {}, QIcon::Normal, QIcon::On);
     icon.addFile(active, {}, QIcon::Selected, QIcon::Off);

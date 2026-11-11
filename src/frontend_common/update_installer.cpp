@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: Copyright 2026 Lichii Emulator Project
+// SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "frontend_common/update_installer.h"
@@ -136,7 +136,7 @@ bool CanReplace(const fs::path& target) {
     }
     const auto probe =
         target.parent_path() /
-        (".lichii-update-write-test-" +
+        (".eden-update-write-test-" +
          std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     if (fs::symlink_status(probe, ec).type() != fs::file_type::not_found) {
         return false;

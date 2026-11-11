@@ -14,8 +14,8 @@
 /// Returns a QFont object appropriate to use as a monospace font for debugging widgets, etc.
 [[nodiscard]] QFont GetMonospaceFont();
 
-/// A menu icon from the Lichii icon set, white on the highlighted row. Other themes keep menus
-/// without icons, so this returns a null icon unless Lichii Dark is active.
+/// A menu icon from the Eden icon set, white on the highlighted row. Other themes keep menus
+/// without icons, so this returns a null icon unless Eden Dark is active.
 [[nodiscard]] QIcon MenuIcon(const char* name);
 
 /**

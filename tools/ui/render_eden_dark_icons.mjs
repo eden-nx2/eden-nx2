@@ -1,12 +1,12 @@
-// Renders the Lichii theme's SVG sources to the PNGs the stylesheet and dialogs load,
+// Renders the Eden theme's SVG sources to the PNGs the stylesheet and dialogs load,
 // at 1x and @2x, and lists them in style.qrc. Qt picks the @2x file on high-DPI screens.
 // Menu icons (menu_*) also get a white _white variant for the highlighted menu row.
 // Needs @resvg/resvg-js:
-//   npm i @resvg/resvg-js && node tools/ui/render_lichii_icons.mjs
+//   npm i @resvg/resvg-js && node tools/ui/render_eden_dark_icons.mjs
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { Resvg } from "@resvg/resvg-js";
 
-const root = new URL("../../dist/qt_themes/lichii/", import.meta.url);
+const root = new URL("../../dist/qt_themes/eden_dark/", import.meta.url);
 const src = new URL("svg/", root);
 const out = new URL("icons/", root);
 mkdirSync(out, { recursive: true });

@@ -390,7 +390,7 @@ fun getGitVersion(): String {
     } else {
         gitVersion
     }
-    // Releases are tagged android-<version> and titled "Hokkaido <version>": report the plain
+    // Releases are tagged android-<version> and titled "Eden <version>": report the plain
     // version, so updaters (EmuHub) that compare it with the release see the same one.
     return versionName.removePrefix("android-").ifEmpty { "0.0" }
 }

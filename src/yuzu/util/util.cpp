@@ -28,11 +28,11 @@ QFont GetMonospaceFont() {
 
 QIcon MenuIcon(const char* name) {
     QIcon icon;
-    if (UISettings::values.theme != "lichii") {
+    if (UISettings::values.theme != "eden") {
         return icon;
     }
-    icon.addFile(QStringLiteral(":/lichii/icons/menu_%1.png").arg(QLatin1String(name)));
-    icon.addFile(QStringLiteral(":/lichii/icons/menu_%1_white.png").arg(QLatin1String(name)), {},
+    icon.addFile(QStringLiteral(":/eden_dark/icons/menu_%1.png").arg(QLatin1String(name)));
+    icon.addFile(QStringLiteral(":/eden_dark/icons/menu_%1_white.png").arg(QLatin1String(name)), {},
                  QIcon::Active);
     return icon;
 }

@@ -847,7 +847,7 @@ void JNICALL Java_org_yuzu_yuzu_1emu_NativeLibrary_initializeGpuDriver(JNIEnv* e
 
 [[maybe_unused]] bool SupportsCustomDriver() {
     // adrenotools loads any custom Vulkan driver through its own linker namespace, so this is not
-    // limited to Qualcomm KGSL devices. Lichii: allow it everywhere so Mesa RADV can be used on
+    // limited to Qualcomm KGSL devices. Eden: allow it everywhere so Mesa RADV can be used on
     // Samsung Exynos (Xclipse) GPUs and other non-Adreno phones.
     return android_get_device_api_level() >= 28;
 }

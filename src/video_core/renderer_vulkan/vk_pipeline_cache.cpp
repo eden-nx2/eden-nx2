@@ -759,7 +759,7 @@ PipelineCache::PipelineCache(Tegra::MaxwellDeviceMemoryManager& device_memory_,
 namespace {
 // Ocarina of Time's native task/mesh draws stall mobile GPUs (first seen on Xclipse): on Android,
 // build its task/mesh pipelines for the compute emulation, which draws them, so the game draws
-// the same way on every phone. Desktop GPUs keep their native mesh draws. (From Hokkaido.)
+// the same way on every phone. Desktop GPUs keep their native mesh draws. (From Eden.)
 bool ForceMeshEmulation() {
 #ifdef __ANDROID__
     static constexpr u64 OcarinaOfTime = 0x0400486024DEC000ULL;

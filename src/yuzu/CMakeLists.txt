@@ -258,10 +258,10 @@ add_executable(yuzu
     game/carousel.h game/carousel.cpp
 )
 
-set_target_properties(yuzu PROPERTIES OUTPUT_NAME "lichii")
+set_target_properties(yuzu PROPERTIES OUTPUT_NAME "eden")
 
 # Shipped next to the executable: the NX2 switches a GUI launch cannot set another way. Read at
-# startup (LoadNx2Switches in main.cpp); a user copy in %APPDATA%\lichii overrides it.
+# startup (LoadNx2Switches in main.cpp); a user copy in %APPDATA%\eden overrides it.
 add_custom_command(TARGET yuzu POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PROJECT_SOURCE_DIR}/dist/nx2_switches.txt" "$<TARGET_FILE_DIR:yuzu>/nx2_switches.txt"
@@ -386,15 +386,19 @@ target_sources(yuzu
 if (APPLE)
     target_sources(yuzu PRIVATE util/macos_sleep.cpp util/macos_sleep.h)
 
-    # Use the supplied Lichii artwork for all macOS generators.
+    # Eden's artwork: Xcode builds the Assets.car and icns from eden.icon, other generators
+    # use the prebuilt ones.
     set(_dist "${CMAKE_SOURCE_DIR}/dist")
-    set(_icons "${_dist}/lichii.icns")
     if (CMAKE_GENERATOR MATCHES "Xcode")
+        set(_icons "${_dist}/eden.icon")
         set_target_properties(yuzu PROPERTIES
-            MACOSX_BUNDLE_ICON_FILE lichii.icns
+            XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME eden
+            MACOSX_BUNDLE_ICON_FILE eden
             # Also force xcode to manage signing for us.
             XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ON
             XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED ON)
+    else()
+        set(_icons "${_dist}/eden.icns" "${_dist}/Assets.car")
     endif()
 
     set_source_files_properties(${_icons} PROPERTIES
@@ -503,6 +507,6 @@ target_link_libraries(yuzu PRIVATE OpenSSL::SSL OpenSSL::Crypto SDL3::SDL3)
 if (TARGET nxformat::static_nozstd)
     target_sources(yuzu PRIVATE nx_tools.h nx_tools.cpp)
     target_link_libraries(yuzu PRIVATE nxformat::static_nozstd)
-    target_compile_definitions(yuzu PRIVATE LICHII_NX_TOOLS)
+    target_compile_definitions(yuzu PRIVATE EDEN_NX_TOOLS)
 endif()
 create_target_directory_groups(yuzu)

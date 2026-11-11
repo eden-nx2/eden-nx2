@@ -311,7 +311,7 @@ if (YUZU_TESTS)
     add_subdirectory(tests)
 endif()
 
-if (LICHII_FUZZERS)
+if (EDEN_FUZZERS)
     add_subdirectory(fuzz)
 endif()
 

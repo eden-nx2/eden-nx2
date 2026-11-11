@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-pkgname=lichii-git
+# Set _repo to the GitHub owner/repo of your Eden NX2 mirror.
+_repo=OWNER/eden-nx2
+pkgname=eden-nx2-git
 pkgver=0.r0.g0000000
 pkgrel=1
 pkgdesc='Nintendo Switch emulator (development branch)'
 arch=('x86_64')
-url='https://github.com/zortos293/lichii'
+url="https://github.com/${_repo}"
 license=('GPL-3.0-or-later')
 depends=(
   'enet'
@@ -41,18 +43,18 @@ makedepends=(
 optdepends=(
   'qt6-wayland: native Wayland support'
 )
-provides=('lichii')
-conflicts=('lichii')
-source=("lichii::git+https://github.com/zortos293/lichii.git#branch=nx2")
+provides=('eden')
+conflicts=('eden')
+source=("eden::git+https://github.com/${_repo}.git#branch=nx2")
 sha256sums=('SKIP')
 
 pkgver() {
-  cd "$srcdir/lichii"
+  cd "$srcdir/eden"
   printf '0.r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
 }
 
 build() {
-  cmake -S "$srcdir/lichii" -B "$srcdir/build" -G Ninja \
+  cmake -S "$srcdir/eden" -B "$srcdir/build" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=lib \

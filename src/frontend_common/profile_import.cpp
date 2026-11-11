@@ -39,7 +39,13 @@ bool NeedsLegacyProfileImport() {
     if (state != Migration::State::Unresolved) {
         return false;
     }
-    constexpr std::array sources{LegacyEdenDir, CitronDir, SudachiDir, SuyuDir, YuzuDir};
+    // As Eden always did: only offer an import when this emulator has no configuration yet, so an
+    // existing Eden profile is used as it is.
+    if (fs::is_directory(GetEdenPath(EdenPath::ConfigDir)) &&
+        !fs::is_empty(GetEdenPath(EdenPath::ConfigDir))) {
+        return false;
+    }
+    constexpr std::array sources{CitronDir, SudachiDir, SuyuDir, YuzuDir};
     for (const auto source : sources) {
         if (fs::is_directory(GetLegacyPath(source))) {
             return true;
@@ -52,7 +58,7 @@ bool NeedsLegacyProfileImport() {
 void CheckLegacyProfileBeforeConfig() {
     if (NeedsLegacyProfileImport()) {
         throw std::runtime_error("Legacy emulator data or an unfinished import was found. "
-                                 "Open the Lichii GUI to import it or explicitly start fresh "
+                                 "Open the Eden GUI to import it or explicitly start fresh "
                                  "before using eden-cli. No configuration was created.");
     }
 }

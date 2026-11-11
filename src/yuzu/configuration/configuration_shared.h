@@ -16,7 +16,7 @@ class QSize;
 
 namespace ConfigurationShared {
 
-/// A category or tab icon from the Lichii icon set, accent coloured when selected.
+/// A category or tab icon from the Eden icon set, accent coloured when selected.
 QIcon PageIcon(const QString& name);
 
 /// Wraps a settings tab in a frameless scroll area, so a long tab scrolls inside its dialog

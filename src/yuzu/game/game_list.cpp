@@ -29,7 +29,7 @@
 #include "common/fs/fs_util.h"
 #include "core/core.h"
 #include "core/file_sys/nup_writer.h"
-#ifdef LICHII_NX_TOOLS
+#ifdef EDEN_NX_TOOLS
 #include "yuzu/nx_tools.h"
 #endif
 #include "core/file_sys/patch_manager.h"
@@ -541,7 +541,7 @@ void GameList::AddGamePopup(QMenu& context_menu, u64 program_id, const std::stri
     QAction* add_to_nx = nullptr;
     QAction* remove_from_nx = nullptr;
     QAction* edit_nx_metadata = nullptr;
-#ifdef LICHII_NX_TOOLS
+#ifdef EDEN_NX_TOOLS
     if (NxTools::CanConvert(path)) {
         convert_nx = context_menu.addAction(tr("Convert to NX..."));
         convert_nx->setEnabled(!nx_tool_running);

@@ -108,14 +108,13 @@ static const constexpr frozen::map<StringKey, frozen::string, 29> strings = {
     // migrator
     // 17-22
     {MigrationPromptPrefix,
-     QT_TR_NOOP("Lichii has detected user data for the following emulators:")},
+     QT_TR_NOOP("Eden has detected user data for the following emulators:")},
     {MigrationPrompt,
-     QT_TR_NOOP("Would you like to migrate your data for use in Lichii?\n"
+     QT_TR_NOOP("Would you like to migrate your data for use in Eden?\n"
                 "Select the corresponding button to migrate data from that emulator.\n"
                 "This may take a while.")},
     {MigrationTooltipClearShader, QT_TR_NOOP("Clearing shader cache is recommended when migrating "
-                                             "from another emulator.\nEarlier Lichii builds kept "
-                                             "their own cache in Eden's directory.")},
+                                             "from another emulator.")},
     {MigrationTooltipKeepOld,
      QT_TR_NOOP("Keeps the old data directory. This is recommended if you aren't\n"
                 "space-constrained and want to keep separate data for the old emulator.")},
@@ -124,7 +123,7 @@ static const constexpr frozen::map<StringKey, frozen::string, 29> strings = {
                                           "free space for a full copy. Keep the backup until "
                                           "you have checked your saves.")},
     {MigrationTooltipLinkOld,
-     QT_TR_NOOP("Creates a filesystem link between the old directory and Lichii directory.\n"
+     QT_TR_NOOP("Creates a filesystem link between the old directory and Eden directory.\n"
                 "This is recommended if you want to share data between emulators.")},
 
     // why am I writing these comments again
