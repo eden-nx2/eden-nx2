@@ -35,7 +35,7 @@ struct Fixture {
 } // namespace
 
 TEST_CASE("Imported paths are remapped by path component", "[migration]") {
-    const auto old_root = fs::absolute("eden");
+    const auto old_root = fs::absolute("yuzu");
     const auto new_root = fs::absolute("eden");
     CHECK(RemapImportedPath(old_root / "custom-nand", old_root, new_root) ==
           new_root / "custom-nand");
@@ -51,7 +51,7 @@ TEST_CASE("Imported paths are remapped by path component", "[migration]") {
 TEST_CASE("Move remaps every raw imported storage path before the source disappears",
           "[migration]") {
     Fixture fixture;
-    const auto source = fixture.root / "eden";
+    const auto source = fixture.root / "yuzu";
     const auto destination = fixture.root / "eden";
     const auto config = source / "config";
     fs::create_directories(config / "custom");
@@ -122,7 +122,7 @@ TEST_CASE("CLI-first configuration is blocked and portable user stays untouched"
     setenv("XDG_DATA_HOME", (fixture.root / "data").c_str(), 1);
     setenv("XDG_CONFIG_HOME", (fixture.root / "config").c_str(), 1);
     setenv("XDG_CACHE_HOME", (fixture.root / "cache").c_str(), 1);
-    fs::create_directories(fixture.root / "data/eden");
+    fs::create_directories(fixture.root / "data/yuzu");
     fs::create_directories(fixture.root / "config/eden");
     Common::FS::SetAppDirectory("");
     CHECK(NeedsLegacyProfileImport());

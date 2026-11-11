@@ -7,12 +7,12 @@
 
 using namespace Common::FS;
 
-TEST_CASE("Eden keeps its data apart from Eden's", "[fs]") {
+TEST_CASE("Eden keeps its data in Eden's own folder", "[fs]") {
     const auto& data = GetEdenPath(EdenPath::EdenDir);
     if (data.filename() == "user") {
         SKIP("portable user directory in use");
     }
     CHECK(data.filename() == "eden");
-    CHECK(GetLegacyPath(LegacyEdenDir).filename() == "eden");
-    CHECK(GetLegacyPath(LegacyEdenDir).parent_path() == data.parent_path());
+    CHECK(GetLegacyPath(YuzuDir).filename() == "yuzu");
+    CHECK(GetLegacyPath(YuzuDir).parent_path() == data.parent_path());
 }

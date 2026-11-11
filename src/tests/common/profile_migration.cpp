@@ -26,7 +26,7 @@ struct Fixture {
     fs::path base = fs::temp_directory_path() /
                     ("eden-migration-test-" +
                      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-    fs::path source = base / "eden";
+    fs::path source = base / "yuzu";
     fs::path destination = base / "eden";
     fs::path state = base / "eden.migration";
 
@@ -86,7 +86,7 @@ TEST_CASE("Migration decision is independent of config directory existence",
 TEST_CASE("Copy verifies and stages every root before preparing or publishing",
           "[profile_migration]") {
     Fixture f;
-    const auto cache = f.base / "eden-cache";
+    const auto cache = f.base / "yuzu-cache";
     const auto new_cache = f.base / "eden-cache";
     Write(f.source / "config/settings.ini", "old paths");
     Write(cache / "shader/blob", std::string(140000, 'x'));
@@ -131,7 +131,7 @@ TEST_CASE("Import keeps the entire old destination in a sibling backup", "[profi
 TEST_CASE("Interrupted multi-root publication remains pending and retries safely",
           "[profile_migration]") {
     Fixture f;
-    const auto cache = f.base / "eden-cache";
+    const auto cache = f.base / "yuzu-cache";
     const auto new_cache = f.base / "eden-cache";
     Write(f.source / "save", "legacy");
     Write(f.destination / "save", "existing");
@@ -234,7 +234,7 @@ TEST_CASE("Every multi-root publication cutpoint can recover after process exit"
     for (int cut = 0; cut <= 8; ++cut) {
         CAPTURE(cut);
         Fixture f;
-        const auto cache = f.base / "eden-cache";
+        const auto cache = f.base / "yuzu-cache";
         const auto new_cache = f.base / "eden-cache";
         Write(f.source / "save", "legacy");
         Write(f.destination / "save", "existing");
@@ -306,7 +306,7 @@ TEST_CASE("Every multi-root publication cutpoint can recover after process exit"
 
 TEST_CASE("A failed second link removes only this attempt's staged links", "[profile_migration]") {
     Fixture f;
-    const auto cache = f.base / "eden-cache";
+    const auto cache = f.base / "yuzu-cache";
     const auto new_cache = f.base / "eden-cache";
     Write(f.source / "save", "legacy");
     Write(f.destination / "save", "existing");

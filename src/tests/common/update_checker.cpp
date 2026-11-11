@@ -188,6 +188,7 @@ TEST_CASE("Failed release requests are classified by status", "[updater]") {
 
 TEST_CASE("Eden does not select Eden or lookalike download URLs", "[updater]") {
     const std::string url = GENERATE(
+        Catch::Generators::as<std::string>{},
         "https://github.com/eden-emu/eden/releases/download/build-71/eden-windows-x86_64.zip",
         "https://github.com/" + Repo() + "/releases/download/build-70/eden-windows-x86_64.zip",
         "https://github.com/" + Repo() + "/releases/download/build-71/"
