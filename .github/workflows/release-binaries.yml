@@ -15,24 +15,6 @@ on:
         description: Mark the release as a pre-release
         type: boolean
         default: true
-  push:
-    branches:
-      - nx2-experimental
-    # A binary only changes when build inputs change; docs-only pushes skip the build.
-    paths:
-      - "src/**"
-      # Test-only changes cannot change a binary: the build configures with BUILD_TESTING=OFF and
-      # YUZU_TESTS=OFF below, so a push that only touches src/tests has nothing to rebuild.
-      - "!src/tests/**"
-      - "CMakeLists.txt"
-      - "CMakeModules/**"
-      - "externals/**"
-      - "dist/**"
-      - "tools/**"
-      - ".patch/**"
-      - "cpmfile.json"
-      - "*.profdata"
-      - ".github/workflows/release-binaries.yml"
 
 permissions:
   contents: read
@@ -57,7 +39,7 @@ jobs:
       contents: write
     steps:
       - name: Prepare release tag
-        if: github.event_name == 'push' || inputs.publish_release
+        if: inputs.publish_release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -679,13 +661,12 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Publishes every binary as a GitHub release once every platform built: on pushes to
-  # nx2-experimental, and on manual runs unless "Publish the binaries as a GitHub release" is
-  # unticked.
+  # Publishes every binary as a GitHub release once every platform built, unless "Publish the
+  # binaries as a GitHub release" is unticked.
   release:
     name: Publish release
     needs: [build, android]
-    if: github.event_name == 'push' || inputs.publish_release
+    if: inputs.publish_release
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -737,7 +718,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_NOTES: ${{ inputs.notes }}
-          INPUT_PRERELEASE: ${{ github.event_name == 'push' || inputs.prerelease }}
+          INPUT_PRERELEASE: ${{ inputs.prerelease }}
         run: |
           set -euo pipefail
           tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/build-${GITHUB_RUN_NUMBER}" --jq '.object.sha')

@@ -23,7 +23,7 @@ release, tagged `build-<run number>`:
    appears under **Releases** when every platform has built. If one platform fails, nothing is
    published; re-run the failed jobs.
 
-Pushing to the `nx2-experimental` branch also runs it, as a pre-release without highlights.
+Releases are only published from these manual runs; pushes to `nx2` are build-checked but not released.
 
 ## What the notes contain
 
