@@ -17,7 +17,7 @@ class SwitchDiscovery(unittest.TestCase):
         self.root = pathlib.Path(self.tmp.name)
         self.bin = self.root / "mount/usr/bin"
         self.bin.mkdir(parents=True)
-        self.config = self.root / "config/eden"
+        self.config = self.root / "config/eden-nx2"
         self.config.mkdir(parents=True)
         source = self.root / "probe.cpp"
         source.write_text('''#include "yuzu/nx2_switches.h"

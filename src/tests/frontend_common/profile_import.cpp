@@ -123,11 +123,11 @@ TEST_CASE("CLI-first configuration is blocked and portable user stays untouched"
     setenv("XDG_CONFIG_HOME", (fixture.root / "config").c_str(), 1);
     setenv("XDG_CACHE_HOME", (fixture.root / "cache").c_str(), 1);
     fs::create_directories(fixture.root / "data/yuzu");
-    fs::create_directories(fixture.root / "config/eden");
+    fs::create_directories(fixture.root / "config/eden-nx2");
     Common::FS::SetAppDirectory("");
     CHECK(NeedsLegacyProfileImport());
     CHECK_THROWS(CheckLegacyProfileBeforeConfig());
-    CHECK(fs::is_empty(fixture.root / "config/eden"));
+    CHECK(fs::is_empty(fixture.root / "config/eden-nx2"));
     Migration::MarkFresh(ProfileImportStateDirectory());
     CHECK_FALSE(NeedsLegacyProfileImport());
     CHECK_NOTHROW(CheckLegacyProfileBeforeConfig());
