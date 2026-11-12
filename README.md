@@ -16,7 +16,7 @@
 
 <h4 align="center"><b>Eden</b> is a free and open-source Nintendo Switch emulator. This branch carries
 Eden NX2's experimental Switch 2 support together with the performance and compatibility work of
-the Eden (desktop) and Eden (Android) forks, under Eden's own name and artwork.
+the Lichii (desktop) and Hokkaido (Android) forks, under Eden's own name and artwork.
 <br>
 Builds for Windows, Linux, macOS and Android.
 </h4>
@@ -26,11 +26,11 @@ Builds for Windows, Linux, macOS and Android.
 Eden NX2 is Takoroka's experimental Switch 2 branch of Eden
 ([git.eden-emu.dev/Takoroka/eden-nx2](https://git.eden-emu.dev/Takoroka/eden-nx2)). Its
 work was continued in Eglantine and then in
-[Eden](https://github.com/zortos293/Lichii), and
-[Eden](https://github.com/pavelgajdo/Eden) forked Eden for Android phones.
+[Lichii](https://github.com/zortos293/Lichii), and
+[Hokkaido](https://github.com/pavelgajdo/Hokkaido) forked Lichii for Android phones.
 Both forks renamed the emulator.
 
-This branch is Eden's `nx2` tip with Eden's own changes on top, and the Eden branding
+This branch is Lichii's `nx2` tip with Hokkaido's own changes on top, and the Eden branding
 restored on every platform: the `eden` executables, Eden's icons, desktop entry and
 `dev.eden_emu.eden` IDs, the Android app `dev.eden.eden_emulator`, and Eden's data folders.
 [docs/MIRROR_CHANGES.md](./docs/MIRROR_CHANGES.md) lists what came from where and how each
@@ -65,5 +65,5 @@ you have legally obtained. Games, keys and firmware are not included.
 ## License
 
 Eden is licensed under the GPLv3 (or any later version). Refer to the [LICENSE.txt](./LICENSE.txt)
-file. Credit for the Switch 2 work goes to Takoroka and the Eden NX2, Eglantine, Eden and
-Eden contributors; see the commit history.
+file. Credit for the Switch 2 work goes to Takoroka and the Eden NX2, Eglantine, Lichii and
+Hokkaido contributors; see the commit history.
