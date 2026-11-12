@@ -8,8 +8,8 @@
 
 // yuzu data directories
 
-#define EDEN_DIR "eden"
-// Profile importer slot for an older Eden data folder; unused while EDEN_DIR is "eden".
+#define EDEN_DIR "eden-nx2"
+// Official Eden's data folder, offered as a profile to import on first launch.
 #define EDEN_LEGACY_DIR "eden"
 #define PORTABLE_DIR "user"
 

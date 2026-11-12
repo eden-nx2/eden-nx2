@@ -1987,7 +1987,7 @@ bool MainWindow::LoadROM(const QString& filename, Service::AM::FrontendAppletPar
         case Core::SystemResultStatus::ErrorMemoryAllocation:
             QMessageBox::critical(
                 this, tr("Not enough memory to start the game"),
-                tr("Eden could not allocate the game's memory. Close other applications and "
+                tr("Eden NX2 could not allocate the game's memory. Close other applications and "
                    "check that your system has enough available memory and paging-file space, "
                    "then try again."));
             break;
@@ -4993,7 +4993,7 @@ void MainWindow::OnEmulatorUpdateAvailable() {
     const auto result = update_future.result();
     if (result.failure == UpdateChecker::Failure::RateLimited) {
         statusBar()->showMessage(
-            tr("Could not check for updates: GitHub rate limit reached. Eden will try again at "
+            tr("Could not check for updates: GitHub rate limit reached. Eden NX2 will try again at "
                "the next start."),
             15000);
         return;
@@ -5518,7 +5518,7 @@ void MainWindow::OnCheckGraphicsBackend() {
         UISettings::values.gui_force_x11.SetValue(true);
         GraphicsBackend::SetForceX11(true);
         QMessageBox::information(this, tr("Restart Required"),
-                                 tr("Restart Eden to apply the X11 backend."));
+                                 tr("Restart Eden NX2 to apply the X11 backend."));
     }
 }
 #endif
@@ -5637,8 +5637,8 @@ bool MainWindow::ConfirmClose() {
         UISettings::values.confirm_before_stopping.GetValue() == ConfirmStop::Ask_Based_On_Game)
         return true;
 
-    const auto text = tr("Are you sure you want to close Eden?");
-    return question(this, tr("Eden"), text);
+    const auto text = tr("Are you sure you want to close Eden NX2?");
+    return question(this, tr("Eden NX2"), text);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
@@ -5744,7 +5744,7 @@ bool MainWindow::ConfirmChangeGame() {
 
     // Use custom question to link controller navigation
     return question(
-        this, tr("Eden"),
+        this, tr("Eden NX2"),
         tr("Are you sure you want to stop the emulation? Any unsaved progress will be lost."),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
 }
@@ -5753,10 +5753,10 @@ bool MainWindow::ConfirmForceLockedExit() {
     if (QtCommon::emu_thread == nullptr)
         return true;
 
-    const auto text = tr("The currently running application has requested Eden to not exit.\n\n"
+    const auto text = tr("The currently running application has requested Eden NX2 to not exit.\n\n"
                          "Would you like to bypass this and exit anyway?");
 
-    return question(this, tr("Eden"), text);
+    return question(this, tr("Eden NX2"), text);
 }
 
 void MainWindow::RequestGameExit() {

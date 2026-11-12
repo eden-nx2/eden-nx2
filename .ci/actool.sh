@@ -6,7 +6,7 @@
 # SPDX-FileCopyrightText: Copyright 2026 crueter
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-_svg=dev.eden_emu.eden.svg
+_svg=com.eden.eden_nx2.svg
 _icon=dist/eden.icon
 _composed="$_icon/Assets/$_svg"
 _svg="dist/$_svg"

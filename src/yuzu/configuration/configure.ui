@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-    <string>Eden Configuration</string>
+    <string>Eden NX2 Configuration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

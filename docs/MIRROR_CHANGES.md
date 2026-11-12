@@ -80,16 +80,24 @@ ones marked *adapted* conflicted with newer Lichii code and were rewritten onto 
 | Branding, README, release notes and Hokkaido CI commits | Replaced by Eden branding; `android.yml` was taken over with Eden names. |
 | ~30 commits Hokkaido took from Lichii PRs | Already in Lichii (often newer). |
 
-## Eden branding
+## Name and branding
 
-- Executables `eden`, `eden-cli`, `eden-room`, `eden-updater`; Windows/macOS/Linux icons, installer,
-  desktop entry, MIME package (now with `.nup`, `.nsz`, `.xcz`) and AppStream data are Eden's.
-- About dialog is Eden's; "Lichii Dark" is now the optional **Eden Dark** theme, and Eden's default
-  theme is back. The first launch no longer switches theme.
-- Data in Eden's folders. The profile importer runs only when Eden has no configuration yet, and
-  never imports "Eden into Eden".
-- Android: application id `dev.eden.eden_emulator`, app name Eden.
+Released as **Eden NX2**, with Eden's artwork, so it installs next to official Eden:
+
+- Name "Eden NX2" in window titles, About, menus, dialogs and translations, the Linux desktop entry
+  and AppStream data, the macOS bundle (`com.eden.eden-nx2`) and the Windows installer. The
+  executables keep Eden's file names (`eden`, `eden-cli`, `eden-room`, `eden-updater`).
+- Linux desktop, MIME and AppStream id `com.eden.eden_nx2`; the MIME package registers `.nup`,
+  `.nsz` and `.xcz` too.
+- Data in its own `eden-nx2` folders. On first launch it offers to import an official Eden profile
+  (keeping its shader caches) or a Citron, Sudachi, Suyu or yuzu one. The importer runs only while
+  Eden NX2 has no configuration yet.
+- Android: application id `com.eden.eden_nx2`, app name Eden NX2 (Optimized keeps its
+  `com.miHoYo.Yuanshen` package spoof; Legacy is `com.eden.eden_nx2_legacy`).
+- Lichii's dark theme is the optional **Eden Dark** theme; Eden's default theme is the default.
+- In-game defaults stay "Eden": the profile username, the console's device name and the network
+  nickname, which games see, and the "Exit Eden" hotkey's settings key.
 - Updater: follows `EDEN_UPDATE_REPO` (CI sets it to the repository that builds the release);
-  empty for local builds.
+  empty for local builds. Release assets are `eden-<platform>`.
 - Kept on purpose: credit links to upstream PRs, internal macro names (`EGLANTINE_STREAMLINE`, ...),
   and the in-app compatibility report/search, which still uses Lichii's site `lichii.zortos.me`.

@@ -47,9 +47,9 @@ set(BUILD_AUTO_UPDATE_API_PATH "/repos/${EDEN_UPDATE_REPO}/releases?per_page=100
 set(BUILD_AUTO_UPDATE_WEBSITE "https://github.com")
 set(BUILD_AUTO_UPDATE_REPO "${EDEN_UPDATE_REPO}")
 if (NIGHTLY_BUILD)
-    set(REPO_NAME "Eden Nightly")
+    set(REPO_NAME "Eden NX2 Nightly")
 else()
-    set(REPO_NAME "Eden")
+    set(REPO_NAME "Eden NX2")
 endif()
 
 set(BUILD_ID ${GIT_REFSPEC})

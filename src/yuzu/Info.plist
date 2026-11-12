@@ -21,13 +21,15 @@ SPDX-License-Identifier: GPL-2.0-or-later
     <key>CFBundleIconName</key>
     <string>eden_liquidglass</string>
     <key>CFBundleIdentifier</key>
-    <string>com.yuzu-emu.yuzu</string> <!-- May be required by 3rd party ext -->
+    <string>com.eden.eden-nx2</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleLongVersionString</key>
     <string></string>
     <key>CFBundleName</key>
-    <string>eden</string>
+    <string>Eden NX2</string>
+    <key>CFBundleDisplayName</key>
+    <string>Eden NX2</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

@@ -3,13 +3,13 @@
     <name>AboutDialog</name>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="14"/>
-        <source>About Eden</source>
-        <translation>Acerca de Eden</translation>
+        <source>About Eden NX2</source>
+        <translation>Acerca de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="72"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden NX2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden NX2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="85"/>
@@ -25,7 +25,7 @@ hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Noto Sans'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden is an experimental open-source emulator for the Nintendo Switch licensed under GPLv3.0+ which is based on the yuzu emulator which ended development back in March 2024. &lt;br /&gt;&lt;br /&gt;This software should not be used to play games you have not legally obtained.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden NX2 is an experimental open-source emulator for the Nintendo Switch licensed under GPLv3.0+ which is based on the yuzu emulator which ended development back in March 2024. &lt;br /&gt;&lt;br /&gt;This software should not be used to play games you have not legally obtained.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -33,7 +33,7 @@ hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden es un emulador experimental de código abierto de Nintendo Switch licenciado bajo GPLv3.0+ que está basado en el emulador yuzu el cual finalizó su desarrollo en marzo de 2024. &lt;br /&gt;&lt;br /&gt;Este programa no debería ser usado para jugar a juegos que no fueron obtenidos legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden NX2 es un emulador experimental de código abierto de Nintendo Switch licenciado bajo GPLv3.0+ que está basado en el emulador yuzu el cual finalizó su desarrollo en marzo de 2024. &lt;br /&gt;&lt;br /&gt;Este programa no debería ser usado para jugar a juegos que no fueron obtenidos legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="131"/>
@@ -42,18 +42,18 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="147"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; is a trademark of Nintendo. Eden is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; es una marca registrada de Nintendo. Eden no está afiliado de ninguna forma con Nintendo.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; is a trademark of Nintendo. Eden NX2 is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; es una marca registrada de Nintendo. Eden NX2 no está afiliado de ninguna forma con Nintendo.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="14"/>
-        <source>About Eden</source>
-        <translation>Acerca de Eden</translation>
+        <source>About Eden NX2</source>
+        <translation>Acerca de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="72"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden NX2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden NX2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="98"/>
@@ -64,7 +64,7 @@ hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden is an experimental open-source emulator for the Nintendo Switch 2, based on Eglantine and Eden. &lt;br /&gt;&lt;br /&gt;This software should not be used to play games you have not legally obtained.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden NX2 is an experimental open-source emulator for the Nintendo Switch 2, based on Eglantine and Eden NX2. &lt;br /&gt;&lt;br /&gt;This software should not be used to play games you have not legally obtained.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -72,7 +72,7 @@ hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Noto Sans&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden es un emulador experimental de código abierto para Nintendo Switch 2, basado en Eglantine y Eden. &lt;br /&gt;&lt;br /&gt;Este software no debe usarse para jugar juegos que no haya obtenido legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden NX2 es un emulador experimental de código abierto para Nintendo Switch 2, basado en Eglantine y Eden NX2. &lt;br /&gt;&lt;br /&gt;Este software no debe usarse para jugar juegos que no haya obtenido legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="131"/>
@@ -81,8 +81,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </message>
     <message>
         <location filename="../../src/yuzu/aboutdialog.ui" line="147"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; is a trademark of Nintendo. Eden is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; es una marca registrada de Nintendo. Eden no está afiliado a Nintendo de ninguna manera.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; is a trademark of Nintendo. Eden NX2 is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; es una marca registrada de Nintendo. Eden NX2 no está afiliado a Nintendo de ninguna manera.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -2206,10 +2206,10 @@ Enabling it bypasses such prompts and directly exits the emulation.</source>
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="155"/>
         <source>Runs a Switch 2 game&apos;s own DLSS (its upscaling network, translated for this GPU) instead of AMD FSR 3.1 in its place.
-AMD FSR 3.1 still draws while the network is checked, when it can&apos;t run on this GPU, with resolution scaling, and for the rest of the session if its output fails Eden&apos;s checks.
+AMD FSR 3.1 still draws while the network is checked, when it can&apos;t run on this GPU, with resolution scaling, and for the rest of the session if its output fails Eden NX2&apos;s checks.
 Takes effect when a game starts.</source>
         <translation>Ejecuta el DLSS propio de un juego de Switch 2 (su red de reescalado, traducida para esta GPU) en lugar de AMD FSR 3.1.
-AMD FSR 3.1 sigue dibujando mientras se verifica la red, cuando no puede ejecutarse en esta GPU, con escalado de resolución y durante el resto de la sesión si su salida no pasa las comprobaciones de Eden.
+AMD FSR 3.1 sigue dibujando mientras se verifica la red, cuando no puede ejecutarse en esta GPU, con escalado de resolución y durante el resto de la sesión si su salida no pasa las comprobaciones de Eden NX2.
 Se aplica al iniciar un juego.</translation>
     </message>
     <message>
@@ -2246,12 +2246,12 @@ También ajusta la nitidez de los filtros adaptables de ventana AMD FSR 1 y SGSR
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="170"/>
         <source>Uses NVIDIA DLSS on GeForce RTX cards in place of a Switch 2 game&apos;s own DLSS, instead of AMD FSR 3.1.
-Needs NVIDIA&apos;s Streamline loader, and NVIDIA DLSS unless the NVIDIA app has downloaded it; Eden does not ship NVIDIA&apos;s files. Use the download button below.
+Needs NVIDIA&apos;s Streamline loader, and NVIDIA DLSS unless the NVIDIA app has downloaded it; Eden NX2 does not ship NVIDIA&apos;s files. Use the download button below.
 Fire Emblem: Fortune&apos;s Weave also needs EDEN_NX2_DLSS_REPLACEMENT=dlss. Without that override, its spatial workaround remains active.
 In The Legend of Zelda: Ocarina of Time it replaces the game&apos;s upscaler at 1x resolution scale.
 Takes effect when a game starts.</source>
         <translation>Usa NVIDIA DLSS en tarjetas GeForce RTX en lugar del DLSS propio de un juego de Switch 2, en vez de AMD FSR 3.1.
-Necesita el cargador Streamline de NVIDIA, y también NVIDIA DLSS salvo que la aplicación de NVIDIA ya lo haya descargado; Eden no incluye los archivos de NVIDIA. Use el botón de descarga de abajo.
+Necesita el cargador Streamline de NVIDIA, y también NVIDIA DLSS salvo que la aplicación de NVIDIA ya lo haya descargado; Eden NX2 no incluye los archivos de NVIDIA. Use el botón de descarga de abajo.
 Fire Emblem: Fortune&apos;s Weave también necesita EDEN_NX2_DLSS_REPLACEMENT=dlss. Sin esa variable, su solución alternativa espacial sigue activa.
 En The Legend of Zelda: Ocarina of Time reemplaza el reescalador del juego con escala de resolución 1x.
 Se aplica al iniciar un juego.</translation>
@@ -3116,13 +3116,13 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_debug.ui" line="787"/>
-        <source>**This will be reset automatically when Eden closes.</source>
-        <translation>**Esto se reiniciara automáticamente cuando Eden se cierre.</translation>
+        <source>**This will be reset automatically when Eden NX2 closes.</source>
+        <translation>**Esto se reiniciara automáticamente cuando Eden NX2 se cierre.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_debug.ui" line="787"/>
-        <source>**This will be reset automatically when Eden closes.</source>
-        <translation>**Esto se restablecerá automáticamente cuando Eden se cierre.</translation>
+        <source>**This will be reset automatically when Eden NX2 closes.</source>
+        <translation>**Esto se restablecerá automáticamente cuando Eden NX2 se cierre.</translation>
     </message>
 </context>
 <context>
@@ -3166,8 +3166,8 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
     <name>ConfigureDialog</name>
     <message>
         <location filename="../../src/yuzu/configuration/configure.ui" line="20"/>
-        <source>Eden Configuration</source>
-        <translation>Configuración de Eden</translation>
+        <source>Eden NX2 Configuration</source>
+        <translation>Configuración de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure.ui" line="67"/>
@@ -3262,8 +3262,8 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure.ui" line="20"/>
-        <source>Eden Configuration</source>
-        <translation>Configuración de Eden</translation>
+        <source>Eden NX2 Configuration</source>
+        <translation>Configuración de Eden NX2</translation>
     </message>
 </context>
 <context>
@@ -3535,8 +3535,8 @@ Would you like to delete the old save data?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_general.cpp" line="101"/>
-        <source>Eden</source>
-        <translation>Eden</translation>
+        <source>Eden NX2</source>
+        <translation>Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_general.cpp" line="102"/>
@@ -3560,8 +3560,8 @@ Would you like to delete the old save data?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_general.cpp" line="101"/>
-        <source>Eden</source>
-        <translation>Eden</translation>
+        <source>Eden NX2</source>
+        <translation>Eden NX2</translation>
     </message>
 </context>
 <context>
@@ -4112,8 +4112,8 @@ Would you like to delete the old save data?</source>
         <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2659"/>
         <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2701"/>
         <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2717"/>
-        <source>Requires restarting Eden</source>
-        <translation>Require reiniciar Eden</translation>
+        <source>Requires restarting Eden NX2</source>
+        <translation>Require reiniciar Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2668"/>
@@ -4167,8 +4167,8 @@ Would you like to delete the old save data?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2659"/>
-        <source>Requires restarting Eden</source>
-        <translation>Requiere reiniciar Eden</translation>
+        <source>Requires restarting Eden NX2</source>
+        <translation>Requiere reiniciar Eden NX2</translation>
     </message>
 </context>
 <context>
@@ -4835,8 +4835,8 @@ Para invertir los ejes, mueve primero el joystick de manera vertical, y luego ho
         <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="180"/>
         <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="186"/>
         <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="280"/>
-        <source>Eden</source>
-        <translation>Eden</translation>
+        <source>Eden NX2</source>
+        <translation>Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="166"/>
@@ -4900,8 +4900,8 @@ Para invertir los ejes, mueve primero el joystick de manera vertical, y luego ho
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="166"/>
-        <source>Eden</source>
-        <translation>Eden</translation>
+        <source>Eden NX2</source>
+        <translation>Eden NX2</translation>
     </message>
 </context>
 <context>
@@ -5933,8 +5933,8 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="26"/>
-        <source>Warning: The settings in this page affect the inner workings of Eden&apos;s emulated touchscreen. Changing them may result in undesirable behavior, such as the touchscreen partially or not working. You should only use this page if you know what you are doing.</source>
-        <translation>Advertencia: Los ajustes en esta página afectan al funcionamiento interno de la pantalla táctil emulada de Eden. Cambiando estos ajustes pueden resultar en comportamientos indeseados, por ejemplo que la pantalla táctil no funcione parcial o totalmente. Solo debería usar esta página si sabe lo que está haciendo.</translation>
+        <source>Warning: The settings in this page affect the inner workings of Eden NX2&apos;s emulated touchscreen. Changing them may result in undesirable behavior, such as the touchscreen partially or not working. You should only use this page if you know what you are doing.</source>
+        <translation>Advertencia: Los ajustes en esta página afectan al funcionamiento interno de la pantalla táctil emulada de Eden NX2. Cambiando estos ajustes pueden resultar en comportamientos indeseados, por ejemplo que la pantalla táctil no funcione parcial o totalmente. Solo debería usar esta página si sabe lo que está haciendo.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="52"/>
@@ -5963,8 +5963,8 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="26"/>
-        <source>Warning: The settings in this page affect the inner workings of Eden&apos;s emulated touchscreen. Changing them may result in undesirable behavior, such as the touchscreen partially or not working. You should only use this page if you know what you are doing.</source>
-        <translation>Advertencia: Los ajustes de esta página afectan al funcionamiento interno de la pantalla táctil emulada de Eden. Cambiarlos puede provocar comportamientos indeseados, por ejemplo que la pantalla táctil funcione solo en parte o no funcione. Solo debería usar esta página si sabe lo que está haciendo.</translation>
+        <source>Warning: The settings in this page affect the inner workings of Eden NX2&apos;s emulated touchscreen. Changing them may result in undesirable behavior, such as the touchscreen partially or not working. You should only use this page if you know what you are doing.</source>
+        <translation>Advertencia: Los ajustes de esta página afectan al funcionamiento interno de la pantalla táctil emulada de Eden NX2. Cambiarlos puede provocar comportamientos indeseados, por ejemplo que la pantalla táctil funcione solo en parte o no funcione. Solo debería usar esta página si sabe lo que está haciendo.</translation>
     </message>
 </context>
 <context>
@@ -6229,8 +6229,8 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_web.ui" line="25"/>
-        <source>Eden Web Service</source>
-        <translation>Servicio Web de Eden</translation>
+        <source>Eden NX2 Web Service</source>
+        <translation>Servicio Web de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_web.ui" line="33"/>
@@ -6283,8 +6283,8 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/configure_web.ui" line="25"/>
-        <source>Eden Web Service</source>
-        <translation>Servicio web de Eden</translation>
+        <source>Eden NX2 Web Service</source>
+        <translation>Servicio web de Eden NX2</translation>
     </message>
 </context>
 <context>
@@ -6380,18 +6380,18 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     <name>DepsDialog</name>
     <message>
         <location filename="../../src/yuzu/deps_dialog.ui" line="14"/>
-        <source>Eden Dependencies</source>
-        <translation>Dependencias de Eden</translation>
+        <source>Eden NX2 Dependencies</source>
+        <translation>Dependencias de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/deps_dialog.ui" line="72"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden Dependencies&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Dependencias de Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden NX2 Dependencies&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Dependencias de Eden NX2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/deps_dialog.ui" line="85"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The projects that make Eden possible&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Los proyectos que hicieron Eden posible &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The projects that make Eden NX2 possible&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Los proyectos que hicieron Eden NX2 posible &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/deps_dialog.cpp" line="22"/>
@@ -6405,18 +6405,18 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/deps_dialog.ui" line="14"/>
-        <source>Eden Dependencies</source>
-        <translation>Dependencias de Eden</translation>
+        <source>Eden NX2 Dependencies</source>
+        <translation>Dependencias de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/deps_dialog.ui" line="72"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden Dependencies&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Dependencias de Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden NX2 Dependencies&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Dependencias de Eden NX2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/deps_dialog.ui" line="85"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The projects that make Eden possible&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Los proyectos que hacen posible Eden&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The projects that make Eden NX2 possible&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Los proyectos que hacen posible Eden NX2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -6524,8 +6524,8 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/multiplayer/message.cpp" line="32"/>
-        <source>Creating a room failed. Please retry. Restarting Eden might be necessary.</source>
-        <translation>Error en crear una sala. Por favor reintentelo. Reiniciando Eden podría ser necesario.</translation>
+        <source>Creating a room failed. Please retry. Restarting Eden NX2 might be necessary.</source>
+        <translation>Error en crear una sala. Por favor reintentelo. Reiniciando Eden NX2 podría ser necesario.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/multiplayer/message.cpp" line="34"/>
@@ -6534,8 +6534,8 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
     </message>
     <message>
         <location filename="../../src/yuzu/multiplayer/message.cpp" line="37"/>
-        <source>Version mismatch! Please update to the latest version of Eden. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation>Incompatibilidad de versiones! Por favor intenta actualizar al version mas nuevo de Eden. Si la problema persiste, intenta contactar el anfitrión de la sala y pregunta si pueden actualizar el servidor.</translation>
+        <source>Version mismatch! Please update to the latest version of Eden NX2. If the problem persists, contact the room host and ask them to update the server.</source>
+        <translation>Incompatibilidad de versiones! Por favor intenta actualizar al version mas nuevo de Eden NX2. Si la problema persiste, intenta contactar el anfitrión de la sala y pregunta si pueden actualizar el servidor.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/multiplayer/message.cpp" line="39"/>
@@ -6602,8 +6602,8 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
     </message>
     <message>
         <location filename="../../src/yuzu/bootmanager.cpp" line="863"/>
-        <source>Eden has not been compiled with OpenGL support.</source>
-        <translation>Eden no ha sido compilado con soporte para OpenGL.</translation>
+        <source>Eden NX2 has not been compiled with OpenGL support.</source>
+        <translation>Eden NX2 no ha sido compilado con soporte para OpenGL.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/bootmanager.cpp" line="887"/>
@@ -6639,8 +6639,8 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
     </message>
     <message>
         <location filename="../../src/yuzu/bootmanager.cpp" line="866"/>
-        <source>Eden has not been compiled with OpenGL support.</source>
-        <translation>Eden no se compiló con soporte para OpenGL.</translation>
+        <source>Eden NX2 has not been compiled with OpenGL support.</source>
+        <translation>Eden NX2 no se compiló con soporte para OpenGL.</translation>
     </message>
 </context>
 <context>
@@ -7046,9 +7046,9 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
     </message>
     <message>
         <location filename="../../src/yuzu/multiplayer/host_room.cpp" line="187"/>
-        <source>Failed to announce the room to the public lobby. In order to host a room publicly, you must have a valid Eden account configured in Emulation -&gt; Configure -&gt; Web. If you do not want to publish a room in the public lobby, then select Unlisted instead.
+        <source>Failed to announce the room to the public lobby. In order to host a room publicly, you must have a valid Eden NX2 account configured in Emulation -&gt; Configure -&gt; Web. If you do not want to publish a room in the public lobby, then select Unlisted instead.
 Debug Message: </source>
-        <translation>Se fallo anunciar la sala al vestíbulo público. En orden para Anfitrar el sala publicamente, se require que tienes una cuenta de Eden valida en Emulacion -&gt; Configura -&gt; Web. Si no quieres publicar una sala en el vestibulo publico, seleccione no listada en ves.
+        <translation>Se fallo anunciar la sala al vestíbulo público. En orden para Anfitrar el sala publicamente, se require que tienes una cuenta de Eden NX2 valida en Emulacion -&gt; Configura -&gt; Web. Si no quieres publicar una sala en el vestibulo publico, seleccione no listada en ves.
 Mensaje de depuración:</translation>
     </message>
 </context>
@@ -7456,8 +7456,8 @@ Mensaje de depuración:</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="62"/>
-        <source>Open &amp;Eden Folders</source>
-        <translation>Abrir carpetas de &amp;Eden</translation>
+        <source>Open &amp;Eden NX2 Folders</source>
+        <translation>Abrir carpetas de &amp;Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="85"/>
@@ -7597,8 +7597,8 @@ Mensaje de depuración:</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="295"/>
-        <source>&amp;About Eden</source>
-        <translation>&amp;Acerca de Eden</translation>
+        <source>&amp;About Eden NX2</source>
+        <translation>&amp;Acerca de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="303"/>
@@ -7809,8 +7809,8 @@ Mensaje de depuración:</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="558"/>
-        <source>&amp;Eden Dependencies</source>
-        <translation>&amp;Dependencias de Eden</translation>
+        <source>&amp;Eden NX2 Dependencies</source>
+        <translation>&amp;Dependencias de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="563"/>
@@ -7975,8 +7975,8 @@ Mensaje de depuración:</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="1822"/>
-        <source>You are using the deconstructed ROM directory format for this game, which is an outdated format that has been superseded by others such as NCA, NAX, XCI, or NSP. Deconstructed ROM directories lack icons, metadata, and update support.&lt;br&gt;For an explanation of the various Switch formats Eden supports, out our user handbook. This message will not be shown again.</source>
-        <translation>Estás usando el formato de directorio ROM deconstruido para este juego, el cual es un formato obsoleto que ha sido reemplazado por otros como NCA, NAX, XCI o NSP. Los directorios ROM deconstruidos carecen de iconos, metadatos y compatibilidad con actualizaciones.&lt;br&gt;Para obtener una explicación de los distintos formatos de Switch compatibles con Eden, consulta nuestro manual de usuario. Este mensaje no volverá a aparecer de nuevo.</translation>
+        <source>You are using the deconstructed ROM directory format for this game, which is an outdated format that has been superseded by others such as NCA, NAX, XCI, or NSP. Deconstructed ROM directories lack icons, metadata, and update support.&lt;br&gt;For an explanation of the various Switch formats Eden NX2 supports, out our user handbook. This message will not be shown again.</source>
+        <translation>Estás usando el formato de directorio ROM deconstruido para este juego, el cual es un formato obsoleto que ha sido reemplazado por otros como NCA, NAX, XCI o NSP. Los directorios ROM deconstruidos carecen de iconos, metadatos y compatibilidad con actualizaciones.&lt;br&gt;Para obtener una explicación de los distintos formatos de Switch compatibles con Eden NX2, consulta nuestro manual de usuario. Este mensaje no volverá a aparecer de nuevo.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="1833"/>
@@ -8634,8 +8634,8 @@ Se recomienda usar X11 en su lugar.
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4400"/>
-        <source>Restart Eden to apply the X11 backend.</source>
-        <translation>Reinicie Eden para aplicar el motor X11.</translation>
+        <source>Restart Eden NX2 to apply the X11 backend.</source>
+        <translation>Reinicie Eden NX2 para aplicar el motor X11.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4438"/>
@@ -8664,15 +8664,15 @@ Se recomienda usar X11 en su lugar.
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4519"/>
-        <source>Are you sure you want to close Eden?</source>
-        <translation>¿Está seguro de que quiere cerrar Eden?</translation>
+        <source>Are you sure you want to close Eden NX2?</source>
+        <translation>¿Está seguro de que quiere cerrar Eden NX2?</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4520"/>
         <location filename="../../src/yuzu/main_window.cpp" line="4608"/>
         <location filename="../../src/yuzu/main_window.cpp" line="4620"/>
-        <source>Eden</source>
-        <translation>Eden</translation>
+        <source>Eden NX2</source>
+        <translation>Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4609"/>
@@ -8681,10 +8681,10 @@ Se recomienda usar X11 en su lugar.
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4617"/>
-        <source>The currently running application has requested Eden to not exit.
+        <source>The currently running application has requested Eden NX2 to not exit.
 
 Would you like to bypass this and exit anyway?</source>
-        <translation>La aplicación que se está ejecutando actualmente ha solicitado que Eden no se detenga.
+        <translation>La aplicación que se está ejecutando actualmente ha solicitado que Eden NX2 no se detenga.
 
 ¿Desea omitir esto y salir de todos modos?</translation>
     </message>
@@ -8820,23 +8820,23 @@ Would you like to bypass this and exit anyway?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="14"/>
-        <source>Eden</source>
-        <translation>Eden</translation>
+        <source>Eden NX2</source>
+        <translation>Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="62"/>
-        <source>Open &amp;Eden Folders</source>
-        <translation>Abrir carpetas de &amp;Eden</translation>
+        <source>Open &amp;Eden NX2 Folders</source>
+        <translation>Abrir carpetas de &amp;Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="295"/>
-        <source>&amp;About Eden</source>
-        <translation>&amp;Acerca de Eden</translation>
+        <source>&amp;About Eden NX2</source>
+        <translation>&amp;Acerca de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main.ui" line="558"/>
-        <source>&amp;Eden Dependencies</source>
-        <translation>&amp;Dependencias de Eden</translation>
+        <source>&amp;Eden NX2 Dependencies</source>
+        <translation>&amp;Dependencias de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="1690"/>
@@ -8870,8 +8870,8 @@ Would you like to bypass this and exit anyway?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="1948"/>
-        <source>Eden could not allocate the game&apos;s memory. Close other applications and check that your system has enough available memory and paging-file space, then try again.</source>
-        <translation>Eden no pudo reservar la memoria del juego. Cierre otras aplicaciones y compruebe que su sistema tenga suficiente memoria disponible y espacio en el archivo de paginación; luego inténtelo de nuevo.</translation>
+        <source>Eden NX2 could not allocate the game&apos;s memory. Close other applications and check that your system has enough available memory and paging-file space, then try again.</source>
+        <translation>Eden NX2 no pudo reservar la memoria del juego. Cierre otras aplicaciones y compruebe que su sistema tenga suficiente memoria disponible y espacio en el archivo de paginación; luego inténtelo de nuevo.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="2014"/>
@@ -8904,12 +8904,12 @@ Would you like to bypass this and exit anyway?</source>
 
 Vulkan, 1x resolution, GPU Fast, asynchronous shaders, BC3, conservative VRAM, reactive flushing off, FIFO Relaxed VSync, handheld mode, ScaleForce, and FXAA.
 
-They apply to Mario Kart World until Eden is closed. Your saved settings are not changed.</source>
+They apply to Mario Kart World until Eden NX2 is closed. Your saved settings are not changed.</source>
         <translation>¿Desea usar la configuración recomendada para Mario Kart World?
 
 Vulkan, resolución 1x, GPU Rápido, sombreadores asíncronos, BC3, VRAM conservadora, vaciado reactivo desactivado, VSync FIFO Relaxed, modo portátil, ScaleForce y FXAA.
 
-Se aplica a Mario Kart World hasta que cierre Eden. Su configuración guardada no cambia.</translation>
+Se aplica a Mario Kart World hasta que cierre Eden NX2. Su configuración guardada no cambia.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="2130"/>
@@ -9100,8 +9100,8 @@ Puede cambiar esto en Configurar, Gráficos, Avanzado.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4878"/>
-        <source>Could not check for updates: GitHub rate limit reached. Eden will try again at the next start.</source>
-        <translation>No se pudo buscar actualizaciones: se alcanzó el límite de consultas de GitHub. Eden lo intentará de nuevo en el próximo inicio.</translation>
+        <source>Could not check for updates: GitHub rate limit reached. Eden NX2 will try again at the next start.</source>
+        <translation>No se pudo buscar actualizaciones: se alcanzó el límite de consultas de GitHub. Eden NX2 lo intentará de nuevo en el próximo inicio.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="4885"/>
@@ -9195,20 +9195,20 @@ Puede cambiar esto en Configurar, Gráficos, Avanzado.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="5362"/>
-        <source>Restart Eden to apply the X11 backend.</source>
-        <translation>Reinicie Eden para aplicar el backend X11.</translation>
+        <source>Restart Eden NX2 to apply the X11 backend.</source>
+        <translation>Reinicie Eden NX2 para aplicar el backend X11.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="5481"/>
-        <source>Are you sure you want to close Eden?</source>
-        <translation>¿Seguro que desea cerrar Eden?</translation>
+        <source>Are you sure you want to close Eden NX2?</source>
+        <translation>¿Seguro que desea cerrar Eden NX2?</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/main_window.cpp" line="5597"/>
-        <source>The currently running application has requested Eden to not exit.
+        <source>The currently running application has requested Eden NX2 to not exit.
 
 Would you like to bypass this and exit anyway?</source>
-        <translation>La aplicación en ejecución ha solicitado a Eden que no se cierre.
+        <translation>La aplicación en ejecución ha solicitado a Eden NX2 que no se cierre.
 
 ¿Desea ignorarlo y salir de todas formas?</translation>
     </message>
@@ -10410,8 +10410,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../../src/qt_common/util/content.cpp" line="328"/>
-        <source>UNEXPECTED BAD THINGS MAY HAPPEN IF YOU DON&apos;T READ THIS!&lt;br&gt;Eden has detected the following save directories with no attached profile:&lt;br&gt;%1&lt;br&gt;&lt;br&gt;The following profiles are valid:&lt;br&gt;%2&lt;br&gt;&lt;br&gt;Click &quot;OK&quot; to open your save folder and fix up your profiles.&lt;br&gt;Hint: copy the contents of the largest or last-modified folder elsewhere, delete all orphaned profiles, and move your copied contents to the good profile.&lt;br&gt;&lt;br&gt;Still confused? See the &lt;a href=&apos;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/docs/user/Orphaned.md&apos;&gt;help page&lt;/a&gt;.&lt;br&gt;</source>
-        <translation>¡PODRÍAN SUCEDER COSAS MALAS E INESPERADAS SI NO LEE ESTO!&lt;br&gt;Eden ha detectado que los siguientes directorios de guardado no tienen perfil asociado:&lt;br&gt;%1&lt;br&gt;&lt;br&gt;Los siguientes perfiles son válidos:&lt;br&gt;%2&lt;br&gt;&lt;br&gt;Haga clic en &quot;Aceptar&quot; para abrir la carpeta de guardado y arreglar sus perfiles.&lt;br&gt;Consejo: copie el contenido de la carpeta más grande o la última modificada en otro lugar, elimine todos los perfiles huérfanos y mueva el contenido copiado al perfil correcto.&lt;br&gt;&lt;br&gt;¿Aún tiene dudas? Consulte la &lt;a href=&apos;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/docs/user/Orphaned.md&apos;&gt;página de ayuda&lt;/a&gt;.&lt;br&gt;</translation>
+        <source>UNEXPECTED BAD THINGS MAY HAPPEN IF YOU DON&apos;T READ THIS!&lt;br&gt;Eden NX2 has detected the following save directories with no attached profile:&lt;br&gt;%1&lt;br&gt;&lt;br&gt;The following profiles are valid:&lt;br&gt;%2&lt;br&gt;&lt;br&gt;Click &quot;OK&quot; to open your save folder and fix up your profiles.&lt;br&gt;Hint: copy the contents of the largest or last-modified folder elsewhere, delete all orphaned profiles, and move your copied contents to the good profile.&lt;br&gt;&lt;br&gt;Still confused? See the &lt;a href=&apos;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/docs/user/Orphaned.md&apos;&gt;help page&lt;/a&gt;.&lt;br&gt;</source>
+        <translation>¡PODRÍAN SUCEDER COSAS MALAS E INESPERADAS SI NO LEE ESTO!&lt;br&gt;Eden NX2 ha detectado que los siguientes directorios de guardado no tienen perfil asociado:&lt;br&gt;%1&lt;br&gt;&lt;br&gt;Los siguientes perfiles son válidos:&lt;br&gt;%2&lt;br&gt;&lt;br&gt;Haga clic en &quot;Aceptar&quot; para abrir la carpeta de guardado y arreglar sus perfiles.&lt;br&gt;Consejo: copie el contenido de la carpeta más grande o la última modificada en otro lugar, elimine todos los perfiles huérfanos y mueva el contenido copiado al perfil correcto.&lt;br&gt;&lt;br&gt;¿Aún tiene dudas? Consulte la &lt;a href=&apos;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/docs/user/Orphaned.md&apos;&gt;página de ayuda&lt;/a&gt;.&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/util/content.cpp" line="347"/>
@@ -10560,8 +10560,8 @@ Haz esto solo si estás 100% seguro de que deseas borrarlos.</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/util/content.cpp" line="501"/>
-        <source>Install decryption keys and restart Eden before attempting to install firmware.</source>
-        <translation>Instalar las claves de desencriptación y reiniciar Eden antes de intentar instalar el firmware.</translation>
+        <source>Install decryption keys and restart Eden NX2 before attempting to install firmware.</source>
+        <translation>Instalar las claves de desencriptación y reiniciar Eden NX2 antes de intentar instalar el firmware.</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/util/content.cpp" line="513"/>
@@ -11052,10 +11052,10 @@ Verifica que tus herramientas de extracción estén actualizadas y vuelve a extr
     </message>
     <message>
         <location filename="../../src/qt_common/qt_string_lookup.h" line="96"/>
-        <source>Firmware installation cancelled, firmware may be in a bad state or corrupted. Restart Eden or re-install firmware.</source>
+        <source>Firmware installation cancelled, firmware may be in a bad state or corrupted. Restart Eden NX2 or re-install firmware.</source>
         <translation>Instalación del firmware cancelada.
 El firmware podría estar dañado o en un estado incorrecto.
-Reinicia Eden o vuelve a instalar el firmware.</translation>
+Reinicia Eden NX2 o vuelve a instalar el firmware.</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/qt_string_lookup.h" line="101"/>
@@ -11069,15 +11069,15 @@ Reinicia Eden o vuelve a instalar el firmware.</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/qt_string_lookup.h" line="110"/>
-        <source>Eden has detected user data for the following emulators:</source>
-        <translation>Eden ha detectado datos de usuario de los siguientes emuladores:</translation>
+        <source>Eden NX2 has detected user data for the following emulators:</source>
+        <translation>Eden NX2 ha detectado datos de usuario de los siguientes emuladores:</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/qt_string_lookup.h" line="112"/>
-        <source>Would you like to migrate your data for use in Eden?
+        <source>Would you like to migrate your data for use in Eden NX2?
 Select the corresponding button to migrate data from that emulator.
 This may take a while.</source>
-        <translation>¿Deseas migrar tus datos para usarlos en Eden?
+        <translation>¿Deseas migrar tus datos para usarlos en Eden NX2?
 Selecciona el botón correspondiente para transferir los datos desde ese emulador.
 Este proceso puede tardar un poco.</translation>
     </message>
@@ -11104,9 +11104,9 @@ Se recomienda hacerlo en dispositivos con espacio de almacenamiento limitado.</t
     </message>
     <message>
         <location filename="../../src/qt_common/qt_string_lookup.h" line="124"/>
-        <source>Creates a filesystem link between the old directory and Eden directory.
+        <source>Creates a filesystem link between the old directory and Eden NX2 directory.
 This is recommended if you want to share data between emulators.</source>
-        <translation>Crea un enlace del sistema de archivos entre el directorio antiguo y el directorio de Eden.
+        <translation>Crea un enlace del sistema de archivos entre el directorio antiguo y el directorio de Eden NX2.
 Se recomienda si deseas compartir datos entre emuladores.</translation>
     </message>
     <message>
@@ -11565,17 +11565,17 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../../src/yuzu/ryujinx_dialog.ui" line="26"/>
-        <source>Linking save data to Ryujinx lets both Ryujinx and Eden reference the same save files for your games.
+        <source>Linking save data to Ryujinx lets both Ryujinx and Eden NX2 reference the same save files for your games.
 
-By selecting &quot;From Eden&quot;, previous save data stored in Ryujinx will be deleted, and vice versa for &quot;From Ryujinx&quot;.</source>
-        <translation>Enlazar los datos de guardado con Ryujinx permite a ambos Ryujinx y Eden referenciar los mismos archivos de guardado para sus juegos.
+By selecting &quot;From Eden NX2&quot;, previous save data stored in Ryujinx will be deleted, and vice versa for &quot;From Ryujinx&quot;.</source>
+        <translation>Enlazar los datos de guardado con Ryujinx permite a ambos Ryujinx y Eden NX2 referenciar los mismos archivos de guardado para sus juegos.
 
-Seleccionando &quot;Desde Eden&quot;, los datos de guardado anteriores alojados en Ryujinx se borrarán, y vice versa para &quot;Desde Ryujinx&quot;.</translation>
+Seleccionando &quot;Desde Eden NX2&quot;, los datos de guardado anteriores alojados en Ryujinx se borrarán, y vice versa para &quot;Desde Ryujinx&quot;.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/ryujinx_dialog.ui" line="40"/>
-        <source>From Eden</source>
-        <translation>Desde Eden</translation>
+        <source>From Eden NX2</source>
+        <translation>Desde Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/ryujinx_dialog.ui" line="47"/>
@@ -11599,17 +11599,17 @@ Seleccionando &quot;Desde Eden&quot;, los datos de guardado anteriores alojados 
     </message>
     <message>
         <location filename="../../src/yuzu/ryujinx_dialog.ui" line="26"/>
-        <source>Linking save data to Ryujinx lets both Ryujinx and Eden reference the same save files for your games.
+        <source>Linking save data to Ryujinx lets both Ryujinx and Eden NX2 reference the same save files for your games.
 
-By selecting &quot;From Eden&quot;, previous save data stored in Ryujinx will be deleted, and vice versa for &quot;From Ryujinx&quot;.</source>
-        <translation>Vincular los datos de guardado con Ryujinx permite que Ryujinx y Eden usen los mismos archivos de guardado de sus juegos.
+By selecting &quot;From Eden NX2&quot;, previous save data stored in Ryujinx will be deleted, and vice versa for &quot;From Ryujinx&quot;.</source>
+        <translation>Vincular los datos de guardado con Ryujinx permite que Ryujinx y Eden NX2 usen los mismos archivos de guardado de sus juegos.
 
-Si elige &quot;Desde Eden&quot;, se eliminarán los datos de guardado anteriores almacenados en Ryujinx, y al revés si elige &quot;Desde Ryujinx&quot;.</translation>
+Si elige &quot;Desde Eden NX2&quot;, se eliminarán los datos de guardado anteriores almacenados en Ryujinx, y al revés si elige &quot;Desde Ryujinx&quot;.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/ryujinx_dialog.ui" line="40"/>
-        <source>From Eden</source>
-        <translation>Desde Eden</translation>
+        <source>From Eden NX2</source>
+        <translation>Desde Eden NX2</translation>
     </message>
 </context>
 <context>
@@ -11788,8 +11788,8 @@ Código de error: %3</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/updater/update_dialog.cpp" line="229"/>
-        <source>Another Eden window is already updating this installation.</source>
-        <translation>Otra ventana de Eden ya está actualizando esta instalación.</translation>
+        <source>Another Eden NX2 window is already updating this installation.</source>
+        <translation>Otra ventana de Eden NX2 ya está actualizando esta instalación.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/updater/update_dialog.cpp" line="245"/>
@@ -11832,10 +11832,10 @@ Restart now?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/updater/update_dialog.cpp" line="308"/>
-        <source>Eden will close, install the update and start again. The previous version is kept, and your settings and data are not changed.
+        <source>Eden NX2 will close, install the update and start again. The previous version is kept, and your settings and data are not changed.
 
 Restart now?</source>
-        <translation>Eden se cerrará, instalará la actualización y se volverá a iniciar. La versión anterior se conserva, y su configuración y sus datos no cambian.
+        <translation>Eden NX2 se cerrará, instalará la actualización y se volverá a iniciar. La versión anterior se conserva, y su configuración y sus datos no cambian.
 
 ¿Desea reiniciar ahora?</translation>
     </message>
@@ -11954,8 +11954,8 @@ Restart now?</source>
     </message>
     <message>
         <location filename="../../src/yuzu/compatibility_report.cpp" line="190"/>
-        <source>Eden build</source>
-        <translation>Compilación de Eden</translation>
+        <source>Eden NX2 build</source>
+        <translation>Compilación de Eden NX2</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/compatibility_report.cpp" line="191"/>
@@ -12757,8 +12757,8 @@ o haga clic para buscarlo</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="188"/>
-        <source>This game keeps its shaders in a format Eden can&apos;t read, so none are prepared from the game files.</source>
-        <translation>Este juego guarda sus sombreadores en un formato que Eden no puede leer, así que no se prepara ninguno a partir de los archivos del juego.</translation>
+        <source>This game keeps its shaders in a format Eden NX2 can&apos;t read, so none are prepared from the game files.</source>
+        <translation>Este juego guarda sus sombreadores en un formato que Eden NX2 no puede leer, así que no se prepara ninguno a partir de los archivos del juego.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="190"/>
@@ -12895,8 +12895,8 @@ o haga clic para buscarlo</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="462"/>
-        <source>Eden will download %1 from NVIDIA&apos;s Streamline %2 release on GitHub into %3.&lt;br&gt;These files are NVIDIA&apos;s, under NVIDIA&apos;s licence terms below.</source>
-        <translation>Eden descargará %1 de la versión %2 de Streamline de NVIDIA en GitHub a %3.&lt;br&gt;Estos archivos son de NVIDIA y están sujetos a los términos de licencia de NVIDIA que aparecen abajo.</translation>
+        <source>Eden NX2 will download %1 from NVIDIA&apos;s Streamline %2 release on GitHub into %3.&lt;br&gt;These files are NVIDIA&apos;s, under NVIDIA&apos;s licence terms below.</source>
+        <translation>Eden NX2 descargará %1 de la versión %2 de Streamline de NVIDIA en GitHub a %3.&lt;br&gt;Estos archivos son de NVIDIA y están sujetos a los términos de licencia de NVIDIA que aparecen abajo.</translation>
     </message>
     <message>
         <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="472"/>

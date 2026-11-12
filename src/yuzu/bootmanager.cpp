@@ -863,7 +863,7 @@ bool GRenderWindow::InitializeOpenGL() {
     return true;
 #else
     QMessageBox::warning(this, tr("OpenGL not available!"),
-                         tr("Eden has not been compiled with OpenGL support."));
+                         tr("Eden NX2 has not been compiled with OpenGL support."));
     return false;
 #endif
 }

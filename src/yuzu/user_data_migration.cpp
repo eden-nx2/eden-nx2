@@ -101,7 +101,9 @@ void UserDataMigrator::ShowMigrationPrompt(QMainWindow* main_window) {
     }
     migration_prompt.addBox(source);
     const auto update_cache_default = [&] {
-        clear_shaders->setChecked(true);
+        // Official Eden's shader caches work in Eden NX2; other emulators' do not.
+        clear_shaders->setChecked(found.at(source->currentIndex()).e_user_dir !=
+                                  Common::FS::LegacyEdenDir);
         clear_shaders->setEnabled(!link_old->isChecked());
     };
     QObject::connect(source, &QComboBox::currentIndexChanged, &migration_prompt,
@@ -110,11 +112,11 @@ void UserDataMigrator::ShowMigrationPrompt(QMainWindow* main_window) {
                      [=](bool linked) { clear_shaders->setEnabled(!linked); });
     update_cache_default();
     migration_prompt.setText(
-        QObject::tr("Import an existing emulator profile into Eden?\n"
+        QObject::tr("Import an existing emulator profile into Eden NX2?\n"
                     "Copy keeps the original profile unchanged and is recommended.\n"
                     "Move retains a recovery backup and requires space for a full copy.\n"
                     "Link shares settings and saves with the source emulator.\n"
-                    "Existing Eden data is kept in backup directories, not merged or deleted.\n\n"
+                    "Existing Eden NX2 data is kept in backup directories, not merged or deleted.\n\n"
                     "Close the source emulator, then choose its profile below.\n"
                     "Close this window to decide on the next launch."));
     migration_prompt.addButton(QObject::tr("Import"));
@@ -146,7 +148,7 @@ void UserDataMigrator::ShowMigrationPrompt(QMainWindow* main_window) {
 
 void UserDataMigrator::ShowMigrationCancelledMessage(QMainWindow* main_window) {
     QMessageBox::information(main_window, QObject::tr("Migration"),
-                             QObject::tr("Eden will use its own profile. Your old emulator "
+                             QObject::tr("Eden NX2 will use its own profile. Your old emulator "
                                          "data has not been changed."),
                              QMessageBox::Ok);
 }

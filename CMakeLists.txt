@@ -770,14 +770,14 @@ endif()
 
 # TODO: Icon/install handling n such should be put into dist/CMakeLists.txt
 if(ENABLE_QT AND UNIX AND NOT APPLE)
-    install(FILES "dist/dev.eden_emu.eden.desktop"
+    install(FILES "dist/com.eden.eden_nx2.desktop"
         DESTINATION "share/applications")
-    install(FILES "dist/dev.eden_emu.eden.svg"
+    install(FILES "dist/com.eden.eden_nx2.svg"
         DESTINATION "share/icons/hicolor/scalable/apps")
 
-    install(FILES "dist/dev.eden_emu.eden.xml"
+    install(FILES "dist/com.eden.eden_nx2.xml"
         DESTINATION "share/mime/packages")
-    install(FILES "dist/dev.eden_emu.eden.metainfo.xml"
+    install(FILES "dist/com.eden.eden_nx2.metainfo.xml"
         DESTINATION "share/metainfo")
 endif()
 

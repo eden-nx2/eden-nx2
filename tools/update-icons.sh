@@ -18,7 +18,7 @@ EDEN_BG_COLOR="dist/icon_variations/${VARIATION}_bgcolor"
 
 # Desktop / Windows / Qt icons
 
-EDEN_DESKTOP_SVG="dist/dev.eden_emu.eden.svg"
+EDEN_DESKTOP_SVG="dist/com.eden.eden_nx2.svg"
 
 cp "$EDEN_BASE_SVG" "$EDEN_DESKTOP_SVG"
 

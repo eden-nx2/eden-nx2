@@ -7,10 +7,10 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Eden
+Name=Eden NX2
 GenericName=Switch Emulator
 Comment=Experimental Nintendo Switch and Switch 2 emulator
-Icon=dev.eden_emu.eden
+Icon=com.eden.eden_nx2
 TryExec=eden
 Exec=eden %f
 Categories=Game;Emulator;Qt;

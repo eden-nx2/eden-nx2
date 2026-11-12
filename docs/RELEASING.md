@@ -59,9 +59,8 @@ Create a keystore once with:
 keytool -genkeypair -v -keystore release.keystore -alias eden -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-The app uses Eden's application id (`dev.eden.eden_emulator`). A phone that has the official Eden
-app, which is signed with a different key, must uninstall it first; the two cannot be installed side
-by side.
+The app id is `com.eden.eden_nx2`, so it installs next to the official Eden app. Never change
+it: Android treats a new id as a different app, and users would lose their data.
 
 ## Android test builds
 

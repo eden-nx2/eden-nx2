@@ -14,9 +14,9 @@
   <br>
 </h1>
 
-<h4 align="center"><b>Eden</b> is a free and open-source Nintendo Switch emulator. This branch carries
-Eden NX2's experimental Switch 2 support together with the performance and compatibility work of
-the Lichii (desktop) and Hokkaido (Android) forks, under Eden's own name and artwork.
+<h4 align="center"><b>Eden NX2</b> is a free and open-source Nintendo Switch emulator based on Eden. It
+carries Eden NX2's experimental Switch 2 support together with the performance and compatibility
+work of the Lichii (desktop) and Hokkaido (Android) forks, with Eden's artwork.
 <br>
 Builds for Windows, Linux, macOS and Android.
 </h4>
@@ -30,9 +30,11 @@ work was continued in Eglantine and then in
 [Hokkaido](https://github.com/pavelgajdo/Hokkaido) forked Lichii for Android phones.
 Both forks renamed the emulator.
 
-This branch is Lichii's `nx2` tip with Hokkaido's own changes on top, and the Eden branding
-restored on every platform: the `eden` executables, Eden's icons, desktop entry and
-`dev.eden_emu.eden` IDs, the Android app `dev.eden.eden_emulator`, and Eden's data folders.
+This branch is Lichii's `nx2` tip with Hokkaido's own changes on top, released as **Eden NX2** on
+every platform with Eden's icons. It installs next to official Eden instead of replacing it: the
+Android app is `com.eden.eden_nx2`, the desktop entry and macOS bundle are `com.eden.eden_nx2` and
+`com.eden.eden-nx2`, and its data lives in its own `eden-nx2` folders. The executables keep
+Eden's file names (`eden`, `eden-cli`).
 [docs/MIRROR_CHANGES.md](./docs/MIRROR_CHANGES.md) lists what came from where and how each
 conflict was resolved.
 
@@ -40,11 +42,11 @@ This is an independent build, not an official Eden release. It is not affiliated
 
 ## Data folders
 
-Settings, saves and caches are in Eden's usual folders: `%APPDATA%\eden` on Windows, and the
-`eden` directories under `$XDG_DATA_HOME`, `$XDG_CONFIG_HOME` and `$XDG_CACHE_HOME` on Linux and
-macOS. An existing Eden profile is used as it is. When Eden has no configuration yet, the first
-GUI launch offers to import a Citron, Sudachi, Suyu or yuzu profile. A portable `user/` folder
-next to the executable still takes priority.
+Settings, saves and caches are in `%APPDATA%\eden-nx2` on Windows, and in the `eden-nx2`
+directories under `$XDG_DATA_HOME`, `$XDG_CONFIG_HOME` and `$XDG_CACHE_HOME` on Linux and macOS,
+apart from official Eden's `eden` folders. On the first GUI launch, Eden NX2 offers to import an
+existing Eden, Citron, Sudachi, Suyu or yuzu profile (Eden's shader caches are kept). A portable
+`user/` folder next to the executable still takes priority. On Android the app has its own storage.
 
 ## Building
 

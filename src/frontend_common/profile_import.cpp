@@ -39,13 +39,13 @@ bool NeedsLegacyProfileImport() {
     if (state != Migration::State::Unresolved) {
         return false;
     }
-    // As Eden always did: only offer an import when this emulator has no configuration yet, so an
-    // existing Eden profile is used as it is.
+    // Only offer an import when Eden NX2 has no configuration yet, so an existing profile is used
+    // as it is.
     if (fs::is_directory(GetEdenPath(EdenPath::ConfigDir)) &&
         !fs::is_empty(GetEdenPath(EdenPath::ConfigDir))) {
         return false;
     }
-    constexpr std::array sources{CitronDir, SudachiDir, SuyuDir, YuzuDir};
+    constexpr std::array sources{LegacyEdenDir, CitronDir, SudachiDir, SuyuDir, YuzuDir};
     for (const auto source : sources) {
         if (fs::is_directory(GetLegacyPath(source))) {
             return true;

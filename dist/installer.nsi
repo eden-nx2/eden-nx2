@@ -20,7 +20,7 @@
 Unicode true
 ManifestDPIAware true
 
-!define PRODUCT_NAME "Eden"
+!define PRODUCT_NAME "Eden NX2"
 !define PRODUCT_PUBLISHER "Utopia LLC"
 !define PRODUCT_WEB_SITE "https://git.eden-emu.dev"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}.exe"
