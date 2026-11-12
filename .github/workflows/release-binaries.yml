@@ -7,6 +7,14 @@ on:
         description: Publish the binaries as a GitHub release
         type: boolean
         default: true
+      notes:
+        description: Highlights for the release notes (Markdown; empty uses RELEASE_NOTES.md if present)
+        type: string
+        default: ""
+      prerelease:
+        description: Mark the release as a pre-release
+        type: boolean
+        default: true
   push:
     branches:
       - nx2-experimental
@@ -571,17 +579,124 @@ jobs:
           compression-level: 0
           retention-days: 7
 
-  # Publishes every binary as a GitHub pre-release once every platform built: on pushes to
+  # The Android APK, attached to the same build-N release as the desktop binaries. Signed with the
+  # ANDROID_KEYSTORE_B64 / ANDROID_KEYSTORE_PASS / ANDROID_KEY_ALIAS secrets when they are set,
+  # otherwise with the repo's public debug key.
+  android:
+    name: android-arm64 binary
+    needs: prepare-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPRESS: "true"
+      CCACHE_MAXSIZE: 3G
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk/2* /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install NDK and CMake
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "ndk;28.2.13676358" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+
+      - name: Install build tools
+        run: |
+          for attempt in 1 2 3; do
+            if sudo apt-get update && sudo apt-get install -y ccache glslang-tools ninja-build; then
+              exit 0
+            fi
+            echo "apt-get failed (attempt $attempt); retrying in 30 s"
+            sleep 30
+          done
+          exit 1
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: android-ccache-${{ github.sha }}
+          restore-keys: android-ccache-
+
+      - name: Restore CPM downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.cache/cpm
+          key: android-cpm-${{ hashFiles('cpmfile.json', 'externals/cpmfile.json', 'src/**/cpmfile.json') }}
+          restore-keys: android-cpm-
+
+      - name: Set up release signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        shell: bash
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::No ANDROID_KEYSTORE_B64 secret: the APK is signed with the public debug key"
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          {
+            echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore"
+            echo "ANDROID_KEYSTORE_PASS=$KEYSTORE_PASS"
+            echo "ANDROID_KEY_ALIAS=$KEY_ALIAS"
+          } >> "$GITHUB_ENV"
+
+      - name: Build APK
+        env:
+          CCACHE: "true"
+          CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/cpm
+          GIT_TAG_NAME: build-${{ github.run_number }}
+        shell: bash
+        run: |
+          chmod +x .ci/android/build.sh
+          .ci/android/build.sh -t standard -b Release
+          apk=$(ls artifacts/*.apk | head -n 1)
+          mv "$apk" "eden-${GITHUB_SHA}-android-arm64.apk"
+
+      - name: Upload Android binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: eden-android-arm64-${{ github.sha }}
+          path: eden-${{ github.sha }}-android-arm64.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  # Publishes every binary as a GitHub release once every platform built: on pushes to
   # nx2-experimental, and on manual runs unless "Publish the binaries as a GitHub release" is
   # unticked.
   release:
     name: Publish release
-    needs: build
+    needs: [build, android]
     if: github.event_name == 'push' || inputs.publish_release
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
+      # Full history and tags, for the changelog since the previous build-N release.
+      - name: Check out source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          path: src
+
       - name: Download binaries
         uses: actions/download-artifact@v7
         with:
@@ -598,7 +713,11 @@ jobs:
           strip_sha() { sed "s/-${GITHUB_SHA}//" <<< "$1"; }
           for artifact in artifacts/*/; do
             name=$(basename "$artifact")
-            if compgen -G "$artifact*.AppImage" > /dev/null; then
+            if compgen -G "$artifact*.apk" > /dev/null; then
+              for file in "$artifact"*.apk; do
+                cp "$file" "dist/$(strip_sha "$(basename "$file")")"
+              done
+            elif compgen -G "$artifact*.AppImage" > /dev/null; then
               # Linux: ship the AppImage and the tar.gz as they are.
               for file in "$artifact"*.AppImage "$artifact"*.tar.gz; do
                 cp "$file" "dist/$(strip_sha "$(basename "$file")")"
@@ -617,6 +736,8 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          INPUT_NOTES: ${{ inputs.notes }}
+          INPUT_PRERELEASE: ${{ github.event_name == 'push' || inputs.prerelease }}
         run: |
           set -euo pipefail
           tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/build-${GITHUB_RUN_NUMBER}" --jq '.object.sha')
@@ -655,8 +776,41 @@ jobs:
             pgo_note="The PGO builds are the same programs compiled with profile-guided optimization. Linux uses clang with Eglantine's profile; Windows uses clang-cl and ThinLTO with a profile trained in Eden on Ocarina of Time, so other games gain less. Prefer them when your CPU supports it."
           fi
 
+          # Highlights: the run's "notes" input, else RELEASE_NOTES.md in the repo.
+          highlights="${INPUT_NOTES}"
+          if [[ -z "$highlights" && -f src/RELEASE_NOTES.md ]]; then
+            highlights=$(cat src/RELEASE_NOTES.md)
+          fi
+
+          # Changelog: commits since the newest build-N tag before this one.
+          prev=$(git -C src describe --tags --abbrev=0 --match 'build-*' "${GITHUB_SHA}^" 2>/dev/null || true)
+          if [[ -n "$prev" ]]; then
+            count=$(git -C src rev-list --count "$prev..${GITHUB_SHA}")
+            changes=$(git -C src log --no-merges --format='- %s (%h)' "$prev..${GITHUB_SHA}" | head -n 150)
+            changelog="## Changes since ${prev}
+
+          ${changes}
+          $( (( count > 150 )) && echo "- …and more: see the full comparison" || true)
+
+          Full comparison: https://github.com/${GITHUB_REPOSITORY}/compare/${prev}...${tag}"
+          else
+            changelog="## Changes
+
+          First release of this repository: Eden NX2 with Lichii's and Hokkaido's optimizations under Eden's branding. See [docs/MIRROR_CHANGES.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/docs/MIRROR_CHANGES.md) for what came from where."
+          fi
+
           cat > notes.md <<EOF
-          Automatic build of \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}.
+          Build of \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}. Switch 2 support is experimental: expect rendering errors, stutters and crashes in some games. Games, keys and firmware are not included.
+
+          ${highlights:+## Highlights
+
+          ${highlights}
+          }
+          ${changelog}
+
+          ## Android
+
+          $(row "arm64 (Android 7.0+)" "$(link APK eden-android-arm64.apk)" "" "Install the APK (allow installs from unknown sources). Phones with Adreno, Mali, Xclipse or other Vulkan GPUs" | table)
 
           ## Linux
 
@@ -682,10 +836,14 @@ jobs:
           ${pgo_note}
           EOF
 
+          prerelease_flag=--prerelease
+          if [[ "${INPUT_PRERELEASE}" == "false" ]]; then
+            prerelease_flag=--latest
+          fi
           gh release create "${tag}" dist/* \
             --repo "${GITHUB_REPOSITORY}" \
             --verify-tag \
-            --prerelease \
+            ${prerelease_flag} \
             --title "Eden ${GITHUB_REF_NAME} build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})" \
             --notes-file notes.md
 
