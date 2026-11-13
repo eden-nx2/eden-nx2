@@ -663,10 +663,13 @@ jobs:
 
   # Publishes every binary as a GitHub release once every platform built, unless "Publish the
   # binaries as a GitHub release" is unticked.
+  # Runs even when a build leg failed or was cancelled (GitHub often has no macOS runner free and
+  # cancels that leg after queuing): it publishes when every Windows, Linux and Android file is
+  # there, with or without macOS.
   release:
     name: Publish release
     needs: [build, android]
-    if: inputs.publish_release
+    if: ${{ always() && inputs.publish_release && needs.android.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -707,11 +710,24 @@ jobs:
               for file in "$artifact"*.zip "$artifact"*.dmg; do
                 [[ -e "$file" ]] && cp "$file" "dist/$(strip_sha "$(basename "$file")")"
               done
-            else
+            elif [[ -n "$(ls -A "$artifact")" ]]; then
               (cd "$artifact" && zip -qr "${GITHUB_WORKSPACE}/dist/$(strip_sha "$name").zip" .)
             fi
           done
           ls -la dist
+
+          missing=()
+          for file in eden-android-arm64.apk eden-windows-x86_64.zip eden-windows-x86_64-pgo.zip \
+                      eden-linux-{x86_64,aarch64}{,-pgo}.{AppImage,tar.gz}; do
+            [[ -e "dist/$file" ]] || missing+=("$file")
+          done
+          if (( ${#missing[@]} )); then
+            echo "::error::Not publishing, these builds are missing: ${missing[*]}"
+            exit 1
+          fi
+          if [[ ! -e dist/eden-macos-arm64.zip ]]; then
+            echo "::warning::Publishing without macOS: no macOS build (GitHub may have had no macOS runner). Re-run the macOS job and upload its files to the release later."
+          fi
 
       - name: Create release
         shell: bash
@@ -780,8 +796,15 @@ jobs:
           First release of this repository: Eden NX2 with Lichii's and Hokkaido's optimizations under Eden's branding. See [docs/MIRROR_CHANGES.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/docs/MIRROR_CHANGES.md) for what came from where."
           fi
 
+          macos_note=""
+          if [[ ! -e dist/eden-macos-arm64.zip ]]; then
+            macos_note="
+
+          **macOS:** not in this build (GitHub had no macOS runner available); it will be added to this release when it builds."
+          fi
+
           cat > notes.md <<EOF
-          Build of \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}. Switch 2 support is experimental: expect rendering errors, stutters and crashes in some games. Games, keys and firmware are not included.
+          Build of \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}. Switch 2 support is experimental: expect rendering errors, stutters and crashes in some games. Games, keys and firmware are not included.${macos_note}
 
           ${highlights:+## Highlights
 
