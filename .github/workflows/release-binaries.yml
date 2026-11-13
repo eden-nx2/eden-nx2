@@ -779,8 +779,16 @@ jobs:
             highlights=$(cat src/RELEASE_NOTES.md)
           fi
 
-          # Changelog: commits since the newest build-N tag before this one.
-          prev=$(git -C src describe --tags --abbrev=0 --match 'build-*' "${GITHUB_SHA}^" 2>/dev/null || true)
+          # Changelog: commits since the newest earlier build-N tag that has a release (a run that
+          # failed after tagging leaves a tag without one).
+          prev=""
+          for candidate in $(git -C src tag --merged "${GITHUB_SHA}" --sort=-v:refname 'build-*'); do
+            [[ "$candidate" == "$tag" ]] && continue
+            if gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${candidate}" --silent 2>/dev/null; then
+              prev=$candidate
+              break
+            fi
+          done
           if [[ -n "$prev" ]]; then
             count=$(git -C src rev-list --count "$prev..${GITHUB_SHA}")
             changes=$(git -C src log --no-merges --format='- %s (%h)' "$prev..${GITHUB_SHA}" | head -n 150)
