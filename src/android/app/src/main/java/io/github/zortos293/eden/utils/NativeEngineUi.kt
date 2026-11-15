@@ -14,6 +14,17 @@ interface NativeEngineUi {
     /** What Banana Native's application class did in every process. */
     fun install(context: Context)
 
-    /** Starts the game in Banana Native, preparing it first when it needs that; [emulate] plays it in Hokkaido instead. */
-    fun launch(activity: FragmentActivity, gamePath: String, title: String, emulate: () -> Unit)
+    /**
+     * Starts the game in Banana Native, preparing it first when it needs that, with Hokkaido's GPU driver for it
+     * ([driverZip]: a driver zip, empty for the system's) and Hokkaido's save folder ([saveDir], shared by both
+     * engines); [emulate] plays it in Hokkaido instead.
+     */
+    fun launch(
+        activity: FragmentActivity,
+        gamePath: String,
+        title: String,
+        driverZip: String,
+        saveDir: String,
+        emulate: () -> Unit
+    )
 }

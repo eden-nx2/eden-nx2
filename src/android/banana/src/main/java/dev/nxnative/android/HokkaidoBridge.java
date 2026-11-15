@@ -194,6 +194,60 @@ public final class HokkaidoBridge {
         c.startService(new Intent(c, PackService.class).setAction(PackService.ACTION_PAUSE).putExtra(PackService.EXTRA_FROM, "hokkaido"));
     }
 
+    /**
+     * Before a ready game starts: Hokkaido's driver for it (a driver zip, installed into Banana Native's own
+     * gpu_drivers/ when it is new or changed; empty: the system's) and Hokkaido's save folder for it, which both
+     * engines then use. A save Banana Native kept in its own folder moves in once, when Hokkaido's is still empty
+     * (it stays where it was too). Reads and writes files: call it off the main thread.
+     */
+    public static void prepareStart(Context c, Plan plan, String driverZip, String saveDir) throws IOException {
+        String id = plan.game.titleId;
+        if (driverZip == null || driverZip.isEmpty()) {
+            GpuDriver.choice(c, id, GpuDriver.SYSTEM);
+        } else {
+            GpuDriver.choice(c, id, installedDriver(c, new File(driverZip)).dir.getName());
+        }
+        if (saveDir == null || saveDir.isEmpty()) return;
+        File shared = new File(saveDir);
+        if (!shared.isDirectory() && !shared.mkdirs()) throw new IOException("cannot create the save folder " + shared);
+        File own = AppStorage.save(c, id);
+        if (isEmpty(shared) && !own.getAbsoluteFile().equals(shared.getAbsoluteFile()) && !isEmpty(own)) copyTree(own, shared);
+        Prefs.folder(c, "save_" + id, shared.getPath());
+    }
+
+    /** The driver unpacked from a zip, unpacked again only when the zip changed since (by its size and time). */
+    private static GpuDriver.Info installedDriver(Context c, File zip) throws IOException {
+        if (!zip.isFile()) throw new IOException("The GPU driver " + zip + " is not there: pick another one in Hokkaido.");
+        String key = "hokkaido_driver_" + zip.getPath(), stamp = zip.length() + ":" + zip.lastModified();
+        String known = Prefs.of(c).getString(key, "");
+        if (known.startsWith(stamp + ":")) {
+            String name = known.substring(stamp.length() + 1);
+            for (GpuDriver.Info i : GpuDriver.installed(c)) if (i.dir.getName().equals(name)) return i;
+        }
+        GpuDriver.Info i = GpuDriver.install(c, zip);
+        Prefs.of(c).edit().putString(key, stamp + ":" + i.dir.getName()).commit();
+        return i;
+    }
+
+    private static boolean isEmpty(File dir) {
+        String[] l = dir.list();
+        return l == null || l.length == 0;
+    }
+
+    private static void copyTree(File from, File to) throws IOException {
+        File[] l = from.listFiles();
+        if (l == null) return;
+        if (!to.isDirectory() && !to.mkdirs()) throw new IOException("cannot create " + to);
+        for (File f : l) {
+            File t = new File(to, f.getName());
+            if (f.isDirectory()) {
+                copyTree(f, t);
+            } else {
+                java.nio.file.Files.copy(f.toPath(), t.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+    }
+
     /** Starts a ready game (Plan.READY) in Banana Native's game process, as FrontendLaunch.play does. */
     public static void play(Context c, Plan plan) {
         Game g = plan.game;

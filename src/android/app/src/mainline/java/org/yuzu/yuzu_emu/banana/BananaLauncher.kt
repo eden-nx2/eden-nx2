@@ -22,85 +22,92 @@ import io.github.zortos293.eden.utils.NativeEngineUi
 
 /**
  * Hokkaido's screens for the Banana Native engine: whether the game is ready, preparing it (Banana Native's
- * packer, in its own process) with Hokkaido's progress dialog, and starting it. Banana Native's own screens are
- * never shown.
+ * packer, in its own process) with Hokkaido's progress dialog, and starting it with Hokkaido's GPU driver and
+ * save folder. Banana Native's own screens are never shown.
  */
 class BananaLauncher : NativeEngineUi {
+    /** One start of one game: what it plays and with what. */
+    private class Start(
+        val activity: FragmentActivity,
+        val path: String,
+        val title: String,
+        val driverZip: String,
+        val saveDir: String,
+        val emulate: () -> Unit
+    )
+
     override fun install(context: Context) = HokkaidoBridge.install(context)
 
-    override fun launch(activity: FragmentActivity, gamePath: String, title: String, emulate: () -> Unit) =
-        check(activity, gamePath, title, false, emulate)
-
-    private fun check(
+    override fun launch(
         activity: FragmentActivity,
-        path: String,
+        gamePath: String,
         title: String,
-        tryAnyway: Boolean,
+        driverZip: String,
+        saveDir: String,
         emulate: () -> Unit
-    ) {
+    ) = check(Start(activity, gamePath, title, driverZip, saveDir, emulate), false)
+
+    private fun check(start: Start, tryAnyway: Boolean) {
+        val activity = start.activity
         val (box, _, _) = progressView(activity, true)
         val checking = MaterialAlertDialogBuilder(activity)
-            .setTitle(activity.getString(R.string.banana_checking, title))
+            .setTitle(activity.getString(R.string.banana_checking, start.title))
             .setView(box)
             .setCancelable(false)
             .show()
         activity.lifecycleScope.launch {
             val plan = withContext(Dispatchers.IO) {
-                runCatching { HokkaidoBridge.plan(activity, path, tryAnyway) }
+                runCatching {
+                    HokkaidoBridge.plan(activity, start.path, tryAnyway).also {
+                        if (it.kind == HokkaidoBridge.Plan.READY) {
+                            HokkaidoBridge.prepareStart(activity, it, start.driverZip, start.saveDir)
+                        }
+                    }
+                }
             }
             checking.dismiss()
-            plan.onSuccess { show(activity, it, path, emulate) }
-                .onFailure { problem(activity, title, it.message ?: it.toString(), emulate) }
+            plan.onSuccess { show(start, it) }
+                .onFailure { problem(start, start.title, it.message ?: it.toString()) }
         }
     }
 
-    private fun show(
-        activity: FragmentActivity,
-        plan: HokkaidoBridge.Plan,
-        path: String,
-        emulate: () -> Unit
-    ) {
+    private fun show(start: Start, plan: HokkaidoBridge.Plan) {
+        val activity = start.activity
         when (plan.kind) {
             HokkaidoBridge.Plan.READY -> HokkaidoBridge.play(activity, plan)
             HokkaidoBridge.Plan.PREPARE -> MaterialAlertDialogBuilder(activity)
                 .setTitle(activity.getString(R.string.banana_prepare_title, plan.title))
                 .setMessage(plan.message)
-                .setPositiveButton(R.string.banana_prepare) { _, _ -> start(activity, plan, path, emulate) }
-                .setNeutralButton(R.string.game_engine_play_here) { _, _ -> emulate() }
+                .setPositiveButton(R.string.banana_prepare) { _, _ -> prepare(start, plan) }
+                .setNeutralButton(R.string.game_engine_play_here) { _, _ -> start.emulate() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
             HokkaidoBridge.Plan.RESUME -> MaterialAlertDialogBuilder(activity)
                 .setTitle(activity.getString(R.string.banana_resume_title, plan.title))
                 .setMessage(plan.message)
-                .setPositiveButton(R.string.banana_resume) { _, _ -> start(activity, plan, path, emulate) }
-                .setNeutralButton(R.string.game_engine_play_here) { _, _ -> emulate() }
+                .setPositiveButton(R.string.banana_resume) { _, _ -> prepare(start, plan) }
+                .setNeutralButton(R.string.game_engine_play_here) { _, _ -> start.emulate() }
                 .setNegativeButton(android.R.string.cancel, null)
                 .show()
-            HokkaidoBridge.Plan.RUNNING -> progress(activity, path, plan.title, emulate)
+            HokkaidoBridge.Plan.RUNNING -> progress(start, plan.title)
             else -> {
                 val builder = MaterialAlertDialogBuilder(activity)
                     .setTitle(plan.title)
                     .setMessage(
                         if (plan.detail.isEmpty()) plan.message else plan.message + "\n\n" + plan.detail
                     )
-                    .setNeutralButton(R.string.game_engine_play_here) { _, _ -> emulate() }
+                    .setNeutralButton(R.string.game_engine_play_here) { _, _ -> start.emulate() }
                     .setNegativeButton(android.R.string.ok, null)
                 if (plan.canTryAnyway) {
-                    builder.setPositiveButton(R.string.banana_try_anyway) { _, _ ->
-                        check(activity, path, plan.title, true, emulate)
-                    }
+                    builder.setPositiveButton(R.string.banana_try_anyway) { _, _ -> check(start, true) }
                 }
                 builder.show()
             }
         }
     }
 
-    private fun start(
-        activity: FragmentActivity,
-        plan: HokkaidoBridge.Plan,
-        path: String,
-        emulate: () -> Unit
-    ) {
+    private fun prepare(start: Start, plan: HokkaidoBridge.Plan) {
+        val activity = start.activity
         // The progress notification needs the player's yes on Android 13+; the job runs either way.
         if (activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -112,16 +119,13 @@ class BananaLauncher : NativeEngineUi {
                 runCatching { HokkaidoBridge.prepare(activity, plan) }
             }
             started.onSuccess { running ->
-                if (running) {
-                    progress(activity, path, plan.title, emulate)
-                } else {
-                    check(activity, path, plan.title, false, emulate)
-                }
-            }.onFailure { problem(activity, plan.title, it.message ?: it.toString(), emulate) }
+                if (running) progress(start, plan.title) else check(start, false)
+            }.onFailure { problem(start, plan.title, it.message ?: it.toString()) }
         }
     }
 
-    private fun progress(activity: FragmentActivity, path: String, title: String, emulate: () -> Unit) {
+    private fun progress(start: Start, title: String) {
+        val activity = start.activity
         val (box, bar, text) = progressView(activity, false)
         var watch: HokkaidoBridge.Watch? = null
         var finished = false
@@ -141,20 +145,18 @@ class BananaLauncher : NativeEngineUi {
                 MaterialAlertDialogBuilder(activity)
                     .setTitle(activity.getString(R.string.banana_ready_title, title))
                     .setMessage(R.string.banana_ready_description)
-                    .setPositiveButton(R.string.banana_play) { _, _ ->
-                        check(activity, path, title, false, emulate)
-                    }
+                    .setPositiveButton(R.string.banana_play) { _, _ -> check(start, false) }
                     .setNegativeButton(R.string.banana_later, null)
                     .show()
             }
         }.also { it.start() }
     }
 
-    private fun problem(activity: FragmentActivity, title: String, message: String, emulate: () -> Unit) {
-        MaterialAlertDialogBuilder(activity)
+    private fun problem(start: Start, title: String, message: String) {
+        MaterialAlertDialogBuilder(start.activity)
             .setTitle(title)
             .setMessage(message)
-            .setNeutralButton(R.string.game_engine_play_here) { _, _ -> emulate() }
+            .setNeutralButton(R.string.game_engine_play_here) { _, _ -> start.emulate() }
             .setNegativeButton(android.R.string.ok, null)
             .show()
     }

@@ -12,6 +12,8 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import io.github.zortos293.eden.R
 import io.github.zortos293.eden.model.Game
+import io.github.zortos293.eden.features.settings.model.StringSetting
+import io.github.zortos293.eden.features.settings.utils.SettingsFile
 
 /**
  * Which engine runs a game: Hokkaido's emulator, or Banana Native (game code natively, NVN on Vulkan),
@@ -25,7 +27,8 @@ object GameEngine {
 
     /** Games Auto gives to Banana Native: it runs them better than the emulator. */
     private val autoNative = setOf(
-        "040074A01BF12000" // Donkey Kong Bananza
+        "040074A01BF12000", // Donkey Kong Bananza
+        "0400A3A01EE4C000" // Pokemon Pokopia
     )
 
     /** Banana Native's UI, in the mainline flavor only. */
@@ -122,7 +125,19 @@ object GameEngine {
     fun launchNative(activity: FragmentActivity, game: Game, emulate: () -> Unit): Boolean {
         val engine = ui ?: return false
         val path = filePath(game) ?: return false
-        engine.launch(activity, path, game.title, emulate)
+        engine.launch(activity, path, game.title, driverZip(game), game.saveDir, emulate)
         return true
+    }
+
+    /** The GPU driver Hokkaido starts the game with: its own pick, else the global one (a zip; empty: the system's). */
+    private fun driverZip(game: Game): String {
+        if (NativeConfig.isPerGameConfigLoaded()) {
+            return StringSetting.DRIVER_PATH.getString()
+        }
+        SettingsFile.loadCustomConfig(game)
+        val path = StringSetting.DRIVER_PATH.getString()
+        NativeConfig.unloadPerGameConfig()
+        NativeConfig.reloadGlobalConfig()
+        return path
     }
 }
