@@ -2194,7 +2194,7 @@ bool RasterizerVulkan::ClearVolumeSlices(const Framebuffer* framebuffer, u32 fir
 
 void RasterizerVulkan::Clear(u32 layer_count) {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Clear};
-    if (frame_draws_skipped) {
+    if (frame_clears_skipped) {
         return;
     }
     if (Tegra::Engines::g_nx2_trace_draws_after_upscale > 0) {
@@ -3971,8 +3971,21 @@ void RasterizerVulkan::TickFrame() {
         }
         return interval;
     }();
+    static const auto frameskip_parts = [] {
+        const char* value = std::getenv("EDEN_NX2_FRAMESKIP_PARTS");
+        const std::string_view parts = value != nullptr ? value : "draws,clears,present";
+        const std::array<bool, 3> skipped{parts.find("draws") != std::string_view::npos,
+                                          parts.find("clears") != std::string_view::npos,
+                                          parts.find("present") != std::string_view::npos};
+        LOG_WARNING(Render_Vulkan, "Frameskip parts: draws {} clears {} present {}", skipped[0],
+                    skipped[1], skipped[2]);
+        return skipped;
+    }();
     if (frameskip_interval > 1) {
-        frame_draws_skipped = render_trace_frame % frameskip_interval != 0;
+        const bool dropped = render_trace_frame % frameskip_interval != 0;
+        frame_draws_skipped = dropped && frameskip_parts[0];
+        frame_clears_skipped = dropped && frameskip_parts[1];
+        frame_present_skipped = dropped && frameskip_parts[2];
         if (render_trace_frame % 600 == 0) {
             LOG_INFO(Render_Vulkan, "Frameskip: {} draws dropped over the last 600 frames",
                      std::exchange(frameskip_dropped_draws, 0));

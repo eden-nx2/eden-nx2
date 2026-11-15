@@ -296,8 +296,8 @@ void RendererVulkan::Composite(std::span<const Tegra::FramebufferConfig> framebu
     if (!render_window.IsShown()) {
         return;
     }
-    if (rasterizer.FrameDrawsSkipped()) {
-        // Nothing was drawn this frame: the screen keeps the last drawn one.
+    if (rasterizer.FramePresentSkipped()) {
+        // The screen keeps the last frame shown.
         gpu.RendererFrameEndNotify();
         rasterizer.TickFrame();
         return;
