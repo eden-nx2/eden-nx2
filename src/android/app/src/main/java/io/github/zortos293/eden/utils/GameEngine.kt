@@ -14,6 +14,7 @@ import io.github.zortos293.eden.R
 import io.github.zortos293.eden.model.Game
 import io.github.zortos293.eden.features.settings.model.StringSetting
 import io.github.zortos293.eden.features.settings.utils.SettingsFile
+import io.github.zortos293.eden.features.settings.model.IntSetting
 
 /**
  * Which engine runs a game: Hokkaido's emulator, or Banana Native (game code natively, NVN on Vulkan),
@@ -125,19 +126,32 @@ object GameEngine {
     fun launchNative(activity: FragmentActivity, game: Game, emulate: () -> Unit): Boolean {
         val engine = ui ?: return false
         val path = filePath(game) ?: return false
-        engine.launch(activity, path, game.title, driverZip(game), game.saveDir, emulate)
+        val (driver, window) = gameSettings(game)
+        engine.launch(activity, path, game.title, driver, game.saveDir, window, emulate)
         return true
     }
 
-    /** The GPU driver Hokkaido starts the game with: its own pick, else the global one (a zip; empty: the system's). */
-    private fun driverZip(game: Game): String {
-        if (NativeConfig.isPerGameConfigLoaded()) {
-            return StringSetting.DRIVER_PATH.getString()
+    /**
+     * What Hokkaido would start the game with, its own settings else the global ones: the GPU driver (a zip;
+     * empty: the system's) and the render size its resolution scale gives, 1x being 1920x1080.
+     */
+    private fun gameSettings(game: Game): Pair<String, String> {
+        val loaded = NativeConfig.isPerGameConfigLoaded()
+        if (!loaded) {
+            SettingsFile.loadCustomConfig(game)
         }
-        SettingsFile.loadCustomConfig(game)
-        val path = StringSetting.DRIVER_PATH.getString()
-        NativeConfig.unloadPerGameConfig()
-        NativeConfig.reloadGlobalConfig()
-        return path
+        val driver = StringSetting.DRIVER_PATH.getString()
+        val window = windowOf(IntSetting.RENDERER_RESOLUTION.getInt())
+        if (!loaded) {
+            NativeConfig.unloadPerGameConfig()
+            NativeConfig.reloadGlobalConfig()
+        }
+        return driver to window
+    }
+
+    /** ResolutionSetup (Res1_4X … Res8X) as Banana Native's Game resolution; above 2x the game's own size. */
+    private fun windowOf(setup: Int): String {
+        val scale = listOf(0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0).getOrNull(setup) ?: return "original"
+        return "${(1920 * scale).toInt()}x${(1080 * scale).toInt()}"
     }
 }

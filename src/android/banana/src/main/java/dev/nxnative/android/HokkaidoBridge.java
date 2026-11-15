@@ -200,8 +200,10 @@ public final class HokkaidoBridge {
      * engines then use. A save Banana Native kept in its own folder moves in once, when Hokkaido's is still empty
      * (it stays where it was too). Reads and writes files: call it off the main thread.
      */
-    public static void prepareStart(Context c, Plan plan, String driverZip, String saveDir) throws IOException {
+    public static void prepareStart(Context c, Plan plan, String driverZip, String saveDir, String window) throws IOException {
         String id = plan.game.titleId;
+        // The render size Hokkaido's resolution scale gives (Game resolution: a "<width>x<height>" or "original").
+        if (window != null && !window.isEmpty()) Prefs.gameWindow(c, id, window);
         if (driverZip == null || driverZip.isEmpty()) {
             GpuDriver.choice(c, id, GpuDriver.SYSTEM);
         } else {
@@ -246,6 +248,42 @@ public final class HokkaidoBridge {
                 java.nio.file.Files.copy(f.toPath(), t.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         }
+    }
+
+    /**
+     * The game Banana Native's game process still holds ({title ID, name}), or null. Each game has a host of its own
+     * and the process holds one: a game left without Stop the game keeps it, and another game's start is refused
+     * there ("is running, stop it first").
+     */
+    public static String[] runningGame(Context c) {
+        if (gameProcess(c) == null) return null;
+        String title = null, name = null;
+        try {
+            for (String line : java.nio.file.Files.readAllLines(ExitWatch.record(c).toPath())) {
+                if (line.startsWith("title=")) title = line.substring(6);
+                else if (line.startsWith("name=")) name = line.substring(5);
+            }
+        } catch (IOException e) {
+            // no record: an unknown game
+        }
+        return new String[] {title == null ? "" : title, name == null ? "" : name};
+    }
+
+    /** Closes Banana Native's game process (what a game there has not saved is lost); waits up to 3 s for it to go. */
+    public static void stopRunningGame(Context c) {
+        Integer pid = gameProcess(c);
+        if (pid == null) return;
+        android.os.Process.killProcess(pid);
+        for (int i = 0; i < 30 && gameProcess(c) != null; i++) {
+            try { Thread.sleep(100); } catch (InterruptedException e) { return; }
+        }
+    }
+
+    private static Integer gameProcess(Context c) {
+        android.app.ActivityManager am = (android.app.ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+        List<android.app.ActivityManager.RunningAppProcessInfo> ps = am == null ? null : am.getRunningAppProcesses();
+        if (ps != null) for (android.app.ActivityManager.RunningAppProcessInfo p : ps) if (p.processName.endsWith(":game")) return p.pid;
+        return null;
     }
 
     /** Starts a ready game (Plan.READY) in Banana Native's game process, as FrontendLaunch.play does. */

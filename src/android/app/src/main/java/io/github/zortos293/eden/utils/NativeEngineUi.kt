@@ -16,8 +16,9 @@ interface NativeEngineUi {
 
     /**
      * Starts the game in Banana Native, preparing it first when it needs that, with Hokkaido's GPU driver for it
-     * ([driverZip]: a driver zip, empty for the system's) and Hokkaido's save folder ([saveDir], shared by both
-     * engines); [emulate] plays it in Hokkaido instead.
+     * ([driverZip]: a driver zip, empty for the system's), Hokkaido's save folder ([saveDir], shared by both
+     * engines) and the render size of Hokkaido's resolution scale ([window]: "<width>x<height>" or "original");
+     * [emulate] plays it in Hokkaido instead.
      */
     fun launch(
         activity: FragmentActivity,
@@ -25,6 +26,7 @@ interface NativeEngineUi {
         title: String,
         driverZip: String,
         saveDir: String,
+        window: String,
         emulate: () -> Unit
     )
 }

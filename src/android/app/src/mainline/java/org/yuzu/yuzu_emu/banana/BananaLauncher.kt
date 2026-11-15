@@ -33,6 +33,7 @@ class BananaLauncher : NativeEngineUi {
         val title: String,
         val driverZip: String,
         val saveDir: String,
+        val window: String,
         val emulate: () -> Unit
     )
 
@@ -44,8 +45,9 @@ class BananaLauncher : NativeEngineUi {
         title: String,
         driverZip: String,
         saveDir: String,
+        window: String,
         emulate: () -> Unit
-    ) = check(Start(activity, gamePath, title, driverZip, saveDir, emulate), false)
+    ) = check(Start(activity, gamePath, title, driverZip, saveDir, window, emulate), false)
 
     private fun check(start: Start, tryAnyway: Boolean) {
         val activity = start.activity
@@ -60,7 +62,13 @@ class BananaLauncher : NativeEngineUi {
                 runCatching {
                     HokkaidoBridge.plan(activity, start.path, tryAnyway).also {
                         if (it.kind == HokkaidoBridge.Plan.READY) {
-                            HokkaidoBridge.prepareStart(activity, it, start.driverZip, start.saveDir)
+                            HokkaidoBridge.prepareStart(
+                                activity,
+                                it,
+                                start.driverZip,
+                                start.saveDir,
+                                start.window
+                            )
                         }
                     }
                 }
@@ -74,7 +82,7 @@ class BananaLauncher : NativeEngineUi {
     private fun show(start: Start, plan: HokkaidoBridge.Plan) {
         val activity = start.activity
         when (plan.kind) {
-            HokkaidoBridge.Plan.READY -> HokkaidoBridge.play(activity, plan)
+            HokkaidoBridge.Plan.READY -> play(start, plan)
             HokkaidoBridge.Plan.PREPARE -> MaterialAlertDialogBuilder(activity)
                 .setTitle(activity.getString(R.string.banana_prepare_title, plan.title))
                 .setMessage(plan.message)
@@ -103,6 +111,33 @@ class BananaLauncher : NativeEngineUi {
                 }
                 builder.show()
             }
+        }
+    }
+
+    /**
+     * Starts a ready game. Banana Native's game process holds one game: another one still in it (left without
+     * Stop the game) is closed first, when the player says so.
+     */
+    private fun play(start: Start, plan: HokkaidoBridge.Plan) {
+        val activity = start.activity
+        activity.lifecycleScope.launch {
+            val running = withContext(Dispatchers.IO) { HokkaidoBridge.runningGame(activity) }
+            if (running == null || running[0].equals(plan.game.titleId, ignoreCase = true)) {
+                HokkaidoBridge.play(activity, plan)
+                return@launch
+            }
+            val other = running[1].ifEmpty { activity.getString(R.string.banana_another_game) }
+            MaterialAlertDialogBuilder(activity)
+                .setTitle(activity.getString(R.string.banana_running_title, other))
+                .setMessage(activity.getString(R.string.banana_running_description, start.title, other))
+                .setPositiveButton(R.string.banana_close_and_start) { _, _ ->
+                    activity.lifecycleScope.launch {
+                        withContext(Dispatchers.IO) { HokkaidoBridge.stopRunningGame(activity) }
+                        HokkaidoBridge.play(activity, plan)
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
         }
     }
 

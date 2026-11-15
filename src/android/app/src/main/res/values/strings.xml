@@ -1927,4 +1927,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="banana_ready_description">Its pack and shaders are prepared. From now on it starts at once.</string>
     <string name="banana_play">Play</string>
     <string name="banana_later">Later</string>
+    <string name="banana_running_title">%1$s is still running</string>
+    <string name="banana_running_description">Banana Native runs one game at a time. Close %2$s and start %1$s? Anything %2$s has not saved is lost.</string>
+    <string name="banana_close_and_start">Close and start</string>
+    <string name="banana_another_game">Another game</string>
 </resources>
