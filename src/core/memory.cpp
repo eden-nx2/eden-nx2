@@ -580,8 +580,8 @@ struct Memory::Impl {
 
     /// Read traps replace reactive flushing's blanket read protection of every cached page: only
     /// pages the GPU writes are protected, and each one only until its first read
-    /// (EDEN_NX2_READ_TRAPS=0 turns them off). Under NCE every fault is taken as a write, so they
-    /// are not used there.
+    /// (EDEN_NX2_READ_TRAPS=0 turns them off). Under NCE they need its loads handled as reads
+    /// (NceReadsEnabled), else every fault is taken as a write.
     bool ReadTrapsEnabled() const {
         static const bool disabled = [] {
             const char* value = std::getenv("EDEN_NX2_READ_TRAPS");
@@ -589,7 +589,64 @@ struct Memory::Impl {
         }();
         return !disabled && current_page_table->fastmem_arena &&
                !Settings::ReactiveFlushing() &&
-               Settings::values.cpu_backend.GetValue() != Settings::CpuBackend::Nce;
+               (Settings::values.cpu_backend.GetValue() != Settings::CpuBackend::Nce ||
+                NceReadsEnabled());
+    }
+
+    /// NCE takes a guest load from a GPU-cached page as a read, as the slow path of a JIT does:
+    /// the GPU's data is downloaded and the page handed to the CPU for reading only. Taken as a
+    /// write, the load threw away what the GPU had drawn there and re-uploaded guest memory over
+    /// it (Pokemon Pokopia's sky was black on every phone). EDEN_NX2_NCE_READS=0 turns it off.
+    static bool NceReadsEnabled() {
+        static const bool enabled = [] {
+            const char* value = std::getenv("EDEN_NX2_NCE_READS");
+            return value == nullptr || value[0] != '0';
+        }();
+        return enabled;
+    }
+
+    bool HandleNceRead(u64 vaddr) {
+        if (!NceReadsEnabled() || !current_page_table->fastmem_arena) {
+            return false;
+        }
+        const u64 base = Common::AlignDown(vaddr, EDEN_PAGESIZE);
+        const auto is_cached = [&] {
+            return AddressSpaceContains(*current_page_table, base, EDEN_PAGESIZE) &&
+                   std::as_const(current_page_table->entries)[base >> EDEN_PAGEBITS].Type() ==
+                       Common::PageType::RasterizerCachedMemory;
+        };
+        if (!is_cached()) {
+            return false;
+        }
+        HandleRasterizerDownload(base, EDEN_PAGESIZE);
+        std::scoped_lock lk{nce_read_mutex};
+        if (!is_cached()) {
+            // Handed back to the CPU meanwhile: its permissions are already the CPU's.
+            return true;
+        }
+        // Writes stay trapped, so the GPU caches still see them.
+        host_buffer->Protect(base, EDEN_PAGESIZE, Common::MemoryPermission::Read);
+        if (Settings::ReactiveFlushing()) {
+            // Reactive flushing reads every GPU write: take the page back at the next present.
+            nce_read_pages.push_back(base);
+        }
+        return true;
+    }
+
+    /// Takes read permission back from the pages HandleNceRead handed out, so that the GPU's later
+    /// writes reach the CPU's next reads (reactive flushing only, once per present).
+    void ReprotectNceReads() {
+        std::scoped_lock lk{nce_read_mutex};
+        for (const u64 base : nce_read_pages) {
+            const bool cached =
+                AddressSpaceContains(*current_page_table, base, EDEN_PAGESIZE) &&
+                std::as_const(current_page_table->entries)[base >> EDEN_PAGEBITS].Type() ==
+                    Common::PageType::RasterizerCachedMemory;
+            if (cached) {
+                host_buffer->Protect(base, EDEN_PAGESIZE, Common::MemoryPermission{});
+            }
+        }
+        nce_read_pages.clear();
     }
 
     void RasterizerArmReadTraps(u64 vaddr, u64 size) {
@@ -1041,6 +1098,8 @@ struct Memory::Impl {
     std::set<u64> armed_read_traps;
     std::atomic<size_t> armed_read_trap_count{};
     std::mutex read_trap_mutex;
+    std::vector<u64> nce_read_pages;
+    std::mutex nce_read_mutex;
     std::array<GPUDirtyState, Core::Hardware::NUM_CPU_CORES> rasterizer_write_areas{};
     std::array<Common::ScratchBuffer<u32>, Core::Hardware::NUM_CPU_CORES> scratch_buffers{};
     std::span<Core::GPUDirtyMemoryManager> gpu_dirty_managers;
@@ -1271,6 +1330,14 @@ bool Memory::InvalidateNCE(Common::ProcessAddress vaddr, size_t size) {
 #endif
 
     return mapped && ptr != nullptr;
+}
+
+bool Memory::HandleNceRead(Common::ProcessAddress vaddr) {
+    return impl->HandleNceRead(GetInteger(vaddr));
+}
+
+void Memory::ReprotectNceReads() {
+    impl->ReprotectNceReads();
 }
 
 bool Memory::HasGpuWrittenDataNCE(Common::ProcessAddress vaddr, size_t size) {

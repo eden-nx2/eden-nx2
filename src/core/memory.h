@@ -506,6 +506,13 @@ public:
 
     bool InvalidateNCE(Common::ProcessAddress vaddr, size_t size);
 
+    /// NCE: a guest load from a GPU-cached page. Downloads the GPU's data and makes the page
+    /// readable; false when the page is not GPU-cached.
+    bool HandleNceRead(Common::ProcessAddress vaddr);
+
+    /// Takes read permission back from the pages HandleNceRead opened (reactive flushing).
+    void ReprotectNceReads();
+
     /// Whether a GPU-cached page holds GPU-written buffer data guest memory lacks (NCE faults).
     bool HasGpuWrittenDataNCE(Common::ProcessAddress vaddr, size_t size);
 
