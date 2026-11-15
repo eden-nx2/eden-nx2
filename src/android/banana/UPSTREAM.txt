@@ -1,0 +1,6 @@
+# The Banana Native release this module embeds (tools/android/sync_bananative.sh writes this file).
+repo = https://git.eden-emu.dev/moceure/BananaNative
+tag = v0.3.25
+commit = 67a2da0ac654bb0958889d93dec6cf4e6d0d56c2
+apk_url = https://git.eden-emu.dev/moceure/BananaNative/releases/download/v0.3.25/banana-native-v0.3.25.apk
+apk_sha256 = e4fe03d8ee2af6d11e3ca380e3962338c69da06b2fed5c05a44e6d21a2fff5a9

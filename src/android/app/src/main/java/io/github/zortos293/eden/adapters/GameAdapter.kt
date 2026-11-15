@@ -32,6 +32,7 @@ import io.github.zortos293.eden.utils.GameIconUtils
 import io.github.zortos293.eden.utils.ViewUtils.marquee
 import io.github.zortos293.eden.viewholder.AbstractViewHolder
 import androidx.core.net.toUri
+import io.github.zortos293.eden.utils.GameEngine
 import androidx.core.content.edit
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.zortos293.eden.NativeLibrary
@@ -262,8 +263,20 @@ class GameAdapter(private val activity: AppCompatActivity) :
                     }
                 }
 
-                val action = HomeNavigationDirections.actionGlobalEmulationActivity(game, true)
-                binding.root.findNavController().navigate(action)
+                val emulate = {
+                    val action = HomeNavigationDirections.actionGlobalEmulationActivity(game, true)
+                    binding.root.findNavController().navigate(action)
+                }
+                if (!GameEngine.usesNative(activity, game)) {
+                    emulate()
+                } else if (!GameEngine.launchNative(activity, game)) {
+                    MaterialAlertDialogBuilder(activity)
+                        .setTitle(R.string.game_engine_banana_missing)
+                        .setMessage(R.string.game_engine_banana_missing_description)
+                        .setPositiveButton(R.string.game_engine_play_here) { _, _ -> emulate() }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                }
             }
 
             if (NativeLibrary.gameRequiresFirmware(game.programId) && !NativeLibrary.isFirmwareAvailable()) {

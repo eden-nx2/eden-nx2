@@ -330,6 +330,8 @@ play {
 }
 
 dependencies {
+    // Banana Native, the per-game "Banana Native" engine (GameEngine): the mainline flavor only (Android 13+).
+    "mainlineImplementation"(project(":banana"))
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.recyclerview:recyclerview:1.4.0")

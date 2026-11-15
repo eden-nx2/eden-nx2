@@ -1,0 +1,10 @@
+--- a/main/java/dev/nxnative/android/Updater.java
++++ b/main/java/dev/nxnative/android/Updater.java
+@@ -107,6 +107,7 @@
+
+     /** The sources this app asks, in order: UpdateCheck.SOURCES in the release app, those update.txt names in a test app (none without it) */
+     static List<UpdateCheck.Source> sources(Context c) {
++        if (HokkaidoBridge.embedded()) return new ArrayList<>();   // Hokkaido: its own updates carry Banana Native
+         if (BuildConfig.NX_LIVE) return UpdateCheck.SOURCES;
+         java.util.Map<String, String> o = override(c);
+         List<UpdateCheck.Source> l = new ArrayList<>();

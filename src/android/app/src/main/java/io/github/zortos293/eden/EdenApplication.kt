@@ -24,6 +24,7 @@ import io.github.zortos293.eden.utils.GpuDriverHelper
 import io.github.zortos293.eden.utils.Log
 import io.github.zortos293.eden.utils.PowerStateUpdater
 import io.github.zortos293.eden.utils.ControllerNavigationGlobalHook
+import io.github.zortos293.eden.utils.GameEngine
 import java.util.Locale
 
 fun Context.getPublicFilesDir(): File = getExternalFilesDir(null) ?: filesDir
@@ -58,6 +59,12 @@ class EdenApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Banana Native runs its game, packer and checks in processes of its own: those get only its
+        // setup, none of the emulator's.
+        GameEngine.installEmbedded(this)
+        if (GameEngine.isEmbeddedProcess()) {
+            return
+        }
         application = this
         documentsTree = DocumentsTree()
         DirectoryInitialization.start()

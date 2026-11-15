@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 }
 
 include(":app")
+include(":banana")
 
 include("Eden")
 project(":Eden").projectDir = file("../..")
