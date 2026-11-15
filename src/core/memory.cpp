@@ -597,12 +597,14 @@ struct Memory::Impl {
     /// the GPU's data is downloaded and the page handed to the CPU for reading only. Taken as a
     /// write, the load threw away what the GPU had drawn there and re-uploaded guest memory over
     /// it (Pokemon Pokopia's sky was black on every phone). EDEN_NX2_NCE_READS=0 turns it off.
+    /// Pokopia only: other games keep the write path they were tested with.
     static bool NceReadsEnabled() {
+        static constexpr u64 PokemonPokopia = 0x0400A3A01EE4C000ULL;
         static const bool enabled = [] {
             const char* value = std::getenv("EDEN_NX2_NCE_READS");
             return value == nullptr || value[0] != '0';
         }();
-        return enabled;
+        return enabled && Settings::GetCurrentProgramID() == PokemonPokopia;
     }
 
     bool HandleNceRead(u64 vaddr) {
