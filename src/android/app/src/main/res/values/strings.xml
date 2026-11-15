@@ -1914,4 +1914,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="frames_ahead_on">On</string>
     <string name="scene_memory_cap">Limit memory during scene loads</string>
     <string name="scene_memory_cap_description">Keeps at most 256 MB of upload buffers while a scene loads and frees large ones every frame. Helps games that get closed for low memory, but slows games that stream textures. Auto: Ocarina of Time only.</string>
+    <string name="banana_checking">Checking %1$s…</string>
+    <string name="banana_prepare_title">Prepare %1$s?</string>
+    <string name="banana_prepare">Prepare</string>
+    <string name="banana_resume_title">Resume preparing %1$s?</string>
+    <string name="banana_resume">Resume</string>
+    <string name="banana_preparing_title">Preparing %1$s</string>
+    <string name="banana_hide">Hide</string>
+    <string name="banana_pause">Pause</string>
+    <string name="banana_try_anyway">Try anyway</string>
+    <string name="banana_ready_title">%1$s is ready</string>
+    <string name="banana_ready_description">Its pack and shaders are prepared. From now on it starts at once.</string>
+    <string name="banana_play">Play</string>
+    <string name="banana_later">Later</string>
 </resources>

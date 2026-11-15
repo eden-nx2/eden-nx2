@@ -5,7 +5,7 @@ package io.github.zortos293.eden.utils
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
+import androidx.fragment.app.FragmentActivity
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.core.content.edit
@@ -15,15 +15,10 @@ import io.github.zortos293.eden.model.Game
 
 /**
  * Which engine runs a game: Hokkaido's emulator, or Banana Native (game code natively, NVN on Vulkan),
- * built into the mainline flavor (the :banana module) and started through its FrontendLaunch activity
- * (BananaNative android/FRONTENDS.md).
+ * built into the mainline flavor (the :banana module) behind Hokkaido's own screens (NativeEngineUi).
  */
 object GameEngine {
     enum class Choice { AUTO, EMULATE, NATIVE }
-
-    private const val BANANA_PACKAGE = "dev.nxnative.android"
-    private const val FRONTEND_LAUNCH = "$BANANA_PACKAGE.FrontendLaunch"
-    private const val BRIDGE = "$BANANA_PACKAGE.HokkaidoBridge"
 
     /** Banana Native's own processes (its manifest): they run none of the emulator's setup. */
     private val embeddedProcesses = listOf(":game", ":pack", ":readiness", ":selftest")
@@ -33,19 +28,21 @@ object GameEngine {
         "040074A01BF12000" // Donkey Kong Bananza
     )
 
-    /** Whether this build carries Banana Native (the mainline flavor). */
-    val isBananaAvailable: Boolean by lazy {
-        runCatching { Class.forName(FRONTEND_LAUNCH) }.isSuccess
+    /** Banana Native's UI, in the mainline flavor only. */
+    private val ui: NativeEngineUi? by lazy {
+        runCatching {
+            Class.forName("io.github.zortos293.eden.banana.BananaLauncher").getDeclaredConstructor()
+                .newInstance() as NativeEngineUi
+        }.getOrNull()
     }
+
+    /** Whether this build carries Banana Native (the mainline flavor). */
+    val isBananaAvailable: Boolean get() = ui != null
 
     /** What Banana Native's application class did in every process (PickedNup). */
     fun installEmbedded(context: Context) {
-        if (!isBananaAvailable) {
-            return
-        }
-        runCatching {
-            Class.forName(BRIDGE).getMethod("install", Context::class.java).invoke(null, context)
-        }.onFailure { android.util.Log.e("GameEngine", "Banana Native setup failed", it) }
+        runCatching { ui?.install(context) }
+            .onFailure { android.util.Log.e("GameEngine", "Banana Native setup failed", it) }
     }
 
     fun isEmbeddedProcess(): Boolean {
@@ -119,24 +116,13 @@ object GameEngine {
     }
 
     /**
-     * Starts the game in Banana Native: at once when it is ready there, else Banana Native's Home
-     * opens with it (pack, shaders). False when this build has no Banana Native.
+     * Starts the game in Banana Native, through Hokkaido's screens: at once when it is prepared, else
+     * after preparing it. False when this build has no Banana Native or the game has no path it reads.
      */
-    fun launchNative(context: Context, game: Game): Boolean {
-        if (!isBananaAvailable) {
-            return false
-        }
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setClassName(context.packageName, FRONTEND_LAUNCH)
-            val path = filePath(game)
-            if (path != null) {
-                putExtra("game", path)
-            } else {
-                data = Uri.parse(game.path)
-            }
-        }
-        return runCatching { context.startActivity(intent) }
-            .onFailure { android.util.Log.e("GameEngine", "Banana Native did not start", it) }
-            .isSuccess
+    fun launchNative(activity: FragmentActivity, game: Game, emulate: () -> Unit): Boolean {
+        val engine = ui ?: return false
+        val path = filePath(game) ?: return false
+        engine.launch(activity, path, game.title, emulate)
+        return true
     }
 }
