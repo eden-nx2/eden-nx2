@@ -323,10 +323,16 @@ public:
     /// Decode images the GPU is done with, for the next texture of the same shape.
     std::vector<PendingTranscode> free_transcodes;
 
-    /// Full-size images of downscaled render targets (Image::FreeOriginalIfDownscaled), destroyed
-    /// once the GPU is past `first`.
-    std::deque<std::pair<u64, vk::Image>> deferred_image_frees;
-    void DeferImageFree(vk::Image image);
+    /// Full-size images of downscaled render targets (Image::FreeOriginalIfDownscaled) and the
+    /// scale helper's views and framebuffers, destroyed once the GPU is past `tick`.
+    struct DeferredImageFree {
+        u64 tick{};
+        vk::Image image;
+        std::array<std::unique_ptr<ImageView>, 2> views;
+        std::array<std::unique_ptr<Framebuffer>, 2> framebuffers;
+    };
+    std::deque<DeferredImageFree> deferred_image_frees;
+    void DeferImageFree(DeferredImageFree&& freed);
 
     std::optional<BlockLinearUnswizzle3DPass> bl3d_unswizzle_pass;
     const Settings::ResolutionScalingInfo& resolution;

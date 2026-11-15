@@ -3044,7 +3044,7 @@ void TextureCacheRuntime::TickFrame() {
     for (const PendingTranscode& t : free_transcodes) {
         free_bytes += decode_bytes(t);
     }
-    while (!deferred_image_frees.empty() && scheduler.IsFree(deferred_image_frees.front().first)) {
+    while (!deferred_image_frees.empty() && scheduler.IsFree(deferred_image_frees.front().tick)) {
         deferred_image_frees.pop_front();
     }
     while (!pending_transcodes.empty() && scheduler.IsFree(pending_transcodes.front().tick)) {
@@ -4304,8 +4304,9 @@ bool Image::ScaleUp(bool ignore) {
     return true;
 }
 
-void TextureCacheRuntime::DeferImageFree(vk::Image image) {
-    deferred_image_frees.emplace_back(scheduler.CurrentTick(), std::move(image));
+void TextureCacheRuntime::DeferImageFree(DeferredImageFree&& freed) {
+    freed.tick = scheduler.CurrentTick();
+    deferred_image_frees.push_back(std::move(freed));
 }
 
 void Image::FreeOriginalIfDownscaled() {
@@ -4327,7 +4328,20 @@ void Image::FreeOriginalIfDownscaled() {
     if (ENABLE_MSAA_RESOLVE_CONSUME) {
         runtime->EraseResolveShadow(*original_image);
     }
-    runtime->DeferImageFree(std::move(original_image));
+    // The scale helper's cached views and framebuffers can be on the original: kept, the next
+    // scale down drew into the freed image (Fast Fusion's menu: RADV crashed or lost the device).
+    // They go with it and are made again on the image in use.
+    TextureCacheRuntime::DeferredImageFree freed{.image = std::move(original_image)};
+    freed.views = {std::move(scale_view), std::move(normal_view)};
+    std::optional<Framebuffer>* const framebuffers[] = {&scale_framebuffer, &normal_framebuffer};
+    for (size_t index = 0; index < freed.framebuffers.size(); ++index) {
+        if (*framebuffers[index]) {
+            freed.framebuffers[index] =
+                std::make_unique<Framebuffer>(std::move(**framebuffers[index]));
+            framebuffers[index]->reset();
+        }
+    }
+    runtime->DeferImageFree(std::move(freed));
     original_image = vk::Image{};
 #endif
 }
