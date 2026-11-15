@@ -6,11 +6,14 @@
 #include <algorithm>
 #include <atomic>
 #include <bit>
+#include <chrono>
 #include <cstdlib>
 #include <cstdio>
 #include <mutex>
 #include <span>
 #include <thread>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -43,6 +46,62 @@ namespace Tegra {
 
 constexpr u32 MacroRegistersStart = 0xE00;
 constexpr u32 ComputeInline = 0x6D;
+
+namespace {
+// EDEN_NX2_GPU_LIST_DUMP=<file>: every 10 s, how many command lists the front read from
+// GPU-written pages and how many differed from the last read at the same address; once <file>
+// exists, the words of the next 64 such lists.
+void NoteGpuWrittenList(GPUVAddr address, std::span<const u32> words) {
+    static const char* const trigger = std::getenv("EDEN_NX2_GPU_LIST_DUMP");
+    if (trigger == nullptr) {
+        return;
+    }
+    static std::mutex mutex;
+    static std::unordered_map<GPUVAddr, u64> last_hash;
+    static u64 reads{}, changed{}, words_read{}, dumped{};
+    static bool triggered{};
+    static auto last_log = std::chrono::steady_clock::now();
+    static auto last_check = last_log;
+    u64 hash = 0xcbf29ce484222325ULL;
+    for (const u32 word : words) {
+        hash = (hash ^ word) * 0x100000001b3ULL;
+    }
+    std::scoped_lock lock{mutex};
+    ++reads;
+    words_read += words.size();
+    const auto [it, inserted] = last_hash.try_emplace(address, hash);
+    const bool differs = !inserted && it->second != hash;
+    if (differs) {
+        ++changed;
+        it->second = hash;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    if (!triggered && now - last_check >= std::chrono::seconds{1}) {
+        last_check = now;
+        if (std::FILE* const file = std::fopen(trigger, "rb")) {
+            std::fclose(file);
+            triggered = true;
+        }
+    }
+    if (triggered && dumped < 64) {
+        ++dumped;
+        std::string text;
+        for (size_t i = 0; i < (std::min<size_t>)(words.size(), 64); ++i) {
+            text += fmt::format(" {:08x}", words[i]);
+        }
+        LOG_INFO(HW_GPU, "GPU-written list {:#x} words {} {}:{}", address, words.size(),
+                 inserted ? "first read" : differs ? "changed" : "same", text);
+    }
+    if (now - last_log >= std::chrono::seconds{10}) {
+        LOG_INFO(HW_GPU,
+                 "GPU-written lists in 10 s: {} reads ({} words) at {} addresses so far, {} "
+                 "differed from the last read there",
+                 reads, words_read, last_hash.size(), changed);
+        reads = changed = words_read = 0;
+        last_log = now;
+    }
+}
+} // Anonymous namespace
 
 namespace CommandWordsPool {
 namespace {
@@ -1186,6 +1245,7 @@ bool DmaPusher::ReadGpuWrittenCommands(GPUVAddr address, u32 count, bool* pendin
         }
         chunk = chunk_end;
     }
+    NoteGpuWrittenList(address, std::span{reinterpret_cast<const u32*>(command_headers.data()), count});
     return true;
 }
 
