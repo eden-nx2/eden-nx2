@@ -73,6 +73,11 @@ public final class HokkaidoBridge {
             this.shaders = shaders;
         }
 
+        /** The ready game's title ID (READY), else empty. */
+        public String titleId() {
+            return game != null ? game.titleId : "";
+        }
+
         static Plan problem(String title, String message, String detail) {
             return new Plan(PROBLEM, title, message, detail, false, null, null, null, null, null, false, false);
         }

@@ -122,7 +122,7 @@ class BananaLauncher : NativeEngineUi {
         val activity = start.activity
         activity.lifecycleScope.launch {
             val running = withContext(Dispatchers.IO) { HokkaidoBridge.runningGame(activity) }
-            if (running == null || running[0].equals(plan.game.titleId, ignoreCase = true)) {
+            if (running == null || running[0].equals(plan.titleId(), ignoreCase = true)) {
                 HokkaidoBridge.play(activity, plan)
                 return@launch
             }
