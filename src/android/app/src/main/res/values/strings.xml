@@ -1135,6 +1135,9 @@
     <string name="gpu_fence_behavior_immediate">Immediate</string>
     <string name="gpu_fence_behavior_balanced">Balanced</string>
     <string name="gpu_fence_behavior_accurate">Accurate</string>
+    <string name="precache_shaders">Prebake shaders</string>
+    <string name="precache_shaders_description">Builds the game\'s shaders on the loading screen before it starts: the compute shaders in the game files and every pipeline cached in earlier sessions. Starting takes longer, but play stutters less and uses less memory early on.</string>
+    <string name="precache_shaders_always">Before playing</string>
 
     <!-- ASTC Decoding Method Choices -->
     <string name="accelerate_astc_cpu" translatable="false">CPU</string>
