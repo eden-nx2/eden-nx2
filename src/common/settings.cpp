@@ -278,7 +278,12 @@ void SetCurrentProgramIsSwitch2(bool is_switch2) {
 }
 
 bool ReactiveFlushing() {
-    return values.use_reactive_flushing.GetValue() || values.force_reactive_flushing;
+    // Pokemon Pokopia under NCE draws its sky from GPU results the CPU reads back: black without
+    // reactive flushing, which phones turn off by default. (From Hokkaido.)
+    static constexpr u64 PokemonPokopia = 0x0400A3A01EE4C000ULL;
+    return values.use_reactive_flushing.GetValue() || values.force_reactive_flushing ||
+           (values.cpu_backend.GetValue() == CpuBackend::Nce &&
+            current_program_id == PokemonPokopia);
 }
 
 bool CurrentProgramIsSwitch2() {
