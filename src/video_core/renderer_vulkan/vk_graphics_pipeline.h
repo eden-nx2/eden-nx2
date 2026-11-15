@@ -204,6 +204,27 @@ public:
         return key.state.extended_dynamic_state != 0;
     }
 
+    /// True when a stage stores to memory (storage buffers, images or global memory), so a draw
+    /// has effects beyond its render targets.
+    [[nodiscard]] bool WritesMemory() const noexcept {
+        const auto written = [](const auto& descriptors) {
+            for (const auto& descriptor : descriptors) {
+                if (descriptor.is_written) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        for (const auto& info : stage_infos) {
+            if (info.stores_global_memory || info.uses_global_increment ||
+                written(info.storage_buffers_descriptors) ||
+                written(info.image_buffer_descriptors) || written(info.image_descriptors)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /// Switch 2 task/mesh pipeline: drawn with vkCmdDrawMeshTasksEXT.
     [[nodiscard]] bool IsMeshPipeline() const noexcept {
         return stage_infos[0].is_task || stage_infos[0].is_mesh;

@@ -1059,6 +1059,14 @@ void RasterizerVulkan::PrepareDraw(bool is_indexed, Func&& draw_func, bool is_in
         Profile::Scope scope{Profile::Zone::PipelineLookup};
         return pipeline_cache.CurrentGraphicsPipeline();
     }()};
+    // A skipped frame still runs draws whose shaders store to memory or that capture transform
+    // feedback: the game reads what they write (Mario Tennis Fever panicked in its menu).
+    if (pipeline && frame_draws_skipped && !pipeline->WritesMemory() &&
+        maxwell3d->regs.transform_feedback_enabled == 0) {
+        submitted = true;
+        ++frameskip_dropped_draws;
+        return;
+    }
     if (!pipeline) {
         report_failure("no pipeline");
         TraceRenderState(is_indexed, "no-pipeline", nullptr);
@@ -1543,10 +1551,6 @@ void TraceWindowTarget(const Tegra::Engines::Maxwell3D& maxwell3d, Tegra::Memory
 
 void RasterizerVulkan::Draw(bool is_indexed, u32 instance_count) {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Draw};
-    if (frame_draws_skipped) {
-        ++frameskip_dropped_draws;
-        return;
-    }
     {
         // A draw's first and count can come from memory a skipped (rejected) compute program
         // should have written. Past 16M vertices they are garbage: building the quad index
@@ -1785,10 +1789,6 @@ void RasterizerVulkan::Draw(bool is_indexed, u32 instance_count) {
 
 void RasterizerVulkan::DrawIndirect() {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Draw};
-    if (frame_draws_skipped) {
-        ++frameskip_dropped_draws;
-        return;
-    }
     const auto& params = maxwell3d->draw_manager.indirect_state;
     if (Common::DkbFrameTrace::Enabled()) {
         ++trace_indirect;
