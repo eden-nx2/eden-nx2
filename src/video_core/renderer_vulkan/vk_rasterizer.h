@@ -384,6 +384,7 @@ private:
     bool frame_clears_skipped{};
     bool frame_present_skipped{};
     u64 frameskip_dropped_draws = 0;
+    u32 frameskip_logged_interval = 0;
     u32 render_trace_draws = 0;
     u32 render_trace_clears = 0;
     bool pending_native_work{};

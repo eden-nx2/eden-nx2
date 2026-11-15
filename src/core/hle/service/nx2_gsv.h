@@ -2571,10 +2571,7 @@ private:
             m_frame_trace.refresh = refresh_rate;
             m_frame_trace.forced = forced_interval;
         }
-        static const u32 forced_fps_limit = [] {
-            const char* value = std::getenv("EDEN_NX2_FPS_LIMIT");
-            return value ? static_cast<u32>(std::strtoul(value, nullptr, 10)) : 0U;
-        }();
+        const u32 forced_fps_limit = Settings::PerTitleEnv("EDEN_NX2_FPS_LIMIT");
         const u32 fps_limit =
             forced_fps_limit != 0 ? forced_fps_limit : Settings::values.fps_limit.GetValue();
         // With a frame rate limit other than 60 Hz the vsync event already paces the game; holding

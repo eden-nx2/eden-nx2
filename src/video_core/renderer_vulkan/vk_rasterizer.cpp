@@ -3961,16 +3961,13 @@ void RasterizerVulkan::TickFrame() {
         trace_sample_frame = trace_frame < 4 || trace_rate.Ready(now);
     }
     ComputePipeline::TickUpscalerTrace();
-    static const u32 frameskip_interval = [] {
-        const char* value = std::getenv("EDEN_NX2_FRAMESKIP");
-        const u32 interval =
-            value != nullptr ? std::min<u32>(static_cast<u32>(std::strtoul(value, nullptr, 10)), 4)
-                             : 0U;
-        if (interval > 1) {
-            LOG_WARNING(Render_Vulkan, "Frameskip: drawing one frame in {}", interval);
-        }
-        return interval;
-    }();
+    // Read again each frame: on Android one process runs every game launched.
+    const u32 frameskip_interval =
+        std::min<u32>(Settings::PerTitleEnv("EDEN_NX2_FRAMESKIP"), 4);
+    if (frameskip_interval != std::exchange(frameskip_logged_interval, frameskip_interval)) {
+        LOG_WARNING(Render_Vulkan, "Frameskip: drawing one frame in {}",
+                    std::max<u32>(frameskip_interval, 1));
+    }
     static const auto frameskip_parts = [] {
         const char* value = std::getenv("EDEN_NX2_FRAMESKIP_PARTS");
         const std::string_view parts = value != nullptr ? value : "draws,clears,present";
@@ -3981,6 +3978,7 @@ void RasterizerVulkan::TickFrame() {
                     skipped[1], skipped[2]);
         return skipped;
     }();
+    frame_draws_skipped = frame_clears_skipped = frame_present_skipped = false;
     if (frameskip_interval > 1) {
         const bool dropped = render_trace_frame % frameskip_interval != 0;
         frame_draws_skipped = dropped && frameskip_parts[0];

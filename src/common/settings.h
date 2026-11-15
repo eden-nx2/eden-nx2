@@ -1222,6 +1222,12 @@ bool CurrentProgramIsSwitch2();
 /// that requires it.
 bool ReactiveFlushing();
 bool SkipCpuInnerInvalidation();
+
+// Value of a numeric EDEN_NX2_* environment switch for the running program. The variable holds a
+// plain number for every game, or a comma separated list of <title id>:<number> entries, where a
+// plain number in the list applies to the titles not named. 0 when unset or not matched.
+u32 PerTitleEnv(const char* name);
+
 // scene_memory_cap for the running program.
 bool SceneMemoryCapEnabled();
 
