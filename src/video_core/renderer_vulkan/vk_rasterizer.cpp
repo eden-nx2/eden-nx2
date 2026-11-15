@@ -1543,6 +1543,10 @@ void TraceWindowTarget(const Tegra::Engines::Maxwell3D& maxwell3d, Tegra::Memory
 
 void RasterizerVulkan::Draw(bool is_indexed, u32 instance_count) {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Draw};
+    if (frame_draws_skipped) {
+        ++frameskip_dropped_draws;
+        return;
+    }
     {
         // A draw's first and count can come from memory a skipped (rejected) compute program
         // should have written. Past 16M vertices they are garbage: building the quad index
@@ -1781,6 +1785,10 @@ void RasterizerVulkan::Draw(bool is_indexed, u32 instance_count) {
 
 void RasterizerVulkan::DrawIndirect() {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Draw};
+    if (frame_draws_skipped) {
+        ++frameskip_dropped_draws;
+        return;
+    }
     const auto& params = maxwell3d->draw_manager.indirect_state;
     if (Common::DkbFrameTrace::Enabled()) {
         ++trace_indirect;
@@ -2051,6 +2059,10 @@ void RasterizerVulkan::CollectIndirectTrace() {
 }
 
 void RasterizerVulkan::DrawTexture() {
+    if (frame_draws_skipped) {
+        ++frameskip_dropped_draws;
+        return;
+    }
 
     SCOPE_EXIT {
         gpu.TickWork();
@@ -2182,6 +2194,9 @@ bool RasterizerVulkan::ClearVolumeSlices(const Framebuffer* framebuffer, u32 fir
 
 void RasterizerVulkan::Clear(u32 layer_count) {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Clear};
+    if (frame_draws_skipped) {
+        return;
+    }
     if (Tegra::Engines::g_nx2_trace_draws_after_upscale > 0) {
         const auto& regs = maxwell3d->regs;
         LOG_INFO(HW_GPU, "after upscale: clear rt0 {:#x} {}x{} fmt {:#x} surface {:#x} colour {} {} {} {}",
@@ -3946,6 +3961,23 @@ void RasterizerVulkan::TickFrame() {
         trace_sample_frame = trace_frame < 4 || trace_rate.Ready(now);
     }
     ComputePipeline::TickUpscalerTrace();
+    static const u32 frameskip_interval = [] {
+        const char* value = std::getenv("EDEN_NX2_FRAMESKIP");
+        const u32 interval =
+            value != nullptr ? std::min<u32>(static_cast<u32>(std::strtoul(value, nullptr, 10)), 4)
+                             : 0U;
+        if (interval > 1) {
+            LOG_WARNING(Render_Vulkan, "Frameskip: drawing one frame in {}", interval);
+        }
+        return interval;
+    }();
+    if (frameskip_interval > 1) {
+        frame_draws_skipped = render_trace_frame % frameskip_interval != 0;
+        if (render_trace_frame % 600 == 0) {
+            LOG_INFO(Render_Vulkan, "Frameskip: {} draws dropped over the last 600 frames",
+                     std::exchange(frameskip_dropped_draws, 0));
+        }
+    }
     draw_counter = 0;
     pending_native_work = false;
     pipeline_cache.TickFrame();
