@@ -80,6 +80,36 @@ bool IsWriteFault(mcontext_t& host_ctx) {
     return esr && (*esr & (u64{1} << 6)) != 0;
 }
 
+// Whether this thread's load keeps faulting on the same page from the same instruction within
+// a few milliseconds: handling it as a read did not let it through, so it takes the write path
+// instead of looping. A page read again each frame after being protected again faults far apart.
+bool ReadFaultRepeats(u64 page, u64 pc) {
+    struct Last {
+        u64 page = ~u64{0};
+        u64 pc = 0;
+        u32 count = 0;
+        std::chrono::steady_clock::time_point time;
+    };
+    thread_local Last last;
+    const auto now = std::chrono::steady_clock::now();
+    if (last.page != page || last.pc != pc || now - last.time > std::chrono::milliseconds{5}) {
+        last = {page, pc, 1, now};
+        return false;
+    }
+    last.time = now;
+    if (++last.count <= 64) {
+        return false;
+    }
+    if (static std::atomic_flag logged; !logged.test_and_set(std::memory_order_relaxed)) {
+        LOG_WARNING(Core_ARM,
+                    "NCE: a load at {:#x} keeps faulting on page {:#x} handled as a read, taking "
+                    "it as a write",
+                    pc, page);
+    }
+    last = {};
+    return true;
+}
+
 // Whether it was known to be a read: a load, not a store and not a cache maintenance operation
 // (ESR_EL1.CM), which reports itself as a write anyway.
 bool IsReadFault(mcontext_t& host_ctx) {
@@ -272,7 +302,8 @@ bool ArmNce::HandleGuestAccessFault(GuestContext* guest_ctx, void* raw_info, voi
         (reinterpret_cast<u64>(info->si_addr) & ~Memory::EDEN_PAGEMASK);
     auto& memory = guest_ctx->parent->m_running_thread->GetOwnerProcess()->GetMemory();
     auto& host_ctx = static_cast<ucontext_t*>(raw_context)->uc_mcontext;
-    if (IsReadFault(host_ctx) && memory.HandleNceRead(addr)) {
+    if (IsReadFault(host_ctx) && !ReadFaultRepeats(GetInteger(addr), host_ctx.pc) &&
+        memory.HandleNceRead(addr)) {
         return true;
     }
     if (RunStoreToGpuPage(memory, host_ctx, GetInteger(addr))) {

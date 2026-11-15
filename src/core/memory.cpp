@@ -626,6 +626,11 @@ struct Memory::Impl {
         }
         // Writes stay trapped, so the GPU caches still see them.
         host_buffer->Protect(base, EDEN_PAGESIZE, Common::MemoryPermission::Read);
+#ifdef __ANDROID__
+        // A separate heap page that is not resident only records the permission: map it, or the
+        // load faults again forever (Mario Golf: Super Rush hung leaving a course).
+        host_buffer->DeferredMapSeparateHeap(base);
+#endif
         if (Settings::ReactiveFlushing()) {
             // Reactive flushing reads every GPU write: take the page back at the next present.
             nce_read_pages.push_back(base);
