@@ -1135,9 +1135,15 @@
     <string name="gpu_fence_behavior_immediate">Immediate</string>
     <string name="gpu_fence_behavior_balanced">Balanced</string>
     <string name="gpu_fence_behavior_accurate">Accurate</string>
-    <string name="precache_shaders">Prebake shaders</string>
-    <string name="precache_shaders_description">Builds the game\'s shaders on the loading screen before it starts: the compute shaders in the game files and every pipeline cached in earlier sessions. Starting takes longer, but play stutters less and uses less memory early on.</string>
-    <string name="precache_shaders_always">Before playing</string>
+    <string name="game_engine">Engine</string>
+    <string name="game_engine_description">Which engine runs this game: Hokkaido emulates the Switch 2 GPU; Banana Native runs the game\'s code natively and draws with Vulkan (its games need preparing once). Auto picks what we consider best.</string>
+    <string name="game_engine_auto">Auto</string>
+    <string name="game_engine_auto_now">Auto (%1$s)</string>
+    <string name="game_engine_emulate">Hokkaido</string>
+    <string name="game_engine_native">Banana Native</string>
+    <string name="game_engine_banana_missing">Banana Native could not start</string>
+    <string name="game_engine_banana_missing_description">This game is set to run in Banana Native, but this build has no Banana Native or it could not start. Play it with Hokkaido instead?</string>
+    <string name="game_engine_play_here">Play with Hokkaido</string>
 
     <!-- ASTC Decoding Method Choices -->
     <string name="accelerate_astc_cpu" translatable="false">CPU</string>

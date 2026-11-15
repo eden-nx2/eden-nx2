@@ -567,16 +567,6 @@
     </integer-array>
 
 
-    <!-- PrecacheShaders: Off 0, Ask 1 (desktop only), Always 2 -->
-    <string-array name="precacheShadersNames">
-        <item>@string/frames_ahead_off</item>
-        <item>@string/precache_shaders_always</item>
-    </string-array>
-    <integer-array name="precacheShadersValues">
-        <item>0</item>
-        <item>2</item>
-    </integer-array>
-
     <string-array name="framesAheadNames">
         <item>@string/frames_ahead_auto</item>
         <item>@string/frames_ahead_off</item>

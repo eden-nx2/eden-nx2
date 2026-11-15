@@ -89,22 +89,33 @@ object GameEngine {
     }
 
     /**
-     * The game's file path for Banana Native, which opens games by path: a storage document URI
-     * becomes /storage/<volume>/<path>; a path is kept.
+     * The game's path for Banana Native, which opens games by path: a storage document URI becomes
+     * /storage/<volume>/<path>. A loose game (Hokkaido lists its exefs/main) is its dump folder,
+     * the one holding base/ and updates/<version>/ (or exefs/), as Banana Native expects.
      */
     private fun filePath(game: Game): String? {
         val uri = Uri.parse(game.path)
-        if (uri.scheme == null || uri.scheme == "file") {
-            return uri.path
+        val path = if (uri.scheme == null || uri.scheme == "file") {
+            uri.path ?: return null
+        } else {
+            if (uri.authority != "com.android.externalstorage.documents") {
+                return null
+            }
+            val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return null
+            val volume = id.substringBefore(':')
+            val relative = id.substringAfter(':', "")
+            val root = if (volume == "primary") "/storage/emulated/0" else "/storage/$volume"
+            if (relative.isEmpty()) root else "$root/$relative"
         }
-        if (uri.authority != "com.android.externalstorage.documents") {
-            return null
+        if (!path.endsWith("/exefs/main")) {
+            return path
         }
-        val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return null
-        val volume = id.substringBefore(':')
-        val relative = id.substringAfter(':', "")
-        val root = if (volume == "primary") "/storage/emulated/0" else "/storage/$volume"
-        return if (relative.isEmpty()) root else "$root/$relative"
+        val folder = path.removeSuffix("/exefs/main")
+        return when {
+            Regex(".*/updates/[0-9]+$").matches(folder) -> folder.replace(Regex("/updates/[0-9]+$"), "")
+            folder.endsWith("/base") -> folder.removeSuffix("/base")
+            else -> folder
+        }
     }
 
     /**
@@ -117,11 +128,12 @@ object GameEngine {
         }
         val intent = Intent(Intent.ACTION_VIEW).apply {
             setClassName(context.packageName, FRONTEND_LAUNCH)
-            val uri = Uri.parse(game.path)
-            if (uri.scheme == "content") {
-                data = uri
+            val path = filePath(game)
+            if (path != null) {
+                putExtra("game", path)
+            } else {
+                data = Uri.parse(game.path)
             }
-            filePath(game)?.let { putExtra("game", it) }
         }
         return runCatching { context.startActivity(intent) }
             .onFailure { android.util.Log.e("GameEngine", "Banana Native did not start", it) }
