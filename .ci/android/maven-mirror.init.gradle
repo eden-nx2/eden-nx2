@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+// CI only: the workflows copy it to ~/.gradle/init.d. Puts Google's mirror of Maven Central first
+// in every repository list, since shared CI runners get HTTP 429 from Maven Central (and from the
+// Gradle Plugin Portal, which redirects there). What the mirror lacks still comes from the rest.
+def mirrorUrl = 'https://maven-central.storage-download.googleapis.com/maven2/'
+def preferMirror = { RepositoryHandler repos ->
+    def mirror = repos.maven { name = 'MavenCentralMirror'; url = mirrorUrl }
+    repos.remove(mirror)
+    repos.addFirst(mirror)
+}
+beforeSettings { settings -> preferMirror(settings.pluginManagement.repositories) }
+settingsEvaluated { settings -> preferMirror(settings.dependencyResolutionManagement.repositories) }
+allprojects { project -> preferMirror(project.buildscript.repositories) }

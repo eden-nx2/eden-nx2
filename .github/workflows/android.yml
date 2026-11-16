@@ -75,6 +75,12 @@ jobs:
           key: android-cpm-${{ hashFiles('cpmfile.json', 'externals/cpmfile.json', 'src/**/cpmfile.json') }}
           restore-keys: android-cpm-
 
+      - name: Use a Maven Central mirror
+        # Maven Central answers shared runners with HTTP 429, sometimes for every attempt.
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cp .ci/android/maven-mirror.init.gradle ~/.gradle/init.d/
+
       - name: Build APK
         env:
           CCACHE: "true"
