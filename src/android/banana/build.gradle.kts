@@ -86,6 +86,10 @@ fun sha256(file: File): String {
 }
 
 val bananaApk = providers.gradleProperty("bananaApk").orElse(providers.environmentVariable("BANANA_APK"))
+// Native libraries built from Banana Native's source (tools/android/build_bananative_native.sh): each one
+// replaces the release's library of the same name, the rest stay the release's.
+val nativeLibs = providers.gradleProperty("bananaNativeLibs")
+    .orElse(providers.environmentVariable("BANANA_NATIVE_LIBS"))
 val generatedDir = layout.buildDirectory.dir("generated/banana")
 val cachedApk = layout.buildDirectory.file("banana/" + upstream.getValue("apk_url").substringAfterLast('/'))
 
@@ -93,6 +97,7 @@ val extractBananaRelease = tasks.register("extractBananaRelease") {
     val url = upstream.getValue("apk_url")
     val expected = upstream.getValue("apk_sha256")
     inputs.property("apk_sha256", expected)
+    nativeLibs.orNull?.let { inputs.files(fileTree(it) { include("*.so") }) }
     outputs.dir(generatedDir)
     doLast {
         val apk = bananaApk.orNull?.let { File(it) } ?: cachedApk.get().asFile.also { file ->
@@ -119,6 +124,10 @@ val extractBananaRelease = tasks.register("extractBananaRelease") {
                 target.parentFile.mkdirs()
                 zip.getInputStream(entry).use { input -> target.outputStream().use { input.copyTo(it) } }
             }
+        }
+        nativeLibs.orNull?.let { File(it) }?.listFiles { f -> f.name.endsWith(".so") }?.forEach { lib ->
+            logger.lifecycle("Banana Native: own build of ${lib.name}")
+            lib.copyTo(File(out, "jni/arm64-v8a/" + lib.name), overwrite = true)
         }
     }
 }
