@@ -633,6 +633,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          # Keeps Gradle's downloads between runs: Maven Central answers runners with 429 when
+          # every run fetches them again.
+          cache: gradle
 
       - name: Install NDK and CMake
         run: |
@@ -692,8 +695,20 @@ jobs:
           GIT_TAG_NAME: build-${{ github.run_number }}
         shell: bash
         run: |
+          set -o pipefail
           chmod +x .ci/android/build.sh
-          .ci/android/build.sh -t standard -b Release
+          # Maven Central rate-limits shared runners (HTTP 429); a build that failed only on that
+          # is tried again after a pause, and Gradle keeps what it already fetched.
+          for attempt in 1 2 3; do
+            if .ci/android/build.sh -t standard -b Release 2>&1 | tee "$RUNNER_TEMP/android-build.log"; then
+              break
+            fi
+            if [[ $attempt == 3 ]] || ! grep -q "Received status code 429" "$RUNNER_TEMP/android-build.log"; then
+              exit 1
+            fi
+            echo "::warning::Maven Central rate-limited the build (HTTP 429); retrying in $((attempt * 60)) s"
+            sleep $((attempt * 60))
+          done
           apk=$(ls artifacts/*.apk | head -n 1)
           mv "$apk" "eden-${GITHUB_SHA}-android-arm64.apk"
 
