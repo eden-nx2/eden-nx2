@@ -466,13 +466,19 @@ class GamePropertiesFragment : Fragment() {
                                     positiveButtonTitleId = android.R.string.cancel,
                                     negativeButtonTitleId = android.R.string.ok,
                                     negativeAction = {
-                                        File(args.game.saveDir).deleteRecursively()
-                                        Toast.makeText(
-                                            EdenApplication.appContext,
-                                            R.string.save_data_deleted_successfully,
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        homeViewModel.reloadPropertiesList(true)
+                                        val context = EdenApplication.appContext
+                                        viewLifecycleOwner.lifecycleScope.launch {
+                                            val deleted = withContext(Dispatchers.IO) {
+                                                GameEngine.deleteSave(context, args.game)
+                                            }
+                                            Toast.makeText(
+                                                context,
+                                                if (deleted) R.string.save_data_deleted_successfully
+                                                else R.string.save_data_delete_failed,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            homeViewModel.reloadPropertiesList(true)
+                                        }
                                     }
                                 ).show(parentFragmentManager, MessageDialogFragment.TAG)
                             }
@@ -637,7 +643,7 @@ class GamePropertiesFragment : Fragment() {
                     }
 
                     if (savesFolderFile != null) {
-                        savesFolder.deleteRecursively()
+                        GameEngine.deleteSave(requireContext(), args.game)
                         savesFolder.mkdir()
                         savesFolderFile.copyRecursively(savesFolder)
                         savesFolderFile.deleteRecursively()

@@ -911,6 +911,7 @@
     <string name="delete_save_data_description">Removes all save data specific to this game</string>
     <string name="delete_save_data_warning_description">This irrecoverably removes all of this game\'s save data. Are you sure you want to continue?</string>
     <string name="save_data_deleted_successfully">Save data deleted successfully</string>
+    <string name="save_data_delete_failed">Some save data could not be deleted</string>
     <string name="select_content_type">Content type</string>
     <string name="updates_and_dlc">Updates and DLC</string>
     <string name="mods_and_cheats">Mods and cheats</string>

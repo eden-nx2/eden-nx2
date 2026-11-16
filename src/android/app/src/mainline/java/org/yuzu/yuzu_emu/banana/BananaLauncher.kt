@@ -39,6 +39,8 @@ class BananaLauncher : NativeEngineUi {
 
     override fun install(context: Context) = HokkaidoBridge.install(context)
 
+    override fun closeGame(context: Context, titleId: String) = HokkaidoBridge.closeGame(context, titleId)
+
     override fun launch(
         activity: FragmentActivity,
         gamePath: String,

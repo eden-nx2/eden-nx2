@@ -15,6 +15,7 @@ import io.github.zortos293.eden.model.Game
 import io.github.zortos293.eden.features.settings.model.StringSetting
 import io.github.zortos293.eden.features.settings.utils.SettingsFile
 import io.github.zortos293.eden.features.settings.model.IntSetting
+import java.io.File
 
 /**
  * Which engine runs a game: Hokkaido's emulator, or Banana Native (game code natively, NVN on Vulkan),
@@ -147,6 +148,24 @@ object GameEngine {
             NativeConfig.reloadGlobalConfig()
         }
         return driver to window
+    }
+
+    /**
+     * Removes the game's save folder and what Banana Native keeps beside it, which would bring the save back:
+     * its transaction and journal (<save>.work, .new, .re, .old, .restore, .pend1, .pend2, .restore-set), its
+     * lock, and its device save (<save>_device and that one's). Banana Native's game process is closed first
+     * when it holds the game. Blocks: call it off the main thread. False when something stayed.
+     */
+    fun deleteSave(context: Context, game: Game): Boolean {
+        val save = File(game.saveDir)
+        runCatching { ui?.closeGame(context, game.programIdHex) }
+        val parent = save.parentFile ?: return !save.exists() || save.deleteRecursively()
+        var ok = true
+        parent.listFiles()?.filter {
+            it.name == save.name || it.name.startsWith(save.name + ".") ||
+                it.name.startsWith(save.name + "_device")
+        }?.forEach { ok = it.deleteRecursively() && ok }
+        return ok
     }
 
     /** ResolutionSetup (Res1_4X … Res8X) as Banana Native's Game resolution; above 2x the game's own size. */

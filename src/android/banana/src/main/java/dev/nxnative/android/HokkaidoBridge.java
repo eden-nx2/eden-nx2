@@ -217,8 +217,10 @@ public final class HokkaidoBridge {
         if (saveDir == null || saveDir.isEmpty()) return;
         File shared = new File(saveDir);
         if (!shared.isDirectory() && !shared.mkdirs()) throw new IOException("cannot create the save folder " + shared);
+        // Only the first time the game uses Hokkaido's folder: later an empty one is a deleted save, never refilled.
         File own = AppStorage.save(c, id);
-        if (isEmpty(shared) && !own.getAbsoluteFile().equals(shared.getAbsoluteFile()) && !isEmpty(own)) copyTree(own, shared);
+        boolean first = Prefs.folder(c, "save_" + id) == null;
+        if (first && isEmpty(shared) && !own.getAbsoluteFile().equals(shared.getAbsoluteFile()) && !isEmpty(own)) copyTree(own, shared);
         Prefs.folder(c, "save_" + id, shared.getPath());
     }
 
@@ -272,6 +274,12 @@ public final class HokkaidoBridge {
             // no record: an unknown game
         }
         return new String[] {title == null ? "" : title, name == null ? "" : name};
+    }
+
+    /** Closes Banana Native's game process when it holds this game (its save is about to change under it). */
+    public static void closeGame(Context c, String titleId) {
+        String[] running = runningGame(c);
+        if (running != null && running[0].equalsIgnoreCase(titleId)) stopRunningGame(c);
     }
 
     /** Closes Banana Native's game process (what a game there has not saved is lost); waits up to 3 s for it to go. */

@@ -14,6 +14,9 @@ interface NativeEngineUi {
     /** What Banana Native's application class did in every process. */
     fun install(context: Context)
 
+    /** Closes Banana Native's game process when it holds this game. Blocks up to 3 s: call it off the main thread. */
+    fun closeGame(context: Context, titleId: String)
+
     /**
      * Starts the game in Banana Native, preparing it first when it needs that, with Hokkaido's GPU driver for it
      * ([driverZip]: a driver zip, empty for the system's), Hokkaido's save folder ([saveDir], shared by both
