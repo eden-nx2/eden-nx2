@@ -28,12 +28,6 @@ object GameEngine {
     /** Banana Native's own processes (its manifest): they run none of the emulator's setup. */
     private val embeddedProcesses = listOf(":game", ":pack", ":readiness", ":selftest")
 
-    /** Games Auto gives to Banana Native: it runs them better than the emulator. */
-    private val autoNative = setOf(
-        "040074A01BF12000", // Donkey Kong Bananza
-        "0400A3A01EE4C000" // Pokemon Pokopia
-    )
-
     /** Banana Native's UI, in the mainline flavor only. */
     private val ui: NativeEngineUi? by lazy {
         runCatching {
@@ -70,24 +64,34 @@ object GameEngine {
         }
     }
 
-    /** What Auto picks for this game. */
-    fun autoIsNative(game: Game): Boolean =
-        isBananaAvailable && game.programIdHex.uppercase().padStart(16, '0') in autoNative
+    /** Banana Native's status for the game ("playable", "bring-up"), null when it cannot run it. */
+    private fun status(game: Game): String? =
+        runCatching { ui?.status(game.programIdHex.uppercase().padStart(16, '0')) }.getOrNull()
+
+    /** Whether Banana Native has a profile for the game: only then is it a choice. */
+    fun supports(game: Game): Boolean = status(game) != null
+
+    /** What Auto picks: Banana Native for the games its profiles call playable, Hokkaido for the rest. */
+    fun autoIsNative(game: Game): Boolean = status(game) == "playable"
 
     fun usesNative(context: Context, game: Game): Boolean = when (choice(context, game)) {
-        Choice.NATIVE -> true
+        Choice.NATIVE -> supports(game)
         Choice.EMULATE -> false
         Choice.AUTO -> autoIsNative(game)
     }
 
+    /** Banana Native's name for this game: marked experimental while its profile is in bring-up. */
+    fun nativeName(context: Context, game: Game): String = context.getString(
+        if (autoIsNative(game)) R.string.game_engine_native else R.string.game_engine_native_experimental
+    )
+
     fun describe(context: Context, game: Game): String = when (choice(context, game)) {
         Choice.EMULATE -> context.getString(R.string.game_engine_emulate)
-        Choice.NATIVE -> context.getString(R.string.game_engine_native)
+        Choice.NATIVE -> nativeName(context, game)
         Choice.AUTO -> context.getString(
             R.string.game_engine_auto_now,
-            context.getString(
-                if (autoIsNative(game)) R.string.game_engine_native else R.string.game_engine_emulate
-            )
+            if (autoIsNative(game)) nativeName(context, game)
+            else context.getString(R.string.game_engine_emulate)
         )
     }
 

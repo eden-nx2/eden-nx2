@@ -334,7 +334,7 @@ class GamePropertiesFragment : Fragment() {
                 )
             )
 
-            if (GameEngine.isBananaAvailable && !args.game.isHomebrew) {
+            if (GameEngine.supports(args.game) && !args.game.isHomebrew) {
                 add(
                     SubmenuProperty(
                         R.string.game_engine,
@@ -806,7 +806,7 @@ class GamePropertiesFragment : Fragment() {
                     )
                 }
                 GameEngine.Choice.EMULATE -> getString(R.string.game_engine_emulate)
-                GameEngine.Choice.NATIVE -> getString(R.string.game_engine_native)
+                GameEngine.Choice.NATIVE -> GameEngine.nativeName(requireContext(), args.game)
             }
         }.toTypedArray()
         val current = choices.indexOf(GameEngine.choice(requireContext(), args.game))

@@ -34,6 +34,15 @@ public final class HokkaidoBridge {
         PickedNup.install(context);
     }
 
+    /**
+     * Banana Native's status for a game (its profile's readiness.tsv status row: "playable", "bring-up"), or
+     * null when this Banana Native has no profile for it and cannot run it.
+     */
+    public static String status(String titleId) {
+        Profile p = Profile.of(titleId == null ? "" : titleId.toUpperCase(Locale.ROOT));
+        return p == null ? null : p.status;
+    }
+
     /** Embedded, Banana Native never updates itself: Hokkaido's releases carry it (Updater.sources). */
     static boolean embedded() {
         return true;

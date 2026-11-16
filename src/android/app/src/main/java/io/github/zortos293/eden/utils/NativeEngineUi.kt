@@ -14,6 +14,9 @@ interface NativeEngineUi {
     /** What Banana Native's application class did in every process. */
     fun install(context: Context)
 
+    /** Banana Native's status for a game ("playable", "bring-up"), or null when it has no profile for it. */
+    fun status(titleId: String): String?
+
     /** Closes Banana Native's game process when it holds this game. Blocks up to 3 s: call it off the main thread. */
     fun closeGame(context: Context, titleId: String)
 

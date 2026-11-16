@@ -1142,6 +1142,7 @@
     <string name="game_engine_auto_now">Auto (%1$s)</string>
     <string name="game_engine_emulate">Hokkaido</string>
     <string name="game_engine_native">Banana Native</string>
+    <string name="game_engine_native_experimental">Banana Native (experimental)</string>
     <string name="game_engine_banana_missing">Banana Native could not start</string>
     <string name="game_engine_banana_missing_description">This game is set to run in Banana Native, but this build has no Banana Native or it could not start. Play it with Hokkaido instead?</string>
     <string name="game_engine_play_here">Play with Hokkaido</string>
