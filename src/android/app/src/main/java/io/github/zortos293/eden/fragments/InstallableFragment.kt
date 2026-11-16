@@ -285,7 +285,7 @@ class InstallableFragment : Fragment() {
                     var failedImports = 0
                     if (files != null) {
                         for (file in files) {
-                            if (file.isDirectory) {
+                            if (isTitleSaveFolder(file)) {
                                 val baseSaveDir =
                                     NativeLibrary.getSavePath(BigInteger(file.name, 16).toString())
                                 if (baseSaveDir.isEmpty()) {
@@ -374,16 +374,14 @@ class InstallableFragment : Fragment() {
                 NativeConfig.getSaveDir() +
                     NativeLibrary.getDefaultProfileSaveDataRoot(false)
             )
-            if (oldSaveDataFolder.exists()) {
-                oldSaveDataFolder.copyRecursively(cacheSaveDir)
-            }
-
             val futureSaveDataFolder = File(
                 NativeConfig.getSaveDir() +
                     NativeLibrary.getDefaultProfileSaveDataRoot(true)
             )
-            if (futureSaveDataFolder.exists()) {
-                futureSaveDataFolder.copyRecursively(cacheSaveDir)
+            for (folder in listOf(oldSaveDataFolder, futureSaveDataFolder)) {
+                folder.listFiles()?.filter { isTitleSaveFolder(it) }?.forEach {
+                    it.copyRecursively(File(cacheSaveDir, it.name), overwrite = true)
+                }
             }
 
             val saveFilesTotal = cacheSaveDir.listFiles()?.size ?: 0
@@ -405,4 +403,11 @@ class InstallableFragment : Fragment() {
             }
         }.show(parentFragmentManager, ProgressDialogFragment.TAG)
     }
+
+    /**
+     * A game's save folder, named by its title ID. Banana Native keeps a lock file and a staging folder
+     * (<title ID>.lock, <title ID>.work) beside each save folder it uses, which is Hokkaido's.
+     */
+    private fun isTitleSaveFolder(file: File): Boolean =
+        file.isDirectory && file.name.length == 16 && file.name.all { it.isDigit() || it.uppercaseChar() in 'A'..'F' }
 }
