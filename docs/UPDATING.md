@@ -36,7 +36,11 @@ git commit                                    # the merge commit; list the code 
 The script ends with checks: no path or text may still say Lichii (except upstream links and
 Lichii's compatibility site), build files must not point at missing assets, and no
 `std::atomic_ref` may appear outside the tests: Lichii only builds for desktop, and Android's
-libc++ lacks it (use `__atomic_load_n` and friends). Fix what it
+libc++ lacks it (use `__atomic_load_n` and friends). No Android resource may be defined twice
+in one `values*` folder either: Lichii keeps Eden's synthwave theme (`eden_error`, `EdenSlider`,
+`Theme.Eden.Main`) beside its own, so the script names Lichii's own `EdenNX2` (`eden_nx2_error`,
+`Theme.EdenNX2.Main`); a new clash gets a line in `ANDROID_SPECIFIC`. A merge can also repeat a
+block both sides added: delete one copy. Fix what it
 reports, rerun it until it passes, and build before pushing (`build-check` runs on every push).
 
 ## Hokkaido commits

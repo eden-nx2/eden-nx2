@@ -281,7 +281,7 @@
 
     <!-- Common Colors Across All Themes -->
     <color name="eden_outlineVariant">#C6C5D0</color>
-    <color name="eden_error">#BA1A1A</color>
+    <color name="eden_nx2_error">#BA1A1A</color>
     <color name="eden_errorContainer">#FFDAD6</color>
     <color name="eden_onError">#FFFFFF</color>
     <color name="eden_onErrorContainer">#410002</color>

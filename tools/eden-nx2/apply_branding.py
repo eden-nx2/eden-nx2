@@ -73,6 +73,17 @@ TEXT_SPECIFIC = [
 ]
 GENERIC = [("LICHII", "EDEN"), ("Lichii", "Eden"), ("lichii", "eden")]
 
+# Lichii's Android resources keep Eden's synthwave theme (eden_error, EdenSlider, Theme.Eden.Main,
+# ...) next to its own base theme (lichii_error, LichiiSlider, Theme.Lichii.Main, ...), so the
+# generic rename would give two resources one name and the APK would not build. Lichii's own get
+# an EdenNX2 name instead. The duplicate-resource check below catches any new clash.
+ANDROID_SPECIFIC = [
+    (re.compile(r"\blichii_error\b"), "eden_nx2_error"),
+    (re.compile(r"\bLichiiSlider\b"), "EdenNX2Slider"),
+    (re.compile(r"\bLichiiPopupMenu\b"), "EdenNX2PopupMenu"),
+    (re.compile(r"\bTheme([._])Lichii(?=[._]Main(?![A-Za-z0-9]))"), r"Theme\1EdenNX2"),
+]
+
 # Desktop ids (desktop entry, MIME, AppStream, Qt desktop file name). Android keeps the Kotlin
 # package io.github.zortos293.eden that the generic rename makes of Lichii's.
 DESKTOP_ID = ("io.github.zortos293.eden", "com.eden.eden_nx2")
@@ -187,6 +198,9 @@ def rebrand_text(text, path):
         text = text.replace(phrase, f"\0P{i}\0")
     for old, new in TEXT_SPECIFIC:
         text = text.replace(old, new)
+    if path.startswith("src/android/"):
+        for old, new in ANDROID_SPECIFIC:
+            text = old.sub(new, text)
     for old, new in GENERIC:
         text = text.replace(old, new)
     if not path.startswith("src/android/"):
@@ -295,6 +309,20 @@ def check():
             for n, line in enumerate((read(f) or "").splitlines(), 1):
                 if "std::atomic_ref" in line and not line.lstrip().startswith("//"):
                     problems.append(f"{f}:{n}: std::atomic_ref does not build for Android")
+    # Android resources: one name may be defined only once per configuration (values, values-night,
+    # ...), or aapt fails ("Found item ... more than one time").
+    resource = re.compile(r'<(color|string|string-array|integer-array|array|dimen|style|bool|integer)'
+                          r'\s+name="([^"]+)"')
+    seen = {}
+    for f in files:
+        m = re.match(r"(src/android/.*/res/values[^/]*)/[^/]+\.xml$", f)
+        if not m:
+            continue
+        for kind, name in resource.findall(read(f) or ""):
+            key = (m.group(1), kind, name)
+            if key in seen:
+                problems.append(f"{f}: Android {kind} {name} is already defined (in {seen[key]})")
+            seen.setdefault(key, f)
     return problems
 
 

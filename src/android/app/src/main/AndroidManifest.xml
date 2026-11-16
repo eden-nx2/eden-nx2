@@ -69,17 +69,17 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
         <activity
             android:name="io.github.zortos293.eden.features.settings.ui.SettingsActivity"
-            android:theme="@style/Theme.Eden.Main"
+            android:theme="@style/Theme.EdenNX2.Main"
             android:label="@string/preferences_settings"/>
 
         <activity
             android:name="io.github.zortos293.eden.features.settings.ui.SettingsSubscreenActivity"
-            android:theme="@style/Theme.Eden.Main"
+            android:theme="@style/Theme.EdenNX2.Main"
             android:label="@string/preferences_settings"/>
 
         <activity
             android:name="io.github.zortos293.eden.activities.EmulationActivity"
-            android:theme="@style/Theme.Eden.Main"
+            android:theme="@style/Theme.EdenNX2.Main"
             android:launchMode="singleTop"
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|uiMode"

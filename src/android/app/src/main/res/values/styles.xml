@@ -13,7 +13,7 @@
         <item name="android:paddingRight">32dp</item>
     </style>
 
-    <style name="EdenSlider" parent="Widget.Material3.Slider">
+    <style name="EdenNX2Slider" parent="Widget.Material3.Slider">
         <item name="tickVisible">false</item>
         <item name="labelBehavior">gone</item>
     </style>
@@ -210,7 +210,7 @@
     <style name="EdenPopupMenu" parent="Widget.Material3.PopupMenu">
         <item name="android:popupBackground">@drawable/popup_menu_background</item>
     </style>
-    <style name="EdenPopupMenu" parent="Widget.Material3.PopupMenu">
+    <style name="EdenNX2PopupMenu" parent="Widget.Material3.PopupMenu">
         <item name="android:popupBackground">@drawable/popup_menu_background</item>
     </style>
 

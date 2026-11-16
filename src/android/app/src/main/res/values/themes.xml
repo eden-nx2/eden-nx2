@@ -4,11 +4,11 @@
     <style name="Theme.Eden.Splash.Main" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/eden_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_eden_splash</item>
-        <item name="postSplashScreenTheme">@style/Theme.Eden.Main</item>
+        <item name="postSplashScreenTheme">@style/Theme.EdenNX2.Main</item>
     </style>
 
-    <style name="Theme.Eden.Main" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorError">@color/eden_error</item>
+    <style name="Theme.EdenNX2.Main" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorError">@color/eden_nx2_error</item>
         <item name="colorErrorContainer">@color/eden_errorContainer</item>
         <item name="colorOnError">@color/eden_onError</item>
         <item name="colorOnErrorContainer">@color/eden_onErrorContainer</item>
@@ -17,14 +17,14 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
 
-        <item name="sliderStyle">@style/EdenSlider</item>
+        <item name="sliderStyle">@style/EdenNX2Slider</item>
 
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
 
         <item name="android:enforceStatusBarContrast">false</item>
         <item name="android:enforceNavigationBarContrast">false</item>
         <!-- Popup menu theme -->
-        <item name="popupMenuStyle">@style/EdenPopupMenu</item>
+        <item name="popupMenuStyle">@style/EdenNX2PopupMenu</item>
     </style>
 
     <style name="Theme.Eden.Main" parent="Theme.Material3.DayNight.NoActionBar">
@@ -77,7 +77,7 @@
         <item name="android:itemTextAppearance">@style/TextAppearance.Material3.BodyLarge</item>
     </style>
 
-    <style name="Theme.Eden.Main.Blue" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Blue" parent="Theme.EdenNX2.Main">
         <!-- Blue theme colors -->
         <item name="colorPrimary">@color/eden_primary_blue</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_blue</item>
@@ -105,7 +105,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Blue</item>
     </style>
 
-    <style name="Theme.Eden.Main.Red" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Red" parent="Theme.EdenNX2.Main">
         <!-- Red theme colors -->
         <item name="colorPrimary">@color/eden_primary_red</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_red</item>
@@ -133,7 +133,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Red</item>
     </style>
 
-    <style name="Theme.Eden.Main.Green" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Green" parent="Theme.EdenNX2.Main">
         <!-- Green theme colors -->
         <item name="colorPrimary">@color/eden_primary_green</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_green</item>
@@ -161,7 +161,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Green</item>
     </style>
 
-    <style name="Theme.Eden.Main.Orange" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Orange" parent="Theme.EdenNX2.Main">
         <!-- Orange theme colors -->
         <item name="colorPrimary">@color/eden_primary_orange</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_orange</item>
@@ -189,7 +189,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Orange</item>
     </style>
 
-    <style name="Theme.Eden.Main.Yellow" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Yellow" parent="Theme.EdenNX2.Main">
         <!-- Yellow theme colors -->
         <item name="colorPrimary">@color/eden_primary_yellow</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_yellow</item>
@@ -217,7 +217,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Yellow</item>
     </style>
 
-    <style name="Theme.Eden.Main.Violet" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Violet" parent="Theme.EdenNX2.Main">
         <!-- Violet theme colors -->
         <item name="colorPrimary">@color/eden_primary_violet</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_violet</item>
@@ -245,7 +245,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Violet</item>
     </style>
 
-    <style name="Theme.Eden.Main.Cyan" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Cyan" parent="Theme.EdenNX2.Main">
         <!-- Cyan theme colors -->
         <item name="colorPrimary">@color/eden_primary_cyan</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_cyan</item>
@@ -273,7 +273,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Cyan</item>
     </style>
 
-    <style name="Theme.Eden.Main.Gray" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Gray" parent="Theme.EdenNX2.Main">
         <!-- Gray Theme Colors -->
         <item name="colorPrimary">@color/eden_primary_gray</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_gray</item>
@@ -301,7 +301,7 @@
         <item name="materialAlertDialogTheme">@style/EdenMaterialDialog.Gray</item>
     </style>
 
-    <style name="Theme.Eden.Main.Pink" parent="Theme.Eden.Main">
+    <style name="Theme.EdenNX2.Main.Pink" parent="Theme.EdenNX2.Main">
         <!-- Pink Theme Colors -->
         <item name="colorPrimary">@color/eden_primary_pink</item>
         <item name="colorOnPrimary">@color/eden_onPrimary_pink</item>

@@ -36,7 +36,7 @@ object ThemeHelper {
             Theme.Default -> activity.setTheme(getSelectedStaticThemeColor())
             Theme.MaterialYou -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    activity.setTheme(R.style.Theme_Eden_Main_MaterialYou)
+                    activity.setTheme(R.style.Theme_EdenNX2_Main_MaterialYou)
                 } else {
                     activity.setTheme(getSelectedStaticThemeColor())
                 }
@@ -55,15 +55,15 @@ object ThemeHelper {
         val themeIndex = IntSetting.STATIC_THEME_COLOR.getInt(false)
         val themes = arrayOf(
             R.style.Theme_Eden_Main,
-            R.style.Theme_Eden_Main_Violet,
-            R.style.Theme_Eden_Main_Blue,
-            R.style.Theme_Eden_Main_Cyan,
-            R.style.Theme_Eden_Main_Red,
-            R.style.Theme_Eden_Main_Green,
-            R.style.Theme_Eden_Main_Yellow,
-            R.style.Theme_Eden_Main_Orange,
-            R.style.Theme_Eden_Main_Pink,
-            R.style.Theme_Eden_Main_Gray
+            R.style.Theme_EdenNX2_Main_Violet,
+            R.style.Theme_EdenNX2_Main_Blue,
+            R.style.Theme_EdenNX2_Main_Cyan,
+            R.style.Theme_EdenNX2_Main_Red,
+            R.style.Theme_EdenNX2_Main_Green,
+            R.style.Theme_EdenNX2_Main_Yellow,
+            R.style.Theme_EdenNX2_Main_Orange,
+            R.style.Theme_EdenNX2_Main_Pink,
+            R.style.Theme_EdenNX2_Main_Gray
         )
         return themes[themeIndex]
     }
