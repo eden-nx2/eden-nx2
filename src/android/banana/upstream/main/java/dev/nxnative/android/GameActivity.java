@@ -118,7 +118,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         tag = overlayText(Gravity.TOP | Gravity.START, 1f);
         tag.setText(Prefs.buildTag(this));
         tag.setTypeface(Typeface.DEFAULT_BOLD);
-        tag.setVisibility(overlayOn() && Prefs.overlayItem(this, "tag") ? View.VISIBLE : View.GONE);
+        tag.setVisibility(!HokkaidoInGame.on() && overlayOn() && Prefs.overlayItem(this, "tag") ? View.VISIBLE : View.GONE);
         root.addView(tag, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.START));
         // The log block may grow at most up to the tag's bottom edge (its top margin), so a long log never runs under the tag
         tag.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
@@ -126,13 +126,14 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             int top = b + ((FrameLayout.LayoutParams) tag.getLayoutParams()).topMargin;
             if (lp.topMargin != top) { lp.topMargin = top; overlay.post(overlay::requestLayout); }
         });
-        fps = overlayText(Gravity.TOP | Gravity.END, 0.85f);
-        root.addView(fps, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.END));
+        int fpsCorner = HokkaidoInGame.on() ? Gravity.TOP | Gravity.START : Gravity.TOP | Gravity.END;   // Hokkaido's overlay: the items top left, no build tag
+        fps = overlayText(fpsCorner, 0.85f);
+        root.addView(fps, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, fpsCorner));
         // The same two blocks for the host's present, which draws them into the game's images (Overlay.Block): the views show only when it does not
         TextView tagPic = overlayText(Gravity.TOP | Gravity.START, 1f);
         tagPic.setTypeface(Typeface.DEFAULT_BOLD);
-        tagBlock = new Overlay.Block(0, tagPic);
-        fpsBlock = new Overlay.Block(1, overlayText(Gravity.TOP | Gravity.END, 0.85f));
+        tagBlock = new Overlay.Block(HokkaidoInGame.on() ? 1 : 0, tagPic);
+        fpsBlock = new Overlay.Block(HokkaidoInGame.on() ? 0 : 1, overlayText(fpsCorner, 0.85f));
         stats = new Overlay(this);
         panel = new SidePanel(this, new SidePanel.Rows() {
             @Override public void controls(LinearLayout box) { controls.controlRows(GameActivity.this, box); }
@@ -162,7 +163,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         });
         handle.setContentDescription("Open the in-game panel");
         handle.setOnClickListener(v -> panel.open());   // TalkBack's double tap
-        root.addView(handle, root.indexOfChild(panel), new FrameLayout.LayoutParams(Math.round(20 * dp), Math.round(140 * dp), Gravity.END | Gravity.TOP));
+        if (!HokkaidoInGame.on()) root.addView(handle, root.indexOfChild(panel), new FrameLayout.LayoutParams(Math.round(20 * dp), Math.round(140 * dp), Gravity.END | Gravity.TOP));   // Hokkaido's menu opens with Back
         // Auto with a gamepad connected, or Off: the handle goes with the controls (Back or a gamepad's Home button opens the panel)
         controls.onSwitch = v -> handle.setVisibility(v ? View.VISIBLE : View.GONE);
         controls.setMode(TouchControls.mode(this));
@@ -177,8 +178,9 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         pausedView.setBackgroundColor(0x99000000);
         pausedView.setVisibility(View.GONE);
         pausedView.setOnClickListener(v -> unpause());
+        HokkaidoInGame.stylePaused(pausedView);
         root.addView(pausedView, root.indexOfChild(handle), new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-        panelHint(root);
+        if (!HokkaidoInGame.on()) panelHint(root);
         root.setOnApplyWindowInsetsListener((v, in) -> { insetOverlay(in); return in; });   // again whenever the insets change (a turn, a fold)
         setContentView(root);
         immersive();
@@ -214,6 +216,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         t.setBackground(bg);
         t.setClickable(false);
         t.setFocusable(false);
+        HokkaidoInGame.styleOverlay(t);
         return t;
     }
 
@@ -228,10 +231,15 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         android.view.DisplayCutout cut = in.getDisplayCutout();
         int cl = cut == null ? 0 : cut.getSafeInsetLeft(), ct = cut == null ? 0 : cut.getSafeInsetTop(), cr = cut == null ? 0 : cut.getSafeInsetRight();
         int[] a = OverlayInset.topLeft(tl == null ? 0 : tl.getRadius(), cl, ct), b = OverlayInset.topRight(tr == null ? 0 : tr.getRadius(), cr, ct);
-        tagBlock.inset(a[0], a[1], 0);
-        fpsBlock.inset(0, b[1], b[0]);
-        margins(tag, a[0], a[1], 0);
-        margins(fps, 0, b[1], b[0]);
+        if (HokkaidoInGame.on()) {   // the items top left (onCreate)
+            fpsBlock.inset(a[0], a[1], 0);
+            margins(fps, a[0], a[1], 0);
+        } else {
+            tagBlock.inset(a[0], a[1], 0);
+            fpsBlock.inset(0, b[1], b[0]);
+            margins(tag, a[0], a[1], 0);
+            margins(fps, 0, b[1], b[0]);
+        }
         int[] c = OverlayInset.topLeft(bl == null ? 0 : bl.getRadius(), cl, 0);   // the log block, bottom left: sideways by the corner, up by the same as a top one down
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) overlay.getLayoutParams();
         if (lp.leftMargin != c[0] || lp.bottomMargin != c[1]) { lp.leftMargin = c[0]; lp.bottomMargin = c[1]; overlay.requestLayout(); }
@@ -310,7 +318,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     private void fpsTick() {
         if (stopped || paused) { ui.postDelayed(this::fpsTick, 2000); return; }   // nothing to show: no readings (thermal, battery, the host's counters) while suspended
         boolean on = overlayOn();
-        CharSequence t = on ? stats.tick() : null, g = on && Prefs.overlayItem(this, "tag") ? tag.getText() : null;
+        CharSequence t = on ? stats.tick() : null, g = on && !HokkaidoInGame.on() && Prefs.overlayItem(this, "tag") ? tag.getText() : null;
         boolean host = tagBlock.host(g) & fpsBlock.host(t);   // both every time: a block that is off empties its corner
         fps.setVisibility(!host && t != null ? View.VISIBLE : View.GONE);
         tag.setVisibility(!host && g != null ? View.VISIBLE : View.GONE);
@@ -1175,7 +1183,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         pausedView.setVisibility(View.VISIBLE);
     }
 
-    private void unpause() {
+    void unpause() {
         if (!paused) return;
         paused = false;
         pausedView.setVisibility(View.GONE);
@@ -1404,4 +1412,8 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     FrameLayout rootView() { return rootView; }
     View panelView() { return panel; }
     boolean gamepadConnected() { return !pads.isEmpty(); }
+
+    // For Hokkaido's in-game menu (HokkaidoInGame.Screen)
+    boolean paused() { return paused; }
+    TouchControls touchControls() { return controls; }
 }

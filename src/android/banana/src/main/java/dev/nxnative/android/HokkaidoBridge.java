@@ -216,8 +216,13 @@ public final class HokkaidoBridge {
      */
     public static void prepareStart(Context c, Plan plan, String driverZip, String saveDir, String window) throws IOException {
         String id = plan.game.titleId;
-        // The render size Hokkaido's resolution scale gives (Game resolution: a "<width>x<height>" or "original").
-        if (window != null && !window.isEmpty()) Prefs.gameWindow(c, id, window);
+        // The render size Hokkaido's resolution scale gives (Game resolution: a "<width>x<height>" or "original"),
+        // when it changed since the last start: a size picked in the game's quick settings stays until then.
+        String given = "hokkaido_window_" + id;
+        if (window != null && !window.isEmpty() && !window.equals(Prefs.of(c).getString(given, null))) {
+            Prefs.gameWindow(c, id, window);
+            Prefs.of(c).edit().putString(given, window).commit();
+        }
         if (driverZip == null || driverZip.isEmpty()) {
             GpuDriver.choice(c, id, GpuDriver.SYSTEM);
         } else {
@@ -308,12 +313,19 @@ public final class HokkaidoBridge {
         return null;
     }
 
-    /** Starts a ready game (Plan.READY) in Banana Native's game process, as FrontendLaunch.play does. */
-    public static void play(Context c, Plan plan) {
+    /** Hokkaido's theme for the game screen's menu (HokkaidoInGame.Screen): its style resources, and its dark mode. */
+    static final String EXTRA_THEMES = "hokkaido_themes", EXTRA_NIGHT = "hokkaido_night";
+
+    /**
+     * Starts a ready game (Plan.READY) in Banana Native's game process, as FrontendLaunch.play does, with Hokkaido's
+     * theme (its style resources in order, and its dark mode) for the in-game menu there.
+     */
+    public static void play(Context c, Plan plan, int[] themes, boolean night) {
         Game g = plan.game;
         c.startActivity(new Intent(c, GameActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra("title_id", g.titleId).putExtra("name", g.name).putExtra("game", g.gameDir)
-                .putExtra("pack", g.packDir).putExtra("frontend", true));
+                .putExtra("pack", g.packDir).putExtra("frontend", true)
+                .putExtra(EXTRA_THEMES, themes).putExtra(EXTRA_NIGHT, night));
     }
 
     /** A job's progress, for Hokkaido's progress screen. */

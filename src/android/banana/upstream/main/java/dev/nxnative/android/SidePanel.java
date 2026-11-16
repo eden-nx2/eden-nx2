@@ -56,6 +56,8 @@ final class SidePanel extends FrameLayout {
     private View lit;   // the view with the focus frame
     /** GameActivity: the game's held buttons released when the panel opens (releaseGameInput) */
     Runnable onOpen;
+    /** Hokkaido's in-game menu (HokkaidoInGame), which shows the tabs' rows in its own look; null: this panel shows them */
+    private final HokkaidoInGame.Menu hk;
 
     /** The rows GameActivity adds from its on-screen controls (TouchControls) */
     interface Rows {
@@ -93,6 +95,12 @@ final class SidePanel extends FrameLayout {
         sheet = sh;
         getViewTreeObserver().addOnGlobalFocusChangeListener(this::focusMoved);
         setVisibility(GONE);
+        hk = a instanceof GameActivity ? HokkaidoInGame.menu((GameActivity) a, this) : null;
+        if (hk != null) {   // the rows are built as before, never shown here: Hokkaido's menu shows them (look)
+            removeAllViews();
+            addView(hk.view(), new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            setVisibility(VISIBLE);
+        }
     }
 
     /** The controller's confirm and back keys (PadPanel.confirmBack: the buttons that are the Switch's A and B in this game) */
@@ -101,12 +109,13 @@ final class SidePanel extends FrameLayout {
     boolean isOpen() { return open; }
     void toggle() { if (open) close(); else open(); }
     /** Opened or closed by a controller (GameActivity: Home, or − and + held): opened, the focus on its first row, out of touch mode */
-    void padToggle() { if (open) close(); else { open(); post(this::ensureFocus); } }
+    void padToggle() { if (open) close(); else { open(); if (hk != null) hk.focus(); else post(this::ensureFocus); } }
 
     void open() {
         if (open) return;
         open = true;
         if (onOpen != null) onOpen.run();
+        if (hk != null) { hk.open(); return; }   // its quick settings ask for a tab (hokkaidoTab)
         box.removeAllViews();
         build();
         look();
@@ -123,6 +132,7 @@ final class SidePanel extends FrameLayout {
         open = false;
         heldDir = stickHeld = PadPanel.NONE;
         removeCallbacks(repeat);
+        if (hk != null) { hk.close(); return; }
         sheet.animate().translationX(sheet.getLayoutParams().width).setDuration(150).withEndAction(() -> { if (!open) setVisibility(GONE); }).start();
     }
 
@@ -131,6 +141,7 @@ final class SidePanel extends FrameLayout {
      * repeated; left / right step a radio group or a slider), L / R switch tabs. Each acts on its press. Every key but Back is the panel's: false lets Back through
      */
     boolean padKey(KeyEvent e) {
+        if (hk != null) return hk.padKey(e, confirm, back);
         int k = e.getKeyCode();
         if (k == KeyEvent.KEYCODE_BACK) return false;   // the activity's Back closes the panel
         boolean press = e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0, up = e.getAction() == KeyEvent.ACTION_UP;
@@ -146,6 +157,7 @@ final class SidePanel extends FrameLayout {
 
     /** A controller's sticks and hat while the panel is open: the hat or the left stick as a direction (PadPanel.stick), held like a D-pad key. The game gets none */
     boolean padMotion(MotionEvent e) {
+        if (hk != null) return hk.padMotion(e);
         if (e.getAction() != MotionEvent.ACTION_MOVE) return true;
         int d = PadPanel.stick(e.getAxisValue(MotionEvent.AXIS_HAT_X), e.getAxisValue(MotionEvent.AXIS_HAT_Y), stickHeld);
         if (d == PadPanel.NONE) d = PadPanel.stick(e.getAxisValue(MotionEvent.AXIS_X), e.getAxisValue(MotionEvent.AXIS_Y), stickHeld);
@@ -324,8 +336,19 @@ final class SidePanel extends FrameLayout {
         refresh();
     }
 
+    /** Hokkaido's quick settings show a tab: its rows built for it (look), while the menu is open */
+    void hokkaidoTab(int k) {
+        if (!open) return;
+        tab = k;
+        box.removeAllViews();
+        build();
+        look();
+        refresh();
+    }
+
     /** The panel's size and text size (Prefs.panelSize / panelText): its width, and every row's least height and text size, over what build() made */
     private void look() {
+        if (hk != null) { hk.built(tab, box); return; }
         float dp = getResources().getDisplayMetrics().density;
         int size = Prefs.panelSize(act), w = PanelLook.widthPx(size, dp, getResources().getDisplayMetrics().widthPixels);
         if (sheet.getLayoutParams().width != w) { sheet.getLayoutParams().width = w; sheet.requestLayout(); }
@@ -527,20 +550,23 @@ final class SidePanel extends FrameLayout {
     /** General: the panel's own look, Pause, Stop and Back to the game */
     private void general() {
         note("The game runs on behind this panel; every change applies now and is kept, except those marked for the next start.");
-        panelRows();
+        if (hk == null) panelRows();   // Hokkaido's menu has a look of its own
         cheatRows();
 
+        if (hk == null) {   // Hokkaido's menu has Pause and Exit
         Button pause = new Button(act);   // the game suspended (clock, graphics, threads, audio) until a tap on the screen, or A / Start: GameActivity.pause
         pause.setText("Pause the game");
         pause.setOnClickListener(v -> { close(); if (act instanceof GameActivity) ((GameActivity) act).pause(); });
         LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         pl.topMargin = Math.round(24 * getResources().getDisplayMetrics().density);
         box.addView(pause, pl);
+        }
         android.widget.CheckBox ret = new android.widget.CheckBox(act);
         ret.setText("Pause when the game comes back from the background");
         ret.setChecked(Prefs.pauseOnReturn(act, game()));
         ret.setOnCheckedChangeListener((b, on) -> Prefs.pauseOnReturn(act, game(), on));
         box.addView(ret);
+        if (hk != null) return;
         Button stop = new Button(act);
         stop.setText("Stop the game");
         stop.setOnClickListener(v -> padDialog(new AlertDialog.Builder(act).setTitle("Stop the game?").setMessage("The game ends; unsaved progress is lost. The log stays for Share log.")

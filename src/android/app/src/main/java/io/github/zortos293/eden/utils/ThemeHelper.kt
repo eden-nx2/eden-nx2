@@ -32,13 +32,21 @@ object ThemeHelper {
 
     fun setTheme(activity: AppCompatActivity) {
         setThemeMode(activity)
-        when (Theme.from(IntSetting.THEME.getInt())) {
-            Theme.Default -> activity.setTheme(getSelectedStaticThemeColor())
+        themes(activity).forEach { activity.setTheme(it) }
+    }
+
+    /**
+     * The themes setTheme gives [activity], in order: the base theme, then the black backgrounds
+     * overlay when it applies. Also for a screen in another process, which cannot read the settings.
+     */
+    fun themes(activity: AppCompatActivity): IntArray {
+        val base = when (Theme.from(IntSetting.THEME.getInt())) {
+            Theme.Default -> getSelectedStaticThemeColor()
             Theme.MaterialYou -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    activity.setTheme(R.style.Theme_EdenNX2_Main_MaterialYou)
+                    R.style.Theme_EdenNX2_Main_MaterialYou
                 } else {
-                    activity.setTheme(getSelectedStaticThemeColor())
+                    getSelectedStaticThemeColor()
                 }
             }
         }
@@ -46,8 +54,18 @@ object ThemeHelper {
         // Using a specific night mode check because this could apply incorrectly when using the
         // light app mode, dark system mode, and black backgrounds. Launching the settings activity
         // will then show light mode colors/navigation bars but with black backgrounds.
-        if (BooleanSetting.BLACK_BACKGROUNDS.getBoolean() && isNightMode(activity)) {
-            activity.setTheme(R.style.ThemeOverlay_Eden_Dark)
+        return if (BooleanSetting.BLACK_BACKGROUNDS.getBoolean() && isNightMode(activity)) {
+            intArrayOf(base, R.style.ThemeOverlay_Eden_Dark)
+        } else {
+            intArrayOf(base)
+        }
+    }
+
+    fun isNightMode(activity: AppCompatActivity): Boolean {
+        return when (activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_NO -> false
+            Configuration.UI_MODE_NIGHT_YES -> true
+            else -> false
         }
     }
 
@@ -100,14 +118,6 @@ object ThemeHelper {
             }
             AppCompatDelegate.MODE_NIGHT_NO -> setLightModeSystemBars(windowController)
             AppCompatDelegate.MODE_NIGHT_YES -> setDarkModeSystemBars(windowController)
-        }
-    }
-
-    private fun isNightMode(activity: AppCompatActivity): Boolean {
-        return when (activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-            Configuration.UI_MODE_NIGHT_NO -> false
-            Configuration.UI_MODE_NIGHT_YES -> true
-            else -> false
         }
     }
 

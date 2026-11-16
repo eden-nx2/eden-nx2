@@ -9,16 +9,19 @@ import android.content.pm.PackageManager
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import dev.nxnative.android.HokkaidoBridge
+import dev.nxnative.android.HokkaidoInGame
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import io.github.zortos293.eden.R
 import io.github.zortos293.eden.utils.NativeEngineUi
+import io.github.zortos293.eden.utils.ThemeHelper
 
 /**
  * Hokkaido's screens for the Banana Native engine: whether the game is ready, preparing it (Banana Native's
@@ -37,7 +40,10 @@ class BananaLauncher : NativeEngineUi {
         val emulate: () -> Unit
     )
 
-    override fun install(context: Context) = HokkaidoBridge.install(context)
+    override fun install(context: Context) {
+        HokkaidoBridge.install(context)
+        HokkaidoInGame.set(InGameUi)
+    }
 
     override fun closeGame(context: Context, titleId: String) = HokkaidoBridge.closeGame(context, titleId)
 
@@ -118,6 +124,13 @@ class BananaLauncher : NativeEngineUi {
         }
     }
 
+    /** Starts the game screen with Hokkaido's theme, which its menu takes (the game process cannot read the settings). */
+    private fun startGame(activity: FragmentActivity, plan: HokkaidoBridge.Plan) {
+        val app = activity as? AppCompatActivity
+        val themes = app?.let { ThemeHelper.themes(it) } ?: IntArray(0)
+        HokkaidoBridge.play(activity, plan, themes, app != null && ThemeHelper.isNightMode(app))
+    }
+
     /**
      * Starts a ready game. Banana Native's game process holds one game: another one still in it (left without
      * Stop the game) is closed first, when the player says so.
@@ -127,7 +140,7 @@ class BananaLauncher : NativeEngineUi {
         activity.lifecycleScope.launch {
             val running = withContext(Dispatchers.IO) { HokkaidoBridge.runningGame(activity) }
             if (running == null || running[0].equals(plan.titleId(), ignoreCase = true)) {
-                HokkaidoBridge.play(activity, plan)
+                startGame(activity, plan)
                 return@launch
             }
             val other = running[1].ifEmpty { activity.getString(R.string.banana_another_game) }
@@ -137,7 +150,7 @@ class BananaLauncher : NativeEngineUi {
                 .setPositiveButton(R.string.banana_close_and_start) { _, _ ->
                     activity.lifecycleScope.launch {
                         withContext(Dispatchers.IO) { HokkaidoBridge.stopRunningGame(activity) }
-                        HokkaidoBridge.play(activity, plan)
+                        startGame(activity, plan)
                     }
                 }
                 .setNegativeButton(android.R.string.cancel, null)
