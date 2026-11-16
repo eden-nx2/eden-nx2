@@ -131,16 +131,16 @@ internal class PanelRows(
         }
         syncs += {
             val checked = pairs.firstOrNull { it.first.isChecked }?.first
-            title.text = label?.text ?: checked?.text ?: ""
-            value.text = if (label != null) checked?.text ?: "" else ""
-            value.isVisible = value.text.isNotEmpty()
+            title.show(label?.text ?: checked?.text)
+            value.show(if (label != null) checked?.text else null)
+            value.visible(value.text.isNotEmpty())
             for ((theirs, ours) in pairs) {
-                ours.text = theirs.text
-                ours.isEnabled = theirs.isEnabled
-                ours.isVisible = theirs.visibility == View.VISIBLE
+                ours.show(theirs.text)
+                ours.enabled(theirs.isEnabled)
+                ours.visible(theirs.visibility == View.VISIBLE)
                 if (ours.isChecked != theirs.isChecked) ours.isChecked = theirs.isChecked
             }
-            item.isVisible = shown(group)
+            item.visible(shown(group))
         }
         container.addView(item)
     }
@@ -179,12 +179,12 @@ internal class PanelRows(
             false
         }
         syncs += {
-            title.text = label?.text ?: ""
-            value.isVisible = false
-            slider.isEnabled = bar.isEnabled
+            title.show(label?.text)
+            value.visible(false)
+            slider.enabled(bar.isEnabled)
             val v = bar.progress.coerceIn(0, bar.max.coerceAtLeast(1)).toFloat()
             if (slider.value != v) slider.value = v
-            item.isVisible = shown(bar)
+            item.visible(shown(bar))
         }
         container.addView(item)
     }
@@ -203,12 +203,12 @@ internal class PanelRows(
         }
         row.setOnClickListener { if (toggle.isEnabled) toggle.toggle() }
         syncs += {
-            title.text = box.text
-            toggle.isEnabled = box.isEnabled
-            row.isEnabled = box.isEnabled
-            title.isEnabled = box.isEnabled
+            title.show(box.text)
+            toggle.enabled(box.isEnabled)
+            row.enabled(box.isEnabled)
+            title.enabled(box.isEnabled)
             if (toggle.isChecked != box.isChecked) toggle.isChecked = box.isChecked
-            item.isVisible = shown(box)
+            item.visible(shown(box))
         }
         container.addView(item)
     }
@@ -228,11 +228,11 @@ internal class PanelRows(
         }
         syncs += {
             val parts = button.text.toString().removeSuffix("›").trim().split("  ", limit = 2)
-            title.text = parts[0].trim()
-            value.text = parts.getOrNull(1)?.trim() ?: ""
-            value.isVisible = value.text.isNotEmpty()
-            header.isEnabled = button.isEnabled
-            item.isVisible = shown(button)
+            title.show(parts[0].trim())
+            value.show(parts.getOrNull(1)?.trim())
+            value.visible(value.text.isNotEmpty())
+            header.enabled(button.isEnabled)
+            item.visible(shown(button))
         }
         container.addView(item)
     }
@@ -247,9 +247,9 @@ internal class PanelRows(
         view.setTextColor(color(com.google.android.material.R.attr.colorPrimary))
         view.setTypeface(view.typeface, Typeface.BOLD)
         syncs += {
-            view.text = source.text
-            view.isVisible = shown(source) && source.text.isNotEmpty()
-            divider?.isVisible = view.isVisible
+            view.show(source.text)
+            view.visible(shown(source) && source.text.isNotEmpty())
+            divider?.visible(view.isVisible)
         }
         container.addView(view)
     }
@@ -258,8 +258,8 @@ internal class PanelRows(
         val view = text(com.google.android.material.R.style.TextAppearance_Material3_BodySmall, 4, 4)
         view.setTextColor(color(com.google.android.material.R.attr.colorOnSurfaceVariant))
         syncs += {
-            view.text = source.text
-            view.isVisible = shown(source) && source.text.isNotEmpty()
+            view.show(source.text)
+            view.visible(shown(source) && source.text.isNotEmpty())
         }
         container.addView(view)
     }
@@ -279,8 +279,8 @@ internal class PanelRows(
             }
         }
         syncs += {
-            labels.forEachIndexed { i, l -> ours[i].text = l.text }
-            row.isVisible = shown(source)
+            labels.forEachIndexed { i, l -> ours[i].show(l.text) }
+            row.visible(shown(source))
         }
         container.addView(row)
     }
@@ -292,7 +292,7 @@ internal class PanelRows(
         val pad = (24 * dp).roundToInt()
         frame.setPadding(pad, (4 * dp).roundToInt(), pad, (4 * dp).roundToInt())
         frame.addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        syncs += { frame.isVisible = view.visibility == View.VISIBLE }
+        syncs += { frame.visible(view.visibility == View.VISIBLE) }
         container.addView(frame)
     }
 
@@ -309,6 +309,21 @@ internal class PanelRows(
         val c = a.getColor(0, 0)
         a.recycle()
         return c
+    }
+
+    // Changed only when they differ: each sync runs every 300 ms, and setting a view's text again redraws part of the
+    // sheet, which on the game screen left letters out of the text until it was scrolled
+    private fun TextView.show(t: CharSequence?) {
+        val s = t ?: ""
+        if (text.toString() != s.toString()) text = s
+    }
+
+    private fun View.visible(on: Boolean) {
+        if (isVisible != on) isVisible = on
+    }
+
+    private fun View.enabled(on: Boolean) {
+        if (isEnabled != on) isEnabled = on
     }
 
     private companion object {

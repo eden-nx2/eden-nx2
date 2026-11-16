@@ -3,7 +3,7 @@
 
 // Banana Native (https://git.eden-emu.dev/moceure/BananaNative, MIT) built into Hokkaido. Its Android
 // sources come from upstream/ (tools/android/sync_bananative.sh copies them and applies patches/); its
-// native libraries and the on-device packer's assets come from the matching release APK (UPSTREAM.txt),
+// native libraries and assets come from the matching release APK (UPSTREAM.txt),
 // so Hokkaido's build needs none of Banana Native's own toolchain. -PbananaApk=<file> (or BANANA_APK)
 // names a local copy of that APK; otherwise it is downloaded once into the build folder.
 
@@ -117,8 +117,8 @@ val extractBananaRelease = tasks.register("extractBananaRelease") {
                 val target = when {
                     entry.name.startsWith("lib/arm64-v8a/") && entry.name.endsWith(".so") ->
                         File(out, "jni/arm64-v8a/" + entry.name.substringAfterLast('/'))
-                    listOf("assets/pack/", "assets/digest/", "assets/fonts/")
-                        .any { entry.name.startsWith(it) } -> File(out, entry.name)
+                    // all of them: the packer's, the log digest's, the fonts and the Advanced table (OoT's live sliders)
+                    entry.name.startsWith("assets/") -> File(out, entry.name)
                     else -> continue
                 }
                 target.parentFile.mkdirs()
