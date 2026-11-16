@@ -223,14 +223,7 @@ public final class HokkaidoBridge {
             Prefs.gameWindow(c, id, window);
             Prefs.of(c).edit().putString(given, window).commit();
         }
-        // Banana Native's RAM saver (its Game settings, which Hokkaido does not show) for a game that runs out of memory
-        // on a phone of 12 GB or less, unless it was set: Ocarina of Time swapped 4.7 GB out on the Galaxy S26.
-        if (RAM_SAVER_LOW_RAM.contains(id) && Prefs.lowRam(c) && !Prefs.of(c).contains(Prefs.gameKey("ram_saver", id))) {
-            Prefs.ramSaver(c, id, true);
-        }
-        // Full vegetation (its Game settings, which Hokkaido does not show) unless it was set: the vegetation it leaves out
-        // otherwise looked missing in Ocarina of Time.
-        if (!Prefs.of(c).contains(Prefs.gameKey("full_vegetation", id))) Prefs.fullVegetation(c, id, true);
+        startingSettings(c, id);
         if (driverZip == null || driverZip.isEmpty()) {
             GpuDriver.choice(c, id, GpuDriver.SYSTEM);
         } else {
@@ -246,8 +239,27 @@ public final class HokkaidoBridge {
         Prefs.folder(c, "save_" + id, shared.getPath());
     }
 
-    /** The games that take Banana Native's RAM saver by default on a phone of 12 GB or less (prepareStart). */
-    private static final List<String> RAM_SAVER_LOW_RAM = List.of("0400486024DEC000");
+    /** The starting settings' version (startingSettings): raised when they change, so a game takes the new ones once. */
+    private static final int STARTING_SETTINGS = 1;
+    private static final String OCARINA_OF_TIME = "0400486024DEC000";
+
+    /**
+     * Hokkaido's starting settings for a game, among Banana Native's Game settings that Hokkaido does not show: set once
+     * (again when STARTING_SETTINGS rises), so a change in the game's quick settings stays. Ocarina of Time, from the
+     * Galaxy S26 (RADV, 12 GB): the RAM saver's file-backed texture pools left holes in the terrain, so it is off; Hold
+     * 60 fps keeps the frame rate from jumping between 30 and 20 fps, which the phone's GPU clock cap followed; and the
+     * lower vegetation detail Banana Native recommends.
+     */
+    private static void startingSettings(Context c, String id) {
+        String key = "hokkaido_settings_" + id;
+        if (Prefs.of(c).getInt(key, 0) >= STARTING_SETTINGS) return;
+        if (id.equals(OCARINA_OF_TIME)) {
+            Prefs.ramSaver(c, id, false);
+            Prefs.hold60(c, id, true);
+            Prefs.fullVegetation(c, id, false);
+        }
+        Prefs.of(c).edit().putInt(key, STARTING_SETTINGS).commit();
+    }
 
     /** The driver unpacked from a zip, unpacked again only when the zip changed since (by its size and time). */
     private static GpuDriver.Info installedDriver(Context c, File zip) throws IOException {
