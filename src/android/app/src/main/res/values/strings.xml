@@ -1887,4 +1887,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="add_folders">Add Folder</string>
     <string name="percent">%1$d%%</string>
 
+
+    <!-- From Hokkaido: these strings were lost in the build 228 merge -->
+    <string name="exefs_access_allow">Allow</string>
+    <string name="exefs_access_description">A game folder holds loose Switch 2 games (exefs folders). Eden NX2 can only list them with all files access.</string>
+    <string name="exefs_access_not_now">Not now</string>
+    <string name="exefs_access_title">Allow all files access</string>
+    <string name="exefs_folder_bad_path">Could not resolve the selected folder to a storage path</string>
+    <string name="exefs_folder_choose">Choose which ExeFS to launch</string>
+    <string name="exefs_folder_needs_permission">Grant all files access, then select the folder again</string>
+    <string name="exefs_folder_no_main">No exefs/main found in the selected folder or its subfolders</string>
+    <string name="launch_exefs_folder">Launch ExeFS game folder</string>
+    <string name="frames_ahead">Present a frame ahead</string>
+    <string name="frames_ahead_description">Switch 2 games: lets the game prepare the next frame while the GPU still draws the current one. Usually faster; a few games misbehave with it on. Auto picks per game as tested.</string>
+    <string name="frames_ahead_auto">Auto</string>
+    <string name="frames_ahead_off">Off</string>
+    <string name="frames_ahead_on">On</string>
+    <string name="scene_memory_cap">Limit memory during scene loads</string>
+    <string name="scene_memory_cap_description">Keeps at most 256 MB of upload buffers while a scene loads and frees large ones every frame. Helps games that get closed for low memory, but slows games that stream textures. Auto: Ocarina of Time only.</string>
 </resources>

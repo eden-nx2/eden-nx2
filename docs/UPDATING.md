@@ -40,7 +40,8 @@ libc++ lacks it (use `__atomic_load_n` and friends). No Android resource may be 
 in one `values*` folder either: Lichii keeps Eden's synthwave theme (`eden_error`, `EdenSlider`,
 `Theme.Eden.Main`) beside its own, so the script names Lichii's own `EdenNX2` (`eden_nx2_error`,
 `Theme.EdenNX2.Main`); a new clash gets a line in `ANDROID_SPECIFIC`. A merge can also repeat a
-block both sides added: delete one copy. Fix what it
+block both sides added: delete one copy. And every string the app uses must be defined: taking one side's
+`strings.xml` drops the other side's strings, so add those back. Fix what it
 reports, rerun it until it passes, and build before pushing (`build-check` runs on every push).
 
 ## Hokkaido commits

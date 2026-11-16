@@ -311,7 +311,7 @@ def check():
                     problems.append(f"{f}:{n}: std::atomic_ref does not build for Android")
     # Android resources: one name may be defined only once per configuration (values, values-night,
     # ...), or aapt fails ("Found item ... more than one time").
-    resource = re.compile(r'<(color|string|string-array|integer-array|array|dimen|style|bool|integer)'
+    resource = re.compile(r'<(color|string|string-array|integer-array|array|plurals|dimen|style|bool|integer)'
                           r'\s+name="([^"]+)"')
     seen = {}
     for f in files:
@@ -323,6 +323,20 @@ def check():
             if key in seen:
                 problems.append(f"{f}: Android {kind} {name} is already defined (in {seen[key]})")
             seen.setdefault(key, f)
+    # Strings and arrays the app uses must be defined: a merge that takes one side's strings.xml
+    # drops the other side's strings (aapt or the Kotlin compile then fail late in CI).
+    defined = {name for (_, _, name) in seen}
+    for f in [x for x in files if x.startswith("src/android/") and x.endswith((".gradle.kts", ".gradle"))]:
+        defined |= set(re.findall(r'resValue\(\s*"string",\s*"(\w+)"', read(f) or ""))
+    library = {"appbar_scrolling_view_behavior", "help"}  # AndroidX / Material strings
+    for f in files:
+        if not (f.startswith("src/android/app/src/main/") and f.endswith((".kt", ".java", ".xml"))):
+            continue
+        text = read(f) or ""
+        refs = re.findall(r"(?<![\w.])R\.(?:string|array|plurals)\.(\w+)", text) + \
+            re.findall(r"@(?:string|array|plurals)/(\w+)", text)
+        for name in sorted(set(refs) - defined - library):
+            problems.append(f"{f}: uses Android resource {name}, which is not defined")
     return problems
 
 
