@@ -263,19 +263,9 @@ class GameAdapter(private val activity: AppCompatActivity) :
                     }
                 }
 
-                val emulate = {
+                GameEngine.start(activity, game) {
                     val action = HomeNavigationDirections.actionGlobalEmulationActivity(game, true)
                     binding.root.findNavController().navigate(action)
-                }
-                if (!GameEngine.usesNative(activity, game)) {
-                    emulate()
-                } else if (!GameEngine.launchNative(activity, game, emulate)) {
-                    MaterialAlertDialogBuilder(activity)
-                        .setTitle(R.string.game_engine_banana_missing)
-                        .setMessage(R.string.game_engine_banana_missing_description)
-                        .setPositiveButton(R.string.game_engine_play_here) { _, _ -> emulate() }
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show()
                 }
             }
 

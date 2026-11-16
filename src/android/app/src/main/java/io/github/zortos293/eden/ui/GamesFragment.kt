@@ -50,6 +50,7 @@ import io.github.zortos293.eden.utils.GameHelper
 import io.github.zortos293.eden.utils.PathUtil
 import io.github.zortos293.eden.utils.ViewUtils.setVisible
 import io.github.zortos293.eden.utils.collect
+import io.github.zortos293.eden.utils.GameEngine
 import info.debatty.java.stringsimilarity.Jaccard
 import info.debatty.java.stringsimilarity.JaroWinkler
 import java.io.File
@@ -186,7 +187,10 @@ class GamesFragment : Fragment() {
     }
 
     private fun launchExeFSGame(game: Game) {
-        findNavController().navigate(HomeNavigationDirections.actionGlobalEmulationActivity(game))
+        val navController = findNavController()
+        GameEngine.start(requireActivity(), game) {
+            navController.navigate(HomeNavigationDirections.actionGlobalEmulationActivity(game))
+        }
     }
 
     private fun getCurrentViewType(): Int {

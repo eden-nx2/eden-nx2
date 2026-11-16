@@ -41,6 +41,9 @@ import android.os.Build
 import io.github.zortos293.eden.model.TaskViewModel
 import io.github.zortos293.eden.utils.*
 import io.github.zortos293.eden.utils.ViewUtils.setVisible
+import io.github.zortos293.eden.HomeNavigationDirections
+import io.github.zortos293.eden.model.Game
+import io.github.zortos293.eden.utils.SerializableHelper.parcelable
 import androidx.core.content.edit
 import io.github.zortos293.eden.activities.EmulationActivity
 import kotlin.text.compareTo
@@ -143,6 +146,9 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
         setUpNavigation(navHostFragment.navController)
+        if (savedInstanceState == null) {
+            startEngineGame(intent)
+        }
 
         homeViewModel.statusBarShadeVisible.collect(this) { showStatusBarShade(it) }
         homeViewModel.contentToInstall.collect(
@@ -529,4 +535,25 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 result = result
             )
         }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        startEngineGame(intent)
+    }
+
+    /** A game a shortcut started (EmulationActivity.handOffToEngine): through its engine, else Hokkaido. */
+    private fun startEngineGame(intent: Intent) {
+        val game = intent.parcelable<Game>(EXTRA_ENGINE_GAME) ?: return
+        intent.removeExtra(EXTRA_ENGINE_GAME)
+        val navController =
+            (supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment)
+                .navController
+        GameEngine.start(this, game) {
+            navController.navigate(HomeNavigationDirections.actionGlobalEmulationActivity(game, true))
+        }
+    }
+
+    companion object {
+        const val EXTRA_ENGINE_GAME = "engine_game"
+    }
 }

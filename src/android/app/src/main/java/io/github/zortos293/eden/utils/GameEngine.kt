@@ -15,6 +15,7 @@ import io.github.zortos293.eden.model.Game
 import io.github.zortos293.eden.features.settings.model.StringSetting
 import io.github.zortos293.eden.features.settings.utils.SettingsFile
 import io.github.zortos293.eden.features.settings.model.IntSetting
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 
 /**
@@ -124,26 +125,51 @@ object GameEngine {
      * Starts the game in Banana Native, through Hokkaido's screens: at once when it is prepared, else
      * after preparing it. False when this build has no Banana Native or the game has no path it reads.
      */
-    fun launchNative(activity: FragmentActivity, game: Game, emulate: () -> Unit): Boolean {
+    private fun launchNative(
+        activity: FragmentActivity,
+        game: Game,
+        useCustom: Boolean,
+        emulate: () -> Unit
+    ): Boolean {
         val engine = ui ?: return false
         val path = filePath(game) ?: return false
-        val (driver, window) = gameSettings(game)
+        val (driver, window) = gameSettings(game, useCustom)
         engine.launch(activity, path, game.title, driver, game.saveDir, window, emulate)
         return true
     }
 
     /**
-     * What Hokkaido would start the game with, its own settings else the global ones: the GPU driver (a zip;
-     * empty: the system's) and the render size its resolution scale gives, 1x being 1920x1080.
+     * Starts a game in its engine (Game properties › Engine): every way of starting a game comes here.
+     * [useCustom] is the game's own settings rather than the global ones (Start › Global or Custom);
+     * [emulate] starts it in Hokkaido.
      */
-    private fun gameSettings(game: Game): Pair<String, String> {
+    fun start(activity: FragmentActivity, game: Game, useCustom: Boolean = true, emulate: () -> Unit) {
+        if (!usesNative(activity, game)) {
+            emulate()
+        } else if (!launchNative(activity, game, useCustom, emulate)) {
+            MaterialAlertDialogBuilder(activity)
+                .setTitle(R.string.game_engine_banana_missing)
+                .setMessage(R.string.game_engine_banana_missing_description)
+                .setPositiveButton(R.string.game_engine_play_here) { _, _ -> emulate() }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+    }
+
+    /**
+     * What Hokkaido would start the game with: the GPU driver (a zip; empty: the system's) and the render
+     * size its resolution scale gives, 1x being 1920x1080. With [useCustom] the game's own settings,
+     * else the global ones.
+     */
+    private fun gameSettings(game: Game, useCustom: Boolean): Pair<String, String> {
         val loaded = NativeConfig.isPerGameConfigLoaded()
-        if (!loaded) {
+        if (useCustom && !loaded) {
             SettingsFile.loadCustomConfig(game)
         }
-        val driver = StringSetting.DRIVER_PATH.getString()
-        val window = windowOf(IntSetting.RENDERER_RESOLUTION.getInt())
-        if (!loaded) {
+        val needsGlobal = !useCustom
+        val driver = StringSetting.DRIVER_PATH.getString(needsGlobal)
+        val window = windowOf(IntSetting.RENDERER_RESOLUTION.getInt(needsGlobal))
+        if (useCustom && !loaded) {
             NativeConfig.unloadPerGameConfig()
             NativeConfig.reloadGlobalConfig()
         }

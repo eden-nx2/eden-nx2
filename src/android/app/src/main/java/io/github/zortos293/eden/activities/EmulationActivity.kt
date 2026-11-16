@@ -63,6 +63,10 @@ import io.github.zortos293.eden.utils.NativeConfig
 import io.github.zortos293.eden.utils.NfcReader
 import io.github.zortos293.eden.utils.ParamPackage
 import io.github.zortos293.eden.utils.ThemeHelper
+import io.github.zortos293.eden.ui.main.MainActivity
+import io.github.zortos293.eden.utils.GameEngine
+import io.github.zortos293.eden.utils.GameHelper
+import java.io.File
 import java.text.NumberFormat
 import kotlin.math.roundToInt
 import io.github.zortos293.eden.utils.ForegroundService
@@ -123,6 +127,10 @@ class EmulationActivity : AppCompatActivity(), SensorEventListener, InputManager
         ThemeHelper.setTheme(this)
 
         super.onCreate(savedInstanceState)
+
+        if (savedInstanceState == null && handOffToEngine()) {
+            return
+        }
 
         NativeConfig.reloadGlobalConfig()
 
@@ -258,7 +266,44 @@ class EmulationActivity : AppCompatActivity(), SensorEventListener, InputManager
         super.onPause()
     }
 
+    /**
+     * A shortcut starts a game here with only its file (no game argument). A game whose engine is Banana
+     * Native goes to Hokkaido's home instead, which starts it through its engine (MainActivity).
+     */
+    private fun handOffToEngine(): Boolean {
+        if (!GameEngine.isBananaAvailable || intent.action != Intent.ACTION_VIEW ||
+            intent.extras?.containsKey("game") == true
+        ) {
+            return false
+        }
+        val game = runCatching {
+            val exefs = intent.getStringExtra(EmulationFragment.EXTRA_EXEFS_PATH)
+            when {
+                exefs != null -> GameHelper.getExeFSGame(File(exefs))
+                intent.data != null -> GameHelper.getGame(intent.data!!, false)
+                else -> null
+            }
+        }.getOrNull() ?: return false
+        if (!GameEngine.usesNative(this, game)) {
+            return false
+        }
+        handedOff = true
+        startActivity(
+            Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_ENGINE_GAME, game)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        )
+        finish()
+        return true
+    }
+
+    private var handedOff = false
+
     override fun onDestroy() {
+        if (handedOff) {
+            super.onDestroy()
+            return
+        }
         mainHandler.removeCallbacks(romSwapStopTimeoutRunnable)
         super.onDestroy()
         inputManager.unregisterInputDeviceListener(this)

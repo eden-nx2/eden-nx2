@@ -12,6 +12,7 @@ import io.github.zortos293.eden.HomeNavigationDirections
 import io.github.zortos293.eden.R
 import io.github.zortos293.eden.model.Game
 import io.github.zortos293.eden.utils.SerializableHelper.parcelable
+import io.github.zortos293.eden.utils.GameEngine
 
 class LaunchGameDialogFragment : DialogFragment() {
     private var selectedItem = 1
@@ -27,9 +28,14 @@ class LaunchGameDialogFragment : DialogFragment() {
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.launch_options)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                val action = HomeNavigationDirections
-                    .actionGlobalEmulationActivity(game, selectedItem != 0)
-                requireParentFragment().findNavController().navigate(action)
+                val custom = selectedItem != 0
+                val navController = requireParentFragment().findNavController()
+                // The game's engine (Game properties › Engine), with the chosen settings.
+                GameEngine.start(requireActivity(), game!!, custom) {
+                    navController.navigate(
+                        HomeNavigationDirections.actionGlobalEmulationActivity(game, custom)
+                    )
+                }
             }
             .setSingleChoiceItems(launchOptions, 1) { _: DialogInterface, i: Int ->
                 selectedItem = i
