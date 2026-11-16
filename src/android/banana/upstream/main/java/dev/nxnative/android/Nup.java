@@ -335,14 +335,16 @@ final class Nup {
      */
     static List<Nup> companions(File game) {
         List<Nup> out = new ArrayList<>();
-        if (game == null || !game.getName().endsWith(EXT_NSP)) return out;
+        if (game == null || extOf(game.getName()) == null) return out;   // a game finds the NUP files and NSPs beside it (an update, DLC)
         File parent = game.getAbsoluteFile().getParentFile();
-        File[] l = parent == null ? null : parent.listFiles(f -> f.isFile() && f.getName().endsWith(EXT_NSP) && !f.getName().startsWith("."));
+        File[] l = parent == null ? null : parent.listFiles(f -> f.isFile() && extOf(f.getName()) != null && !f.getName().startsWith("."));
         if (l == null) return out;
         long app;
+        boolean full;   // the game has a base package: the updates of a .nup beside it are versions of it (else they are games of their own)
         try {
             Nup me = open(game);
             if (me.base() == null && me.newest() == null) return out;
+            full = me.base() != null;
             app = Long.parseUnsignedLong(me.programId(), 16);
         } catch (IOException | RuntimeException e) {
             return out;
@@ -351,16 +353,18 @@ final class Nup {
         for (File f : l) {
             if (f.getAbsoluteFile().equals(game.getAbsoluteFile())) continue;
             try {
-                Nup n = open(f);
+                Nup n = peek(f);   // the package records only: a .nup beside the game that is not of it is not hashed
+                boolean nupFile = f.getName().endsWith(EXT);
+                if (nupFile && n.base() != null) continue;   // a .nup with a base package is a game of its own, not a part of this one
                 boolean mine = false;
                 for (Pkg p : n.packages) {
                     long idx = p.titleId - app - 0x1000;
                     if (p.kind == ADDON && idx > 0 && idx <= 2000) mine = true;
-                    else if ((p.kind == BASE || p.kind == UPDATE) && p.titleId == app) mine = true;
+                    else if ((p.kind == BASE || p.kind == UPDATE) && p.titleId == app && (full || !nupFile)) mine = true;
                 }
-                if (mine) out.add(n);
+                if (mine) out.add(open(f));
             } catch (IOException | RuntimeException e) {
-                // not a plaintext NSP of this game
+                // not a NUP file of this game
             }
         }
         return out;
@@ -368,7 +372,7 @@ final class Nup {
 
     /** The file that holds a package of a game: the game's own, else the companion NSP that has it (null selector: the game's own) */
     static File holder(File game, String selector) {
-        if (selector == null || !game.getName().endsWith(EXT_NSP)) return game;
+        if (selector == null || extOf(game.getName()) == null) return game;
         try {
             if (open(game).find(selector) != null) return game;
         } catch (IOException e) {

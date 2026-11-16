@@ -150,16 +150,16 @@ final class Updater {
         c.setReadTimeout(readMs);
         c.setInstanceFollowRedirects(true);   // GitHub's release assets redirect to its object storage (https to https: HttpURLConnection never follows a change of protocol)
         int code = c.getResponseCode();
-        if (code == 403 || code == 429) { c.disconnect(); throw new Failure(label + " rate limit, try again later"); }
+        if (code == 403 || code == 429) { c.disconnect(); throw new Failure(label + Tx.s(R.string.settings_rate_limit_try_again_later)); }
         if (code != 200) { c.disconnect(); throw new Failure(label + " answered HTTP " + code); }
         return c;
     }
 
     private static String why(Throwable e, String label) {
-        if (e instanceof UnknownHostException || e instanceof ConnectException) return "No network (cannot reach " + label + ")";
-        if (e instanceof SocketTimeoutException) return "No network (" + label + " did not answer in time)";
+        if (e instanceof UnknownHostException || e instanceof ConnectException) return Tx.s(R.string.settings_no_network_cannot_reach) + label + ")";
+        if (e instanceof SocketTimeoutException) return "No network (" + label + Tx.s(R.string.settings_did_not_answer_in_time);
         if (e instanceof Failure) return e.getMessage();
-        if (e instanceof IllegalArgumentException) return label + "'s answer could not be read: " + e.getMessage();
+        if (e instanceof IllegalArgumentException) return label + Tx.s(R.string.settings_s_answer_could_not_be) + e.getMessage();
         return e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
     }
 
@@ -176,7 +176,7 @@ final class Updater {
         String body;
         try (InputStream in = c.getInputStream()) {
             byte[] b = in.readNBytes(MAX_LIST + 1);
-            if (b.length > MAX_LIST) throw new Failure(s.name + "'s answer is too large");
+            if (b.length > MAX_LIST) throw new Failure(s.name + Tx.s(R.string.settings_s_answer_is_too_large));
             body = new String(b, StandardCharsets.UTF_8);
         } finally { c.disconnect(); }
         return UpdateCheck.parse(body, s);
@@ -213,7 +213,7 @@ final class Updater {
             for (int k = 0; k < n; k++) {
                 List<UpdateCheck.Release> l = got.get(k);
                 if (l == null) {
-                    String e = err[k] != null ? err[k] : "No network (" + src.get(k).name + " did not answer in time)";
+                    String e = err[k] != null ? err[k] : "No network (" + src.get(k).name + Tx.s(R.string.settings_did_not_answer_in_time);
                     Log.w(TAG, "release source " + src.get(k).name + " failed: " + e);
                     fails.append(fails.length() > 0 ? "; " : "").append(e);
                 }
@@ -222,7 +222,7 @@ final class Updater {
         }
         boolean any = false;
         for (List<UpdateCheck.Release> l : out) any |= l != null;
-        if (!any) throw new Failure(n == 0 ? "no release source" : fails.toString());
+        if (!any) throw new Failure(n == 0 ? Tx.s(R.string.settings_no_release_source) : fails.toString());
         return out;
     }
 
@@ -254,30 +254,30 @@ final class Updater {
     /** Settings › Updates › Check for updates: the release page when a newer release exists, else "You're up to date" */
     static void checkNow(Activity a) {
         if (!available(a)) {
-            msg(a, "Updates", "Only the release app (dev.bananative.android) checks for updates. A test app checks when update.txt in its files folder names repo= or url=.");
+            msg(a, "Updates", Tx.s(R.string.settings_only_the_release_app_dev));
             return;
         }
         int[] cur = UpdateCheck.appVersion(version(a));
-        if (cur == null) { msg(a, "Updates", "This build's version (" + version(a) + ") is not a release version: nothing to compare."); return; }
-        AlertDialog wait = new PadFocus.Builder(a).setMessage("Checking for updates…").setCancelable(false).create();
+        if (cur == null) { msg(a, "Updates", Tx.s(R.string.settings_this_build_s_version) + version(a) + Tx.s(R.string.settings_is_not_a_release_version)); return; }
+        AlertDialog wait = new PadFocus.Builder(a).setMessage(Tx.s(R.string.settings_checking_for_updates)).setCancelable(false).create();
         wait.show();
         Context app = a.getApplicationContext();
         new Thread(() -> {
             UpdateCheck.Update u = null; String err = null;
             try { u = UpdateCheck.pickAll(releases(app), cur); }
-            catch (Throwable e) { err = why(e, "the release sources"); Log.w(TAG, "update check failed: " + err); }
+            catch (Throwable e) { err = why(e, Tx.s(R.string.settings_the_release_sources)); Log.w(TAG, "update check failed: " + err); }
             final UpdateCheck.Update got = u; final String fail = err;
             UI.post(() -> {
                 if (gone(a)) return;
                 wait.dismiss();
-                if (fail != null) Toast.makeText(a, "Update check failed: " + fail, Toast.LENGTH_LONG).show();
-                else if (got == null) Toast.makeText(a, "You're up to date (v" + UpdateCheck.text(cur) + ")", Toast.LENGTH_LONG).show();
+                if (fail != null) Toast.makeText(a, Tx.s(R.string.settings_update_check_failed, fail), Toast.LENGTH_LONG).show();
+                else if (got == null) Toast.makeText(a, Tx.s(R.string.settings_up_to_date, UpdateCheck.text(cur)), Toast.LENGTH_LONG).show();
                 else popup(a, got);
             });
         }, "nx-update-check").start();
     }
 
-    private static void msg(Activity a, String title, String msg) { new PadFocus.Builder(a).setTitle(title).setMessage(msg).setPositiveButton("OK", null).show(); }
+    private static void msg(Activity a, String title, String msg) { new PadFocus.Builder(a).setTitle(title).setMessage(msg).setPositiveButton(android.R.string.ok, null).show(); }
 
     /** The release page (ReleasePage): version, the release notes with their pictures, size; Later, Update */
     static void popup(Activity a, UpdateCheck.Update u) { ReleasePage.show(a, u, version(a), () -> download(a, u)); }
@@ -347,19 +347,19 @@ final class Updater {
     private static void download(Activity a, UpdateCheck.Update u) {
         LinearLayout box = new LinearLayout(a);
         box.setOrientation(LinearLayout.VERTICAL);
-        TextView st = Ui.body(a, "Starting…");
+        TextView st = Ui.body(a, Tx.s(R.string.settings_starting));
         box.addView(st);
         ProgressBar bar = Ui.progress(a);
         bar.setMax(1000);
         Ui.add(box, bar, 12);
         final boolean[] cancel = {false};
-        AlertDialog d = Ui.sheet(a, "Downloading " + u.tag(), box).setCancelable(false).setNegativeButton("Cancel", (x, w) -> cancel[0] = true).show();
+        AlertDialog d = Ui.sheet(a, Tx.s(R.string.settings_downloading_tag, u.tag()), box).setCancelable(false).setNegativeButton(Tx.s(R.string.common_cancel), (x, w) -> cancel[0] = true).show();
         Context app = a.getApplicationContext();
         new Thread(() -> {
             File f = null; String err = null;
             try { f = fetch(app, u, cancel, (n, total) -> UI.post(() -> {
                     bar.setProgress(total > 0 ? (int) (n * 1000 / total) : 0);
-                    st.setText(UpdateCheck.mb(n) + " of " + UpdateCheck.mb(total));
+                    st.setText(Tx.s(R.string.settings_mb_of_mb, UpdateCheck.mb(n), UpdateCheck.mb(total)));
                 })); }
             catch (Throwable e) { err = why(e, u.release.source.name); Log.w(TAG, "download of " + u.apk.url + " failed: " + err); }
             final File got = f; final String fail = err;
@@ -367,7 +367,7 @@ final class Updater {
                 if (d.isShowing()) d.dismiss();
                 if (cancel[0]) return;
                 if (gone(a)) return;
-                if (fail != null) { msg(a, "Update not installed", fail); return; }
+                if (fail != null) { msg(a, Tx.s(R.string.settings_update_not_installed), fail); return; }
                 install(a, got);
             });
         }, "nx-update-download").start();
@@ -378,7 +378,7 @@ final class Updater {
     /** Downloads the APK into the cache and checks it: the size the API gives, and the SHA-256 of its digest when it has one. Only a checked file is returned */
     static File fetch(Context c, UpdateCheck.Update u, boolean[] cancel, Progress p) throws IOException {
         long size = u.apk.size;
-        if (size > MAX_APK) throw new Failure("the APK is larger than 1 GB");
+        if (size > MAX_APK) throw new Failure(Tx.s(R.string.settings_the_apk_is_larger_than));
         File d = dir(c);
         if (!d.isDirectory() && !d.mkdirs()) throw new Failure("cannot make " + d);
         String name = "banana-native-" + u.tag().replaceAll("[^A-Za-z0-9._-]", "_");
@@ -387,13 +387,13 @@ final class Updater {
         MessageDigest md;
         try { md = MessageDigest.getInstance("SHA-256"); } catch (NoSuchAlgorithmException e) { throw new Failure("no SHA-256"); }
         long n = 0;
-        if (!UpdateCheck.allowedAsset(u.apk.url, u.release.source)) throw new Failure("the download link is not on " + u.release.source.name + ": " + u.apk.url);   // UpdateCheck.apk checked it already
+        if (!UpdateCheck.allowedAsset(u.apk.url, u.release.source)) throw new Failure(Tx.s(R.string.settings_the_download_link_is_not) + u.release.source.name + ": " + u.apk.url);   // UpdateCheck.apk checked it already
         HttpsURLConnection conn = open(u.apk.url, "application/octet-stream", u.release.source.name, DL_CONNECT_MS, DL_READ_MS, false);   // the asset's own browser_download_url, as it is: the source counts the download; no cache-busting (the link is new per release, the file is checked below)
         try (InputStream in = conn.getInputStream(); OutputStream out = new FileOutputStream(part)) {
             byte[] b = new byte[1 << 16]; int k; long shown = 0;
             while ((k = in.read(b)) > 0) {
                 if (cancel[0]) throw new Failure("cancelled");
-                if ((n += k) > MAX_APK || (size > 0 && n > size)) throw new Failure("the download is larger than the release says");
+                if ((n += k) > MAX_APK || (size > 0 && n > size)) throw new Failure(Tx.s(R.string.settings_the_download_is_larger_than));
                 out.write(b, 0, k);
                 md.update(b, 0, k);
                 if (n - shown >= (256 << 10)) { shown = n; p.at(n, size); }
@@ -401,14 +401,14 @@ final class Updater {
         } catch (IOException e) { part.delete(); throw e; }
         finally { conn.disconnect(); }
         p.at(n, size);
-        if (size > 0 && n != size) { part.delete(); throw new Failure("the download is incomplete (" + n + " of " + size + " bytes)"); }
+        if (size > 0 && n != size) { part.delete(); throw new Failure(Tx.s(R.string.settings_the_download_is_incomplete) + n + " of " + size + " bytes)"); }
         if (u.sha256 != null) {
             StringBuilder h = new StringBuilder();
             for (byte x : md.digest()) h.append(String.format(Locale.ROOT, "%02x", x));
             if (!h.toString().equals(u.sha256)) { part.delete(); throw new Failure("the download's SHA-256 does not match the release (" + h + ")"); }
             Log.i(TAG, u.apk.name + ": " + n + " bytes, SHA-256 matches");
         } else Log.i(TAG, u.apk.name + ": " + n + " bytes (the release gives no SHA-256)");
-        if (!part.renameTo(apk)) { part.delete(); throw new Failure("cannot rename the download"); }
+        if (!part.renameTo(apk)) { part.delete(); throw new Failure(Tx.s(R.string.settings_cannot_rename_the_download)); }
         return apk;
     }
 
@@ -416,10 +416,10 @@ final class Updater {
     private static void install(Activity a, File apk) {
         if (!a.getPackageManager().canRequestPackageInstalls()) {
             pending = apk;
-            new PadFocus.Builder(a).setTitle("Allow installs")
-                    .setMessage("To install the update, allow Banana Native to install apps (\"Install unknown apps\"), then come back.")
-                    .setPositiveButton("Open settings", (d, w) -> a.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + a.getPackageName()))))
-                    .setNegativeButton("Cancel", (d, w) -> { pending = null; apk.delete(); })
+            new PadFocus.Builder(a).setTitle(Tx.s(R.string.settings_allow_installs))
+                    .setMessage(Tx.s(R.string.settings_to_install_the_update_allow))
+                    .setPositiveButton(Tx.s(R.string.common_open_settings), (d, w) -> a.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + a.getPackageName()))))
+                    .setNegativeButton(Tx.s(R.string.common_cancel), (d, w) -> { pending = null; apk.delete(); })
                     .setCancelable(false).show();
             return;
         }
@@ -435,7 +435,7 @@ final class Updater {
         if (f == null) return;
         if (!f.isFile()) { pending = null; return; }
         if (a.getPackageManager().canRequestPackageInstalls()) install(a, f);
-        else { pending = null; f.delete(); Toast.makeText(a, "Installs from this app are not allowed: the update was not installed", Toast.LENGTH_LONG).show(); }
+        else { pending = null; f.delete(); Toast.makeText(a, Tx.s(R.string.settings_installs_from_this_app_are), Toast.LENGTH_LONG).show(); }
     }
 
     private static void commit(Activity a, File apk) throws IOException {
@@ -479,7 +479,7 @@ final class Updater {
                 } else {
                     Log.w(TAG, "install failed: status " + st + (msg != null ? ": " + msg : ""));
                     if (st != PackageInstaller.STATUS_FAILURE_ABORTED && a != null && !gone(a))
-                        msg(a, "Update not installed", msg != null ? msg : "The installer answered status " + st + ".");
+                        msg(a, Tx.s(R.string.settings_update_not_installed), msg != null ? msg : Tx.s(R.string.settings_the_installer_answered_status) + st + ".");
                 }
             }
         }, new IntentFilter(app.getPackageName() + ACTION), Context.RECEIVER_NOT_EXPORTED);

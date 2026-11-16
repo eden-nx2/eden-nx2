@@ -89,10 +89,10 @@ final class Folders {
 
     /** The picked save folder that is gone: the app's own save from now on (the picked one is forgotten), or the folder picker */
     static void saveGoneDialog(MainActivity a, Game g, File gone) {
-        Ui.explain(a, "Save folder gone", GameFile.saveGoneText(gone.getName()), gone.getPath())
-                .setPositiveButton("Use the app's save", (x, w) -> { Prefs.folder(a, "save_" + g.titleId, null); a.refresh(); })
-                .setNeutralButton("Pick the folder", (x, w) -> { current = g; a.pickFolder(PICK_SAVE, "Pick the folder for " + g.name + "'s save"); })
-                .setNegativeButton("Cancel", null).show();
+        Ui.explain(a, Tx.s(R.string.prepare_save_folder_gone), GameFile.saveGoneText(gone.getName()), gone.getPath())
+                .setPositiveButton(Tx.s(R.string.prepare_use_the_app_s_save), (x, w) -> { Prefs.folder(a, "save_" + g.titleId, null); a.refresh(); })
+                .setNeutralButton(Tx.s(R.string.prepare_pick_the_folder), (x, w) -> { current = g; a.pickFolder(PICK_SAVE, Tx.s(R.string.prepare_pick_folder_for_save, g.name)); })
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /** The default pack folder (the Folders "Default" button): packFor without the picked folder */
@@ -104,7 +104,7 @@ final class Folders {
     /** PackFind over this game's candidates, with PackCheck.blocking as the judge of the code */
     static PackFind.Found find(Context a, File picked, File game, String id) {
         List<File> c = PackFind.candidates(picked, AppStorage.pack(a, id), game, id, PackFind.volumeRoot(game));
-        return PackFind.best(c, id, Pack.isDump(game), p -> PackCheck.blocking(a, p, game));
+        return PackFind.best(c, id, Pack.isDump(game), p -> PackCheck.blocking(a, p, game), ShaderLibs.layerCovers(id, Prefs.layerEnv(a, id)));   // (a game the shader layer covers plays with no library of this version)
     }
 
     /** The app's packs/&lt;id&gt; when it holds this title's pack, else the older places beside the game (Pack.find) */
@@ -136,22 +136,20 @@ final class Folders {
     /** The default save folder's state in words: in app storage (and copied there from where), or still beside the game until the next start copies it */
     static String saveState(Context a, Game g, File save) {
         File app = AppStorage.save(a, g.titleId);
-        if (!SaveStore.same(save, app)) return " (default: your save from an earlier version, beside the game. The game's next start copies it into the app's storage, "
-                + app + ", and plays it from there; this folder is never changed)";
+        if (!SaveStore.same(save, app)) return Tx.s(R.string.prepare_save_default_earlier, app.toString());
         String from = Prefs.migratedFrom(a, g.titleId);
-        return " (default: in the app's storage" + (from != null ? "; copied from " + from + ", which is kept as it was" : "")
-                + ")." + (SaveUi.exports(a, g) ? " Back up saves makes a .zip in a place you pick, so it stays when the app is uninstalled."
-                : " Back up saves puts copies in " + SaveUi.backups(g) + ", on shared storage: they stay when the app is uninstalled.");
+        return Tx.s(from != null ? R.string.prepare_save_default_in_app_copied : R.string.prepare_save_default_in_app, from) + (SaveUi.exports(a, g) ? " " + Tx.s(R.string.prepare_backup_makes_zip)
+                : " " + Tx.s(R.string.prepare_backup_puts_copies, SaveUi.backups(g).toString()));
     }
 
     /** Settings › Folders: the only game's folders, else the user picks the game first */
     static void dialog(MainActivity a) {
         List<Game> list = Game.load(a);
-        if (list.isEmpty()) { a.error("No games yet: + Add game first. Each game has its own folders (tap its tile, then Storage › Folders…)."); return; }
+        if (list.isEmpty()) { a.error(Tx.s(R.string.prepare_no_games_yet_add_game)); return; }
         if (list.size() == 1) { dialog(a, list.get(0)); return; }
         String[] names = new String[list.size()];
         for (int i = 0; i < names.length; i++) names[i] = list.get(i).name + "  (" + list.get(i).titleId + ")";
-        new PadFocus.Builder(a).setTitle("Folders of which game?").setItems(names, (d, w) -> dialog(a, list.get(w))).setNegativeButton("Cancel", null).show();
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.prepare_folders_of_which_game)).setItems(names, (d, w) -> dialog(a, list.get(w))).setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     static void dialog(MainActivity a, Game g) {
@@ -162,15 +160,16 @@ final class Folders {
 
         String pack = pickedPack(a, g.titleId);
         String lp = Pack.libraryProblem(new File(g.packDir), g.titleId);
-        String packState = "\n" + (lp == null ? "Shader library " + BuildConfig.NX_DMSH_VK_CHAIN + ": present." : lp);
+        String packState = "\n" + (lp == null ? "Shader library " + BuildConfig.NX_DMSH_VK_CHAIN + ": present." : lp
+                + (Pack.shadersOnDemand(new File(g.packDir), g.titleId, Prefs.layerEnv(a, g.titleId)) ? " The game plays anyway and builds its shaders as you play." : ""));
         File save = save(a, g);
         String saveKey = "save_" + g.titleId;
 
-        row(a, box, Nup.isNup(new File(g.gameDir)) ? "Game (.nup file)" : "Game folder", g.gameDir, "Pick…", v -> { d[0].dismiss(); a.addGame(); }, null, null);
+        row(a, box, Nup.isNup(new File(g.gameDir)) ? "Game (.nup file)" : "Game folder", g.gameDir, Tx.s(R.string.prepare_pick), v -> { d[0].dismiss(); a.addGame(); }, null, null);
         boolean inApp = SaveStore.inside(new File(g.packDir), AppStorage.packs(a));
-        row(a, box, "Pack and shader folder (pack.tsv, shaders/)", g.packDir + (pack != null ? " (picked)" : inApp ? " (default: in the app's storage)" : " (default: beside the game)") + packState,
-                "Pick…", v -> { d[0].dismiss(); a.pickFolder(PICK_PACK, "Pick the pack folder (the one with pack.tsv and shaders/)"); },
-                pack == null ? null : "Default", v -> {
+        row(a, box, Tx.s(R.string.prepare_pack_and_shader_folder_pack), g.packDir + (pack != null ? Tx.s(R.string.prepare_picked_paren) : inApp ? Tx.s(R.string.prepare_default_in_app_paren) : Tx.s(R.string.prepare_default_beside_game_paren)) + packState,
+                Tx.s(R.string.prepare_pick), v -> { d[0].dismiss(); a.pickFolder(PICK_PACK, Tx.s(R.string.common_pick_the_pack_folder_the)); },
+                pack == null ? null : Tx.s(R.string.home_default), v -> {
                     d[0].dismiss();
                     pickedPack(a, g.titleId, null);
                     if (pack.equals(Prefs.folder(a, "pack"))) Prefs.folder(a, "pack", null);   // the older single-game key, when it was this game's
@@ -179,11 +178,11 @@ final class Folders {
                     dialog(a, g);
                 });
         boolean savePicked = Prefs.folder(a, saveKey) != null;
-        row(a, box, "Save folder", save.getPath() + (savePicked ? " (picked)" : saveState(a, g, save)),
-                "Pick…", v -> { d[0].dismiss(); a.pickFolder(PICK_SAVE, "Pick the folder for " + g.name + "'s save"); },
-                savePicked ? "Default" : null, v -> { d[0].dismiss(); Prefs.folder(a, saveKey, null); dialog(a, g); });
-        Ui.add(box, Ui.small(a, "These are kept when the app is updated. Picking a folder never moves, copies or deletes anything without asking."), 16);
-        d[0] = Ui.sheet(a, "Folders · " + g.name, box).setPositiveButton("Done", null).show();
+        row(a, box, Tx.s(R.string.prepare_save_folder), save.getPath() + (savePicked ? Tx.s(R.string.prepare_picked_paren) : saveState(a, g, save)),
+                Tx.s(R.string.prepare_pick), v -> { d[0].dismiss(); a.pickFolder(PICK_SAVE, Tx.s(R.string.prepare_pick_folder_for_save, g.name)); },
+                savePicked ? Tx.s(R.string.home_default) : null, v -> { d[0].dismiss(); Prefs.folder(a, saveKey, null); dialog(a, g); });
+        Ui.add(box, Ui.small(a, Tx.s(R.string.prepare_these_are_kept_when_the)), 16);
+        d[0] = Ui.sheet(a, Tx.s(R.string.game_title_for, Tx.s(R.string.common_folders), g.name), box).setPositiveButton(Tx.s(R.string.common_done), null).show();
     }
 
     /** One folder: a soft card with its name, its path (selectable) and its buttons */
@@ -197,7 +196,7 @@ final class Folders {
         r.addView(Ui.button(a, b1, Ui.Kind.PRIMARY, l1));
         if (b2 != null) {
             LinearLayout.LayoutParams lp = Ui.wrap();
-            lp.leftMargin = Ui.dp(a, 10);
+            lp.setMarginStart(Ui.dp(a, 10));
             r.addView(Ui.button(a, b2, Ui.Kind.QUIET, l2), lp);
         }
         Ui.add(c, r, 10);
@@ -218,7 +217,7 @@ final class Folders {
     /** Pick a pack folder for whichever game it holds (Prepare's "Pick another pack folder"), not for the game the dialog showed last */
     static void pickPack(MainActivity a) {
         current = null;
-        a.pickFolder(PICK_PACK, "Pick the pack folder (the one with pack.tsv and shaders/)");
+        a.pickFolder(PICK_PACK, Tx.s(R.string.common_pick_the_pack_folder_the));
     }
 
     static boolean activityResult(MainActivity a, int request, File dir) {
@@ -232,18 +231,19 @@ final class Folders {
         try {
             p = Pack.read(dir);
         } catch (IOException e) {
-            a.error("Not a pack folder: " + e.getMessage());
+            a.error(Tx.s(R.string.err_not_a_pack_folder, e.getMessage()));
             return;
         }
         String why = Profile.missing(p.titleId, p.name);
         if (why != null) { a.error(why); return; }
         Game g = current;
-        if (g != null && !p.titleId.equals(g.titleId)) { a.error("That pack is for " + p.titleId + ", not " + g.name + " (" + g.titleId + ")."); return; }
+        if (g != null && !p.titleId.equals(g.titleId)) { a.error(Tx.s(R.string.err_pack_is_for_other, p.titleId, g.name, g.titleId)); return; }
         pickedPack(a, p.titleId, dir.getPath());
         setPack(a, p.titleId, dir);
         String lp = Pack.libraryProblem(dir, p.titleId);
-        new PadFocus.Builder(a).setTitle("Pack folder set").setMessage(dir + "\n\n" + (lp == null ? "It has this app's shader library (" + BuildConfig.NX_DMSH_VK_CHAIN + "): ready to play." : lp))
-                .setPositiveButton("OK", (x, w) -> { if (g != null) dialog(a, g); }).show();
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.prepare_pack_folder_set)).setMessage(dir + "\n\n" + (lp == null ? Tx.s(R.string.prepare_has_this_apps_library, BuildConfig.NX_DMSH_VK_CHAIN)
+                        : Pack.shadersOnDemand(dir, p.titleId, Prefs.layerEnv(a, p.titleId)) ? ShaderState.onDemandNote(g == null || Pack.isDump(new File(g.gameDir))) : lp))
+                .setPositiveButton(android.R.string.ok, (x, w) -> { if (g != null) dialog(a, g); }).show();
     }
 
     private static void savePicked(MainActivity a, File dir) {
@@ -253,9 +253,9 @@ final class Folders {
         File old = save(a, g);
         if (old != null && old.getAbsolutePath().equals(dir.getAbsolutePath())) { dialog(a, g); return; }
         if (isEmpty(dir) && old != null && !isEmpty(old)) {
-            new PadFocus.Builder(a).setTitle("Copy the save?")
-                    .setMessage("The folder you picked is empty. Your current save is in " + old + ".\n\nCopy it into " + dir + "? The current folder stays as it is: nothing is deleted.")
-                    .setPositiveButton("Copy and use", (x, w) -> new Thread(() -> {
+            new PadFocus.Builder(a).setTitle(Tx.s(R.string.prepare_copy_the_save))
+                    .setMessage(Tx.s(R.string.prepare_copy_save_question, old.toString(), dir.toString()))
+                    .setPositiveButton(Tx.s(R.string.prepare_copy_and_use), (x, w) -> new Thread(() -> {
                         String err = null;
                         try {
                             copyTree(old, dir);
@@ -264,13 +264,13 @@ final class Folders {
                         }
                         String fe = err;
                         a.runOnUiThread(() -> {
-                            if (fe != null) { a.error("The copy failed (" + fe + "); the save folder was not changed."); return; }
+                            if (fe != null) { a.error(Tx.s(R.string.err_copy_failed_save_unchanged, fe)); return; }
                             Prefs.folder(a, key, dir.getPath());
                             dialog(a, g);
                         });
                     }, "nx-save-copy").start())
-                    .setNeutralButton("Use it empty", (x, w) -> { Prefs.folder(a, key, dir.getPath()); dialog(a, g); })
-                    .setNegativeButton("Cancel", null).show();
+                    .setNeutralButton(Tx.s(R.string.prepare_use_it_empty), (x, w) -> { Prefs.folder(a, key, dir.getPath()); dialog(a, g); })
+                    .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
             return;
         }
         Prefs.folder(a, key, dir.getPath());

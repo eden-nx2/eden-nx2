@@ -60,7 +60,7 @@ final class StepSlider {
         CheckBox def = null;
         if (dflt != null) {
             def = new CheckBox(c);
-            def.setText("Default (" + dflt + ")");
+            def.setText(Tx.s(R.string.game_default_value, dflt));
             def.setChecked(!own);
             slider.setAlpha(own ? 1f : 0.4f);
             def.setOnCheckedChangeListener((b, on) -> slider.setAlpha(on ? 0.4f : 1f));
@@ -69,7 +69,7 @@ final class StepSlider {
         box.addView(slider);
         CheckBox d = def;
         dlg[0] = new PadFocus.Builder(c).setTitle(title(label, names, index) + suffix).setView(box)
-                .setPositiveButton("OK", (x, w) -> { set.accept(d != null && d.isChecked() ? null : cur[0]); done.run(); })
-                .setNegativeButton("Cancel", null).show();
+                .setPositiveButton(android.R.string.ok, (x, w) -> { set.accept(d != null && d.isChecked() ? null : cur[0]); done.run(); })
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 }

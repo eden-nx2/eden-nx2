@@ -25,7 +25,7 @@ final class Recommend {
             VEGETATION = "vegetation", SKIP_LAYERS = "skip_layers", OPTION = "option.";
     static final List<String> SETTINGS = Collections.unmodifiableList(Arrays.asList(RES_PRESET, DRIVER, UPSCALER, HOLD60, FPS_CAP, DRS, VEGETATION, SKIP_LAYERS));
 
-    /** The values, each list in the order of the launcher's own (GameUpscaler.MODES, DlssTune.MODE_NAMES, Prefs.DRS_NAMES, Prefs.FPS_CAPS, Prefs.PACE_CAPS): the index is the stored value */
+    /** The values, each list in the order of the launcher's own (Tx.arr(R.array.arr_upscaler_modes), Tx.arr(R.array.arr_dlss_modes), Prefs.DRS_NAMES, Prefs.FPS_CAPS, Prefs.PACE_CAPS): the index is the stored value */
     static final String[] UPSCALERS = {"nearest", "bilinear", "fsr1", "native", "sgsr1"};
     static final String[] DLSS_MODES = {"gsr2", "fsr1", "bilinear", "fsr3"};
     static final String[] DRS_VALUES = {"off", "80", "70", "60", "50", "40", "30"};
@@ -274,7 +274,7 @@ final class Recommend {
     static String changedLine(int n) { return n <= 0 ? null : "You changed " + n + " of these."; }
 
     /** A row's tag: "Changed" (warning tint) where the player's value is not the recommended one, else "Recommended" (the value is the recommended one); none without a recommendation */
-    static String tag(State st) { return st == null || st.recommended == null ? null : st.changed() ? "Changed" : "Recommended"; }
+    static String tag(State st) { return st == null || st.recommended == null ? null : st.changed() ? Words.s("game_changed", "Changed") : Words.s("game_recommended", "Recommended"); }
 
     /** Where a value comes from, for the log: the player's own for this game, the recommendation, or the default (Settings or built-in) */
     static String source(boolean own, String recommended) { return own ? "yours" : recommended != null ? "recommended" : "default"; }

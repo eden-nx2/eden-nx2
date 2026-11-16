@@ -46,5 +46,15 @@ final class CopyPlan {
         return "Not enough free space: the copy needs " + gib(total) + " GiB and " + gib(RESERVE) + " GiB stay free for Prepare and the saves; " + gib(usable) + " GiB are free.";
     }
 
+    /**
+     * null when a copied file has the size its provider reported (or the provider reported none: expected of 0 or less), else what to tell the user. A stream that
+     * ends early (a provider that drops the connection, a cloud file not fully local) reads as end of file, so without this check a cut copy was renamed to a game
+     * and a game file with a hole is only found when the host reads it (zero-filled textures, Forgejo #290 #291 #342).
+     */
+    static String shortBy(long expected, long written, String what) {
+        if (expected <= 0 || written == expected) return null;
+        return what + " came out " + (written < expected ? (expected - written) + " bytes short" : (written - expected) + " bytes long") + " (" + written + " of " + expected + "): the provider ended the file early or changed it while it was copied";
+    }
+
     static String gib(long b) { return String.format(java.util.Locale.ROOT, "%.1f", b / (double) (1L << 30)); }
 }

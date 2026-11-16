@@ -151,7 +151,7 @@ final class Native {
     static native int pinThreads();
     /** The frame limit while the game runs (games whose speed follows the measured rate: Prefs.paced); 0 = none */
     static native void fpsLimitSet(int fps);
-    /** Full game speed at low frame rates while the game runs (games whose profile has fps_decouple sead: Prefs.paced; hle_fpslock.c nxhost_fps_decouple_set) */
+    /** Full game speed at low frame rates while the game runs (games whose profile has fps_decouple: Prefs.fullSpeed; hle_fpslock.c nxhost_fps_decouple_set) */
     static native void decoupleSet(boolean on);
     /** Hold 60 fps while the game runs (games whose profile has fps_steps: Prefs.steps; hle_fpslock.c nxhost_fps_hold60_set) */
     static native void hold60Set(boolean on);
@@ -174,6 +174,6 @@ final class Native {
     static native void drsSet(int minPct, int maxPct);
     /** Whether the running game has dispatched a neural upscaler network that the Upscaler can replace (vka_draw.c nxhost_ndsr_status): 1 yes, 0 not yet, -1 this host cannot say */
     static native int ndsrStatus();
-    /** The skipped-work warning (vka_exec.c nxhost_skip_status): "<percent> <causes>" once the replay skipped a large share of the game's draws for causes of the GPU driver, "" before or when it is off; SkipNotice reads it */
+    /** The skipped-work warning (vka_exec.c nxhost_skip_status): "<percent> <causes>" once the replay skipped a large share of the game's draws for causes of the GPU driver or for shaders missing from the pack, "" before or when it is off; SkipNotice reads it */
     static native String skipStatus();
 }

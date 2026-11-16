@@ -279,12 +279,12 @@ final class ExitWatch {
                 String url = v == null ? null : v.docUrl();
                 String likely = LogDigest.likely(v, end.why);
                 FixFinder.Fix fix = FixOffer.find(a, v, rec);   // "Try: <row>" for this end (FixFinder), on the notice and on What it means
-                AlertDialog.Builder b = new PadFocus.Builder(a).setTitle(ExitNotice.TITLE).setMessage(ExitNotice.message(rec.get("name"), end.why, likely))
-                        .setPositiveButton("OK", null);
+                AlertDialog.Builder b = new PadFocus.Builder(a).setTitle(ExitNotice.TITLE()).setMessage(ExitNotice.message(rec.get("name"), end.why, likely))
+                        .setPositiveButton(android.R.string.ok, null);
                 FixOffer.add(a, b, fix, rec);
-                if (log != null) b.setNeutralButton("Share log", (d, w) -> a.shareLog(log, dg != null && dg.isFile() ? dg : null));
+                if (log != null) b.setNeutralButton(Tx.s(R.string.common_share_log), (d, w) -> a.shareLog(log, dg != null && dg.isFile() ? dg : null));
                 if (v != null && v.rule != null) {
-                    b.setNegativeButton("What it means", (d, w) -> {
+                    b.setNegativeButton(Tx.s(R.string.err_what_it_means), (d, w) -> {
                         CharSequence msg = ExitNotice.meaningMessage(v.meaning, v.cause);
                         if (v.cause != null && !v.cause.isEmpty() && v.meaning != null && !v.meaning.isEmpty()) {
                             SpannableString ss = new SpannableString(msg);
@@ -294,10 +294,10 @@ final class ExitWatch {
                                 msg = ss;
                             }
                         }
-                        AlertDialog.Builder mb = new PadFocus.Builder(a).setTitle(ExitNotice.MEANING_TITLE).setMessage(msg)
-                                .setPositiveButton("OK", null);
+                        AlertDialog.Builder mb = new PadFocus.Builder(a).setTitle(ExitNotice.MEANING_TITLE()).setMessage(msg)
+                                .setPositiveButton(android.R.string.ok, null);
                         FixOffer.add(a, mb, fix, rec);
-                        if (url != null) mb.setNegativeButton("More details", (d2, w2) -> a.openLink(url));
+                        if (url != null) mb.setNegativeButton(Tx.s(R.string.err_more_details), (d2, w2) -> a.openLink(url));
                         showing = mb.show();
                     });
                 }

@@ -17,12 +17,14 @@ final class AdvancedTable {
     static final String[] AREAS = {"Graphics", "Performance", "Memory", "Input", "Audio", "Packing", "Game", "Diagnostics"};
 
     static final class Row {
-        String name = "", tier = "", area = "", label = "", tryIf = "", type = "", choices = "", deflt = "", scope = "", warn = "", owner = "", profileKey = "", games = "", fixes = "", reason = "";
+        String name = "", tier = "", area = "", label = "", tryIf = "", type = "", choices = "", deflt = "", scope = "", warn = "", owner = "", profileKey = "", games = "", fixes = "", reason = "", live = "";
 
         boolean shown() { return !tier.equals("internal"); }
         boolean developer() { return tier.equals("developer"); }
         boolean experimental() { return !warn.isEmpty(); }
         boolean owned() { return !owner.isEmpty(); }
+        /** A choice row the in-game panel also offers as a slider that changes the running game (the table's live column) */
+        boolean live() { return live.equals("live") && type.equals("choice") && editable(); }
         /** Whether the page lets the player set it: a launcher control owns the others */
         boolean editable() { return shown() && !owned(); }
         String title() { return label.isEmpty() ? name : label; }
@@ -107,7 +109,7 @@ final class AdvancedTable {
             Row r = new Row();
             r.name = col(head, f, "name"); r.tier = col(head, f, "tier"); r.area = col(head, f, "area"); r.label = col(head, f, "label"); r.tryIf = col(head, f, "try_if");
             r.type = col(head, f, "type"); r.choices = col(head, f, "choices"); r.deflt = col(head, f, "default"); r.scope = col(head, f, "scope"); r.warn = col(head, f, "warn");
-            r.owner = col(head, f, "owner"); r.profileKey = col(head, f, "profile_key"); r.games = col(head, f, "games"); r.fixes = col(head, f, "fixes"); r.reason = col(head, f, "reason");
+            r.owner = col(head, f, "owner"); r.profileKey = col(head, f, "profile_key"); r.games = col(head, f, "games"); r.fixes = col(head, f, "fixes"); r.reason = col(head, f, "reason"); r.live = col(head, f, "live");
             if (r.name.startsWith("DM_") || r.name.startsWith("DMSH_VK_")) rows.add(r);
         }
         return rows;

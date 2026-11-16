@@ -16,15 +16,15 @@ final class TimeOfDay {
     /** The row's value: the chosen time, or the phone's clock */
     static String label(Context c) {
         String t = Prefs.timeOverride(c);
-        return t.isEmpty() ? "The phone's clock" : t.replace('T', ' ');
+        return t.isEmpty() ? Tx.s(R.string.game_the_phone_s_clock) : t.replace('T', ' ');
     }
 
     /** The choice dialog (a date and time, or the phone's clock); done runs after a change so the caller redraws its row */
     static void dialog(Activity a, Runnable done) {
-        String[] items = {"Pick a date and time…", "The phone's clock"};
-        new AlertDialog.Builder(a).setTitle("Time of day")
+        String[] items = {Tx.s(R.string.game_pick_a_date_and_time), Tx.s(R.string.game_the_phone_s_clock)};
+        new AlertDialog.Builder(a).setTitle(Tx.s(R.string.common_time_of_day))
                 .setItems(items, (d, w) -> { if (w == 0) pickDate(a, done); else { Prefs.timeOverride(a, null); done.run(); } })
-                .setNegativeButton("Cancel", null).show();
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /** The system date picker, then the system time picker; the result goes through valid() before it is stored (DM_TIME's format) */
@@ -38,7 +38,7 @@ final class TimeOfDay {
             new android.app.TimePickerDialog(a, (tv, h, min) -> {
                 cal.set(java.util.Calendar.HOUR_OF_DAY, h); cal.set(java.util.Calendar.MINUTE, min); cal.set(java.util.Calendar.SECOND, 0);
                 String v = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", java.util.Locale.ROOT).format(cal.getTime());
-                if (!valid(v)) { Toast.makeText(a, "Not a valid date and time: " + v, Toast.LENGTH_LONG).show(); return; }
+                if (!valid(v)) { Toast.makeText(a, Tx.s(R.string.game_not_a_valid_date_time, v), Toast.LENGTH_LONG).show(); return; }
                 Prefs.timeOverride(a, v); done.run();
             }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), true).show();
         }, cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.DAY_OF_MONTH)).show();

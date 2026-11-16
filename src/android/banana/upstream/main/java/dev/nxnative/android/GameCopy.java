@@ -59,13 +59,13 @@ final class GameCopy {
     private static final class Item { final Uri uri; final String rel; final long size; Item(Uri u, String r, long s) { uri = u; rel = r; size = s; } }
 
     private static void start(MainActivity a, Uri u, boolean tree) {
-        if (running) { a.error("A copy is already running."); return; }
+        if (running) { a.error(Tx.s(R.string.prepare_a_copy_is_already_running)); return; }
         ContentResolver cr = a.getContentResolver();
         File games = CopyPlan.games(AppStorage.root(a));
-        TextView t = Ui.small(a, "Reading the list of files…");
+        TextView t = Ui.small(a, Tx.s(R.string.prepare_reading_the_list_of_files));
         t.setTextSize(15);
         boolean[] cancel = {false};
-        AlertDialog d = Ui.sheet(a, "Copy into the app", t).setNegativeButton("Stop", (x, w) -> cancel[0] = true).setCancelable(false).show();
+        AlertDialog d = Ui.sheet(a, Tx.s(R.string.prepare_copy_into_the_app), t).setNegativeButton(Tx.s(R.string.common_stop), (x, w) -> cancel[0] = true).setCancelable(false).show();
         a.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         running = true;
         new Thread(() -> {
@@ -86,7 +86,7 @@ final class GameCopy {
                 }
                 File dest = new File(games, name), part = CopyPlan.partOf(dest);
                 partF = part;
-                if (dest.exists()) throw new IOException("a copy named " + name + " is already in the app (" + dest + "): remove that game with its copy first, or pick it there");
+                if (dest.exists()) throw new IOException("a copy named " + name + " is already in the app (" + dest + Tx.s(R.string.prepare_remove_that_game_with_its));
                 long total = 0; for (Item i : items) total += Math.max(0, i.size);
                 if (!games.isDirectory() && !games.mkdirs()) throw new IOException("cannot make " + games);
                 String fit = CopyPlan.fits(total, games.getUsableSpace());
@@ -97,15 +97,18 @@ final class GameCopy {
                     File out = tree ? new File(part, i.rel) : part;
                     File parent = out.getParentFile();
                     if (parent != null && !parent.isDirectory() && !parent.mkdirs()) throw new IOException("cannot make " + parent);
+                    long wrote = 0;
                     try (InputStream in = cr.openInputStream(i.uri); OutputStream o = new FileOutputStream(out)) {
                         if (in == null) throw new IOException("cannot open " + i.rel);
                         for (int n; (n = in.read(buf)) > 0;) {
                             if (cancel[0]) throw new IOException("stopped");
                             o.write(buf, 0, n);
-                            copied += n;
+                            copied += n; wrote += n;
                             if (copied - shown > (64L << 20)) { shown = copied; String s = progress(name, copied, total, i.rel); a.runOnUiThread(() -> t.setText(s)); }
                         }
                     }
+                    String cut = CopyPlan.shortBy(i.size, wrote, i.rel.isEmpty() ? name : i.rel);   // a stream that ended early is not a copy
+                    if (cut != null) throw new IOException(cut);
                 }
                 if (!part.renameTo(dest)) throw new IOException("cannot rename " + part + " to " + dest);
                 done = dest;
@@ -122,15 +125,14 @@ final class GameCopy {
                 if (a.isDestroyed()) return;
                 d.dismiss();
                 if (game != null) a.copied(game);
-                else a.error("Not copied: " + why + ". Nothing of the copy is kept.");
+                else a.error(Tx.s(R.string.err_not_copied, why));
             });
         }, "game-copy").start();
     }
 
     private static String progress(String name, long copied, long total, String rel) {
         int pct = total > 0 ? (int) (copied * 100 / total) : 0;
-        return "Copying " + name + ": " + CopyPlan.gib(copied) + " of " + CopyPlan.gib(total) + " GiB (" + pct + " %)\n" + rel
-                + "\n\nKeep the app open. The copy goes to the app's own storage, so it needs no All files access.";
+        return Tx.s(R.string.prepare_copying_progress, name, CopyPlan.gib(copied), CopyPlan.gib(total), pct, rel);
     }
 
     /** The tree's files below doc, with their paths relative to the tree's root */
@@ -143,7 +145,7 @@ final class GameCopy {
             while (c.moveToNext()) {
                 if (cancel[0]) throw new IOException("stopped");
                 String id = c.getString(0), n = CopyPlan.safeName(c.getString(1)), mime = c.getString(2);
-                if (n == null) throw new IOException("a file in " + (rel.isEmpty() ? "the folder" : rel) + " has a name the app cannot use: " + c.getString(1));
+                if (n == null) throw new IOException("a file in " + (rel.isEmpty() ? "the folder" : rel) + Tx.s(R.string.prepare_has_a_name_the_app) + c.getString(1));
                 String r = rel.isEmpty() ? n : rel + "/" + n;
                 if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime)) list(cr, tree, id, r, out, cancel);
                 else out.add(new Item(DocumentsContract.buildDocumentUriUsingTree(tree, id), r, c.isNull(3) ? 0 : c.getLong(3)));

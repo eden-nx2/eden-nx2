@@ -56,6 +56,17 @@ final class Users {
 
     private static void store(Context c, List<User> l) { Prefs.of(c).edit().putString(KEY, format(l)).apply(); }
 
+    /** How many profile pictures UsersUi offers; a user's is stored apart from the host's lines (it is only the launcher's picture), the first user's default is the first one */
+    static final int AVATARS = 12;
+
+    /** The index of a user's profile picture: the one picked, else one made from its Uid (the first user's is the first) */
+    static int avatar(Context c, String uid) {
+        int def = uid.equals(FIRST) ? 0 : Math.floorMod(uid.hashCode(), AVATARS);
+        return Math.floorMod(Prefs.of(c).getInt("user_avatar_" + uid, def), AVATARS);
+    }
+
+    static void setAvatar(Context c, String uid, int index) { Prefs.of(c).edit().putInt("user_avatar_" + uid, Math.floorMod(index, AVATARS)).apply(); }
+
     /** The user games start with (the console's preselected user): its uid, the first user's when none is set or it is gone */
     static String defaultUid(Context c) {
         String d = Prefs.of(c).getString(KEY_DEFAULT, FIRST);

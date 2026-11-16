@@ -50,27 +50,27 @@ final class ReleasePage {
         LinearLayout content = Ui.page(a, pageFrame, 640, true);
         Runnable close = () -> host.removeView(overlay);
 
-        content.addView(Ui.header(a, Ui.back(a, v -> close.run()), "Update available", "Banana Native " + UpdateCheck.text(u.version), null));
+        content.addView(Ui.header(a, Ui.back(a, v -> close.run()), Tx.s(R.string.settings_update_available), Tx.s(R.string.settings_banana_native_version, UpdateCheck.text(u.version)), null));
         LinearLayout head = Ui.add(content, Ui.card(a), 8);
-        head.addView(Ui.heading(a, "Version " + UpdateCheck.text(u.version) + " is available"));
-        Ui.add(head, Ui.body(a, "You have " + have + ". Install over it: saves, packs and settings are kept."), 4);
-        Ui.add(head, Ui.small(a, u.apk.name + " · " + UpdateCheck.mb(u.apk.size) + " · from " + u.release.source.name), 8);
+        head.addView(Ui.heading(a, Tx.s(R.string.settings_version_is_available, UpdateCheck.text(u.version))));
+        Ui.add(head, Ui.body(a, Tx.s(R.string.settings_you_have_install_over, have)), 4);
+        Ui.add(head, Ui.small(a, Tx.s(R.string.settings_apk_size_from, u.apk.name, UpdateCheck.mb(u.apk.size), u.release.source.name)), 8);
 
         List<ReleaseNotes.Block> blocks = ReleaseNotes.parse(u.release.body);
-        Ui.add(content, Ui.section(a, "What's new"), Ui.SECTION_GAP);
+        Ui.add(content, Ui.section(a, Tx.s(R.string.settings_what_s_new)), Ui.SECTION_GAP);
         LinearLayout notes = Ui.add(content, Ui.card(a), 8);
         fill(a, notes, blocks, u.release.source);
-        if (notes.getChildCount() == 0) notes.addView(Ui.small(a, "This release has no notes."));
+        if (notes.getChildCount() == 0) notes.addView(Ui.small(a, Tx.s(R.string.settings_this_release_has_no_notes)));
 
         View line = new View(a);
         line.setBackgroundColor(Ui.col(a, R.color.bn_card_stroke));
         root.addView(line, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(a, 1)));
         LinearLayout bar = Ui.row(a);
         bar.setBackgroundColor(Ui.col(a, R.color.bn_bg));
-        bar.addView(Ui.button(a, "Later", Ui.Kind.TONAL, v -> close.run()), Ui.weight());
+        bar.addView(Ui.button(a, Tx.s(R.string.settings_later), Ui.Kind.TONAL, v -> close.run()), Ui.weight());
         View gap = new View(a);
         bar.addView(gap, new LinearLayout.LayoutParams(Ui.dp(a, 12), 1));
-        bar.addView(Ui.button(a, "Update", Ui.Kind.PRIMARY, v -> { close.run(); onUpdate.run(); }), Ui.weight());
+        bar.addView(Ui.button(a, Tx.s(R.string.settings_update), Ui.Kind.PRIMARY, v -> { close.run(); onUpdate.run(); }), Ui.weight());
         bar.setOnApplyWindowInsetsListener((v, in) -> {
             android.graphics.Insets i = in.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
             int w = a.getResources().getDisplayMetrics().widthPixels;
@@ -119,7 +119,7 @@ final class ReleasePage {
 
     private static void picture(Activity a, LinearLayout card, ReleaseNotes.Block b, UpdateCheck.Source source) {
         String alt = b.text.isEmpty() ? null : b.text;
-        TextView hold = Ui.small(a, alt != null ? alt : "Loading picture…");
+        TextView hold = Ui.small(a, alt != null ? alt : Tx.s(R.string.settings_loading_picture));
         hold.setGravity(Gravity.CENTER);
         hold.setMinHeight(Ui.dp(a, 96));
         hold.setPadding(Ui.dp(a, 12), Ui.dp(a, 12), Ui.dp(a, 12), Ui.dp(a, 12));
@@ -156,7 +156,7 @@ final class ReleasePage {
         ImageView v = new ImageView(a);
         v.setImageBitmap(pic.bitmap);
         v.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        v.setContentDescription(alt != null ? alt : "Picture from the release notes");
+        v.setContentDescription(alt != null ? alt : Tx.s(R.string.settings_picture_from_the_release_notes));
         float r = Ui.dp(a, 12);
         v.setOutlineProvider(new ViewOutlineProvider() {
             @Override public void getOutline(View view, Outline o) { o.setRoundRect(0, 0, view.getWidth(), view.getHeight(), r); }

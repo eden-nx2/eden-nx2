@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * A game this APK runs: its profile (dm/games/&lt;title ID&gt;) was compiled into a host of its own, libnxhost_&lt;title ID&gt;.so (build.gradle nxGames,
  * src/main/cpp/CMakeLists.txt), and what the launcher needs of it comes from build.gradle as BuildConfig.NX_PROFILES: one line per game, tab-separated: title ID,
- * name, the shader count Prepare translates, the shader inputs digest, the builds (game.tsv build rows, "version module=build ID …", ';' between builds), and, when the APK has them, the readiness rows (the profile's readiness.tsv: "level|fact|min|what", ';' between rows: Readiness.parseReqs), its status row (playable or bring-up; dm/games/README.md "Readiness rows"), the shader delta rows (vk_delta.tsv's "from" rows: "version=count", ',' between them), its "stamp" rows ("version:old SHA-256:new SHA-256", ';' between them), what Game resolution sets (resolutionEnv), the RomFS checks (romfsChecks), the GPU timestamp mode (gpuTs), the default Game resolution (window), whether the game is paced (decoupled), dynamic resolution (drs), the default frame limit (fpsLimit) and whether the game's DLSS runs on the host's stand-in (dlss), and, after the vegetation flag and the option rows, the 3D scene overlays (scenes), the Resolution presets (presets), the Speedhack's layers (skipLayers) and the recommended settings (recommend).
+ * name, the shader count Prepare translates, the shader inputs digest, the builds (game.tsv build rows, "version module=build ID …", ';' between builds), and, when the APK has them, the readiness rows (the profile's readiness.tsv: "level|fact|min|what", ';' between rows: Readiness.parseReqs), its status row (playable or bring-up; dm/games/README.md "Readiness rows"), the shader delta rows (vk_delta.tsv's "from" rows: "version=count", ',' between them), its "stamp" rows ("version:old SHA-256:new SHA-256", ';' between them), what Game resolution sets (resolutionEnv), the RomFS checks (romfsChecks), the GPU timestamp mode (gpuTs), the default Game resolution (window), whether the game is paced or skips late frames (decoupled, frameSkip: "1" or "skip"), dynamic resolution (drs), the default frame limit (fpsLimit) and whether the game's DLSS runs on the host's stand-in (dlss), and, after the vegetation flag and the option rows, the 3D scene overlays (scenes), the Resolution presets (presets), the Speedhack's layers (skipLayers) and the recommended settings (recommend).
  * A game without a profile here cannot run in this APK (its host has no profile for it): the launcher says so instead of starting it.
  * No Android classes: the JVM test (android/app/src/jvmtest) runs it on the Mac.
  */
@@ -50,7 +50,8 @@ final class Profile {
         return null;
     }
     boolean dlss;   // game.tsv has dlss_standin rows (build.gradle dlssOf): the game's DLSS runs on the host's GSR2 stand-in, with its Upscaler modes and sliders (Prefs.dlssGame)
-    boolean decoupled;   // game.tsv has fps_decouple rows (build.gradle decoupleOf): the game's speed follows its measured frame rate, so it gets a frame limit (Prefs.paced)
+    boolean decoupled;   // game.tsv has fps_decouple sead (build.gradle decoupleOf "1"): the game's speed follows its measured frame rate, so it gets a frame limit (Prefs.paced)
+    boolean frameSkip;   // game.tsv has fps_decouple skip (decoupleOf "skip"): late frames skip their present through the game's own draw flag (Prefs.frameSkip)
     String romfsChecks = "";   // game.tsv romfs_check rows (build.gradle romfsChecksOf): "<path>|<line>|<expected or main>", ';' between them (RomfsCheck)
 
     /** Whether Game resolution does something for this game (its profile has window_fn, res_levels or graphics_scale rows) */
@@ -246,7 +247,7 @@ final class Profile {
         return size(c) == null ? name : name + " \u00b7 draws " + c + " here";
     }
 
-    static final String[] MODE_NAMES = {"Docked", "Handheld"};
+    static String modeName(int k) { return k == 0 ? Words.s("game_docked", "Docked") : Words.s("game_handheld", "Handheld"); }
 
     /**
      * The two-choice form of Game resolution: a game whose graphics_scale rows are one console row and one handheld row, both sizes (the game's docked and handheld
@@ -272,7 +273,7 @@ final class Profile {
     /** A two-choice form's label (k: 0 docked, 1 handheld): "Docked (1152p)" for a console row of 2048x1152, "Handheld (1080p)" for a handheld row of 1920x1080; null without the form */
     String modeLabel(int k) {
         String[] m = modes();
-        return m == null ? null : MODE_NAMES[k] + " (" + size(m[k])[1] + "p)";
+        return m == null ? null : modeName(k) + " (" + size(m[k])[1] + "p)";
     }
 
     /**
@@ -494,6 +495,7 @@ final class Profile {
             if (c.length > 11 && !c[11].isEmpty()) p.gpuTs = c[11];
             p.window = c.length > 12 ? c[12] : "";
             p.decoupled = c.length > 13 && c[13].equals("1");
+            p.frameSkip = c.length > 13 && c[13].equals("skip");
             p.drs = c.length > 14 && c[14].equals("1");
             try { p.fpsLimit = c.length > 15 && !c[15].isEmpty() ? Math.max(0, Integer.parseInt(c[15])) : 0; } catch (NumberFormatException e) { p.fpsLimit = 0; }
             p.dlss = c.length > 16 && c[16].equals("1");
@@ -542,15 +544,13 @@ final class Profile {
         if (of(titleId) != null) return null;
         Profile other = otherPrograms(titleId).isEmpty() ? null : otherPrograms(titleId).get(0);
         if (other != null)   // a dump of the game alone, whose other program (a Switch 2 Edition) this APK runs: say what the dump lacks (Pack.playableIdOf)
-            return "This dump has only the Switch game (" + titleId + "). This app version runs its " + other.name + " (" + other.titleId + "), program " + program(other.titleId)
-                    + " of the game, which this dump does not hold. Dump the game again with its Nintendo Switch 2 Edition upgrade, so that the dump holds program "
-                    + program(other.titleId) + " too, then add that dump.";
+            return Words.s("err_dump_has_only_switch_game", "This dump has only the Switch game (%1$s). This app version runs its %2$s (%3$s), program %4$s of the game, which this dump does not hold. Dump the game again with its Nintendo Switch 2 Edition upgrade, so that the dump holds program %4$s too, then add that dump.", titleId, other.name, other.titleId, program(other.titleId));
         return notIncluded(titleId, name);
     }
 
     /** missing's sentence for a title this APK has no profile of, whatever else it has (a dump that holds the other program says only this: DumpLayout.find) */
     static String notIncluded(String titleId, String name) {
-        return "This app version does not include " + (name == null || name.isEmpty() || name.equals(titleId) ? "this game" : name) + " (" + titleId + "). Install a build that includes it.";
+        return Words.s("err_app_does_not_include", "This app version does not include %1$s (%2$s). Install a build that includes it.", name == null || name.isEmpty() || name.equals(titleId) ? Words.s("err_this_game", "this game") : name, titleId);
     }
 
     /** A title ID without its platform byte (01 Switch, 04 Switch 2): scripts/pack_dump.py TITLE_NUMBER */
@@ -581,13 +581,13 @@ final class Profile {
     }
 
     /** A version of a dump in words: 0 is the base game itself (no update installed; Mario Kart World 1.8.0's supported build), any other an update */
-    static String versionName(long version) { return version == 0 ? "the base game" : "update " + version; }
+    static String versionName(long version) { return version == 0 ? Words.s("game_the_base_game", "the base game") : "update " + version; }
 
     /** Which versions of this game the APK supports, as a sentence for a dump it refuses (DumpCheck): its builds, by display version when game.tsv names one */
     String supported() {
         List<String> all = new ArrayList<>();
         for (Long v : buildMap().keySet()) all.add(buildName(v));
-        return "This app supports " + name + " (" + titleId + ") " + String.join(" or ", all) + " only.";
+        return Words.s("err_app_supports_only", "This app supports %1$s (%2$s) %3$s only.", name, titleId, String.join(Words.s("err_or_word", " or "), all));
     }
 
     /** The builds this APK supports, in the player's words only ("1.8.0", "update 458752 or the base game"), for a refusal's main text (supported() has the build IDs) */
@@ -601,7 +601,7 @@ final class Profile {
     String buildName(long v) {
         String d = display(v), main = buildMap().getOrDefault(v, Map.of()).get("main");
         String ids = main == null ? "" : "main " + main.substring(0, Math.min(16, main.length())) + "…";
-        if (d != null) return d + " (" + (v == 0 ? "the base game, version 0" : "update " + v) + (ids.isEmpty() ? "" : ", " + ids) + ")";
+        if (d != null) return d + " (" + (v == 0 ? Words.s("game_the_base_game_version_0", "the base game, version 0") : "update " + v) + (ids.isEmpty() ? "" : ", " + ids) + ")";
         return versionName(v) + (ids.isEmpty() ? "" : " (" + ids + ")");
     }
 

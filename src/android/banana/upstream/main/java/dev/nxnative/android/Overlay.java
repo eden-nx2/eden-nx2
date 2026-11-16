@@ -55,19 +55,22 @@ import java.util.concurrent.Executors;
 final class Overlay {
     /** The items: the Prefs key and the switch's label */
     static final String[][] ITEMS = {
-            {"fps", "Frame rate and frame time"},
-            {"throttle", "Throttle dot (green / yellow / red)"},
-            {"gpu", "GPU time a frame"},
-            {"cpu", "CPU clock caps"},
-            {"battery", "Battery temperature and level"},
-            {"tag", "Build tag"},
-            {"memory", "Memory: the game's and the phone's"},
+            {"fps", Tx.s(R.string.game_frame_rate_and_frame_time)},
+            {"throttle", Tx.s(R.string.game_throttle_dot_green_yellow_red)},
+            {"gpu", Tx.s(R.string.game_gpu_time_a_frame)},
+            {"cpu", Tx.s(R.string.game_cpu_clock_caps)},
+            {"battery", Tx.s(R.string.game_battery_temperature_and_level)},
+            {"tag", Tx.s(R.string.game_build_tag)},
+            {"memory", Tx.s(R.string.game_memory_the_game_s_and)},
     };
+
+    /** The three choices of the "Building shaders" label (Prefs.layerLabel, LayerStatus.LABEL_*), in that order */
+    static String[] labelChoices() { return Tx.arr(R.array.arr_layer_label); }
 
     /** The master switch and, below it, one switch per item (main screen dialog, in-game settings) */
     static void rows(Context c, LinearLayout box, String masterNote) {
         CheckBox master = new CheckBox(c);
-        master.setText("Show the overlay over the game" + (masterNote != null ? masterNote : ""));
+        master.setText(Tx.s(R.string.game_show_overlay) + (masterNote != null ? masterNote : ""));
         master.setChecked(Prefs.overlay(c));
         box.addView(master);
         List<CheckBox> items = new ArrayList<>();

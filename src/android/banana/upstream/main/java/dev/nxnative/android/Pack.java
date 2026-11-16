@@ -125,6 +125,54 @@ final class Pack {
         return libraryProblem(dir, titleId) != null && playableLibrary(dir, titleId) != null && deltaShaders(dir, titleId) < 0;
     }
 
+    /**
+     * The shader update is optional (ShaderLibs.optionalUpdate): this APK's library is missing (not present with other tables: the host would load that one), an older
+     * library of this APK's own ABI and inputs plays, and the shader layer builds what it lacks while the game runs. gameEnv: the player's own lines for the game (Prefs.gameEnv)
+     */
+    static boolean shaderUpdateOptional(File dir, String titleId, String gameEnv) {
+        Profile p = Profile.of(titleId);
+        return p != null && libraryOf(dir) == null && ShaderLibs.optionalUpdate(dir, titleId, BuildConfig.NX_DMSH_VK_CHAIN, BuildConfig.NX_DMSH_VK_ABI, p.shaderInputs, gameEnv) != null
+                && ShaderLibs.layerWritable(dir, ShaderLibs.tempOf(titleId));   // (no folder to build in: the layer cannot fill what the older library lacks)
+    }
+
+    /**
+     * The older library a sampled keep (shader_sample.py, ShaderLibs.sampleCandidate) may take over as this version's, null when there is none or one was asked about already: this
+     * APK's library is missing, an older one of its ABI and the profile's inputs plays, the layer covers the game (it verifies what is played afterwards) and the sample size is not 0
+     */
+    static File sampledKeepCandidate(File dir, String titleId, String gameEnv) {
+        Profile p = Profile.of(titleId);
+        return p == null || libraryOf(dir) != null ? null
+                : ShaderLibs.sampleCandidate(dir, titleId, BuildConfig.NX_DMSH_VK_CHAIN, BuildConfig.NX_DMSH_VK_ABI, BuildConfig.NX_DMSH_VK_ABI_COMPAT, BuildConfig.NX_DMSH_VK_ABI_SAME, p.shaderInputs, gameEnv);
+    }
+
+    /**
+     * The game plays on an older library (this APK's is missing, the host plays the older one: {@link #playableLibrary}) and the shader layer builds what that library lacks while it
+     * runs ({@link ShaderLibs#layerCovers}, a folder it can be built in): whatever the older library's ABI or inputs digest, which only decide whether its own shaders are as
+     * this version makes them. The game's page then shows the small row "Shaders: older, built while playing" and never blocks Play; the full update card is for a game the layer
+     * does not cover
+     */
+    static boolean shaderLayerFills(File dir, String titleId, String gameEnv) {
+        return Profile.of(titleId) != null && libraryOf(dir) == null && playableLibrary(dir, titleId) != null && ShaderLibs.layerCovers(titleId, gameEnv)
+                && ShaderLibs.layerWritable(dir, ShaderLibs.tempOf(titleId));
+    }
+
+    /**
+     * The game plays with no shader library of this APK's version or one it can play on, and builds its shaders while it runs (ShaderLibs.onDemand): the shader layer covers
+     * it (a Switch 2 title, DM_VK_LAYER not switched off in gameEnv: Prefs.gameEnv) and the pack has no library of this version, none of a playable ABI and none from before
+     * the ABI field. Then {@link #libraryProblem} does not block Play; a game the layer does not cover keeps it. A game the app has no profile for never qualifies, nor
+     * one whose layer has no folder it can be built in (ShaderLibs.layerWritable: the host would have no layer and an empty library, so nothing would be drawn)
+     */
+    static boolean shadersOnDemand(File dir, String titleId, String gameEnv) {
+        return Profile.of(titleId) != null && ShaderLibs.onDemand(dir, titleId, BuildConfig.NX_DMSH_VK_CHAIN, BuildConfig.NX_DMSH_VK_ABI, BuildConfig.NX_DMSH_VK_ABI_COMPAT, gameEnv)
+                && ShaderLibs.layerWritable(dir, ShaderLibs.tempOf(titleId));
+    }
+
+    /** {@link #libraryProblem} as Play sees it: null also when the shaders are built while the game runs ({@link #shadersOnDemand}) */
+    static String libraryBlock(File dir, String titleId, String gameEnv) {
+        String lp = libraryProblem(dir, titleId);
+        return lp != null && shadersOnDemand(dir, titleId, gameEnv) ? null : lp;
+    }
+
     /** A library of another version made before versioned shader updates (no ABI): played with a warning when no playable one is there (ShaderLibs.legacy), null when none */
     static File legacyLibrary(File dir, String titleId) { return ShaderLibs.legacy(dir, titleId, BuildConfig.NX_DMSH_VK_CHAIN); }
 

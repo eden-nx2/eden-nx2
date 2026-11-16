@@ -25,11 +25,14 @@ import java.util.zip.ZipOutputStream;
  * <ul>
  * <li><b>Export</b> writes the pack folder (pack.tsv at the zip's root, the modules, shaders/…) as one zip, STORED (the library and the code do not compress, and a
  *     stored zip reads back fast), named banana-pack-&lt;title ID&gt;-&lt;version&gt;.zip, into &lt;name&gt;.partial first, which is read back (every entry's size and CRC
- *     against the pack's file) and only then gets its name. The pack is only read.</li>
+ *     against the pack's file) and only then gets its name. The pack is only read. Left out ({@link #exported}): the shader layer (shaders/layer: the shaders this phone built
+ *     while playing, gigabytes that a build may be writing as the zip is made, and that the game builds again where the pack goes) and files a stopped tool left half
+ *     written (*.tmp, *.partial, the layer's .building marker).</li>
  * <li><b>Import</b> takes such a zip (pack.tsv at its root, or in its one top folder) or a pack folder. The title in pack.tsv must be a game of this APK (Profile)
  *     and, from a game's sheet, that game's. The pack is unpacked (or copied) into &lt;packs&gt;/&lt;title ID&gt;.partial; an entry whose name would land outside it
  *     (an absolute path, "..", a backslash: zip slip) refuses the whole zip. The copy is checked: Pack.read (its format, every module's patched.bin), its code
- *     finished (Pack.unfinishedModule) and a shader library of some version in it (an older one goes through the usual restamp / shader update at Play). Only then
+ *     finished (Pack.unfinishedModule). A shader library is not required: a pack of a code-only Prepare (or scripts/pack_android.py --no-shaders) has none, and the game builds its
+ *     shaders while it plays (the shader layer) or Prepare shaders makes the set; an older library goes through the usual restamp / shader update at Play. Only then
  *     is it swapped in (swapIn): the pack already in &lt;packs&gt;/&lt;title ID&gt; is kept as &lt;title ID&gt;.replaced until the new one has its name, then removed.
  *     A swap that stopped between the two renames is put back by recover.</li>
  * </ul>
@@ -43,20 +46,24 @@ final class PackZip {
     static String exportName(Pack p) { return "banana-pack-" + p.titleId + "-" + p.version.replaceAll("[^0-9A-Za-z._-]", "_") + ".zip"; }
 
     /** Every file under a folder by its relative path ("/" between names), sorted; a link or anything but files and folders is refused */
-    static TreeMap<String, File> files(File dir) throws IOException {
+    static TreeMap<String, File> files(File dir) throws IOException { return files(dir, false); }
+
+    /** exportOnly: only what an export takes ({@link #exported}; the layer's folder is not even walked) */
+    static TreeMap<String, File> files(File dir, boolean exportOnly) throws IOException {
         TreeMap<String, File> out = new TreeMap<>();
-        files(dir, "", out);
+        files(dir, "", out, exportOnly);
         return out;
     }
 
-    private static void files(File dir, String rel, TreeMap<String, File> out) throws IOException {
+    private static void files(File dir, String rel, TreeMap<String, File> out, boolean exportOnly) throws IOException {
         String[] names = dir.list();
         if (names == null) throw new IOException("cannot list " + dir);
         for (String n : names) {
             File f = new File(dir, n);
             String r = rel.isEmpty() ? n : rel + "/" + n;
+            if (exportOnly && !exported(r)) continue;
             if (Files.isSymbolicLink(f.toPath())) throw new IOException(r + " is a link: a pack holds files and folders only");
-            if (Files.isDirectory(f.toPath(), LinkOption.NOFOLLOW_LINKS)) files(f, r, out);
+            if (Files.isDirectory(f.toPath(), LinkOption.NOFOLLOW_LINKS)) files(f, r, out, exportOnly);
             else if (Files.isRegularFile(f.toPath(), LinkOption.NOFOLLOW_LINKS)) out.put(r, f);
             else throw new IOException(r + " is neither a file nor a folder");
         }
@@ -80,12 +87,22 @@ final class PackZip {
         return f;
     }
 
+    /** Whether a pack file (its path in the pack, "/" between names) goes into an export: not the shader layer's folder (LayerDir), not a half-written file */
+    static boolean exported(String rel) {
+        if (rel.equals(LAYER) || rel.startsWith(LAYER + "/")) return false;
+        String name = rel.substring(rel.lastIndexOf('/') + 1);
+        return !name.endsWith(".tmp") && !name.endsWith(PARTIAL) && !name.equals(BUILDING);
+    }
+
+    /** The shader layer's folder in a pack (LayerDir.NAME under shaders/) and its build marker (LayerPending.BUILDING); spelled here so PackZip needs neither class */
+    static final String LAYER = "shaders/layer", BUILDING = ".building";
+
     /** Exports the pack folder as a stored zip into outDir (see the class comment); returns the zip */
     static File export(File packDir, File outDir) throws IOException {
         Pack p = Pack.read(packDir);
         if (SaveStore.inside(outDir, packDir)) throw new IOException("the zip cannot go inside the pack folder " + packDir);
         if (!outDir.isDirectory() && !outDir.mkdirs()) throw new IOException("cannot create " + outDir);
-        TreeMap<String, File> fl = files(packDir);
+        TreeMap<String, File> fl = files(packDir, true);
         File zip = freeFile(outDir, exportName(p)), tmp = new File(zip.getPath() + PARTIAL);
         TreeMap<String, long[]> want = new TreeMap<>();
         try {
@@ -240,7 +257,6 @@ final class PackZip {
             if (p.simulated) throw new IOException("that pack is a placeholder of the simulated engine, not a pack to play");
             String m = p.unfinishedModule();
             if (m != null) throw new IOException("the pack's code is unfinished (" + m + " has no .android.key): prepare it again where it was made");
-            if (Pack.libraryOf(part) == null && Pack.libraryVersions(part).isEmpty()) throw new IOException("the pack has no shader library (shaders/v-<version>/dmsh_vk.lib)");
             return p;
         } catch (IOException | RuntimeException e) {
             SaveStore.deleteTree(part);

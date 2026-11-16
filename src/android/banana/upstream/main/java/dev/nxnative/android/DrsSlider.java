@@ -18,7 +18,7 @@ final class DrsSlider {
 
     private static int pos(int index) { return Prefs.DRS.length - 1 - index; }   // slider position: 0 = the smallest size
     /** The title with the range appended: "Dynamic resolution: 40% to 100%", "Dynamic resolution: Off (native size)" */
-    static String title(int index) { return "Dynamic resolution: " + Prefs.DRS_NAMES[index] + (index == 0 ? " (native size)" : " to 100%"); }
+    static String title(int index) { return index == 0 ? Tx.s(R.string.game_drs_title_native, Prefs.DRS_NAMES[index]) : Tx.s(R.string.game_drs_title_to_100, Prefs.DRS_NAMES[index]); }
 
     /** A slider set to index; title(i) goes to setTitle at each step, onChange(index) at each step the user makes */
     static LinearLayout view(Context c, int index, Consumer<String> setTitle, IntConsumer onChange) {
@@ -57,7 +57,7 @@ final class DrsSlider {
         box.addView(slider);
         CheckBox d = dflt;
         dlg[0] = new PadFocus.Builder(c).setTitle(title(index) + suffix).setView(box)
-                .setPositiveButton("OK", (x, w) -> { set.accept(d != null && d.isChecked() ? null : cur[0]); done.run(); })
-                .setNegativeButton("Cancel", null).show();
+                .setPositiveButton(android.R.string.ok, (x, w) -> { set.accept(d != null && d.isChecked() ? null : cur[0]); done.run(); })
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 }

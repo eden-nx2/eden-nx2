@@ -64,7 +64,7 @@ final class FixOffer {
             set[0] = !set[0];
             AdvancedSettings.set(c, f.name, target, set[0] ? f.value : null);
             line.setText(set[0] ? FixFinder.doneText(r, f, rec.get("name")) : FixFinder.offerText(r, f));
-            btn[0].setText(set[0] ? "Undo" : FixFinder.button(r));
+            btn[0].setText(set[0] ? Tx.s(R.string.err_undo) : FixFinder.button(r));
         }), 8);
         b.setView(box);
     }

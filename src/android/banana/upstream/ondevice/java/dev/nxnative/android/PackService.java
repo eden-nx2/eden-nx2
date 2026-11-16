@@ -45,9 +45,9 @@ import java.util.regex.Pattern;
  * <ul>
  * <li>Pause (the notification or the launcher): the tool is interrupted (the translation stops after the shader in hand), the job is written paused, the service
  *     stops and leaves a notification with Resume.</li>
- * <li>Battery below 20 % and not charging, or thermal status SEVERE or worse (PackPolicy): the tool is interrupted, the job waits (paused, wake lock released) and
- *     goes on by itself when charging / cooled (thermal MODERATE or better). Each pause and each going on is a line in the step's log with the thermal status, the
- *     thermal headroom and the battery. A heat pause offers Go on anyway (ACTION_GO_ON: the card and the notification), which lifts it while this service runs the job.</li>
+ * <li>Battery below 20 % and not charging (PackPolicy): the tool is interrupted, the job waits (paused, wake lock released) and goes on by itself when charging. Each pause and
+ *     each going on is a line in the step's log with the thermal status, the thermal headroom and the battery. Heat does not pause the job: a step that starts at thermal status
+ *     SEVERE or worse uses one worker (PackPolicy.workers); a step already running keeps the workers it started with.</li>
  * <li>Android 14+'s 6 hours a day for dataSync services (onTimeout): paused like Pause, reason "timeout"; the launcher's Resume, once the app is open, goes on.</li>
  * </ul>
  * The launcher binds with a Messenger (MSG_REGISTER with replyTo) and gets MSG_STATE messages, data "job" = job.json's text, as the job changes.
@@ -78,6 +78,9 @@ public final class PackService extends Service {
     private PackEngine engine;
     private volatile Job job;
     private volatile Thread worker;
+    private static volatile PackService live;
+    /** A Prepare job is running in this process (the engine takes one tool at a time: LayerService and the job share PackLock, which is what decides) */
+    static boolean busy() { PackService s = live; return s != null && s.worker != null && s.worker.isAlive(); }
     private volatile String stopReason;   // user, timeout: the job pauses and the service stops
     private volatile String autoReason;   // battery, thermal: the job waits and goes on by itself
     private volatile boolean inTool;
@@ -93,10 +96,11 @@ public final class PackService extends Service {
 
     @Override public void onCreate() {
         super.onCreate();
+        live = this;
         nm = getSystemService(NotificationManager.class);
         pm = getSystemService(PowerManager.class);
-        NotificationChannel ch = new NotificationChannel(CHANNEL, "Preparing a game", NotificationManager.IMPORTANCE_LOW);
-        ch.setDescription("Progress while the app prepares a game from your dump");
+        NotificationChannel ch = new NotificationChannel(CHANNEL, Tx.s(R.string.prepare_notification_channel), NotificationManager.IMPORTANCE_LOW);
+        ch.setDescription(Tx.s(R.string.prepare_notification_channel_description));
         nm.createNotificationChannel(ch);
         wake = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "nxnative:pack");
         wake.setReferenceCounted(false);
@@ -108,6 +112,7 @@ public final class PackService extends Service {
     }
 
     @Override public void onDestroy() {
+        if (live == this) live = null;
         unregisterReceiver(batteryReceiver);
         pm.removeThermalStatusListener(thermalListener);
         if (wake.isHeld()) wake.release();
@@ -264,7 +269,7 @@ public final class PackService extends Service {
 
     private String readings() { return PackPolicy.readings(batteryPct, charging, thermal, headroom()); }
 
-    /** The automatic pause (PackPolicy): below 20 % on battery, or SEVERE heat (until MODERATE or better) unless Go on anyway lifted it */
+    /** The automatic pause (PackPolicy): below 20 % on battery. Heat does not pause: a step started hot uses one worker */
     private void policy() {
         String r = PackPolicy.reason(batteryPct, charging, thermal, autoReason, heatOverride);
         String was = autoReason;
@@ -272,8 +277,7 @@ public final class PackService extends Service {
         Job j = job;
         boolean working = worker != null && worker.isAlive();
         if (r != null && !r.equals(was)) {
-            String why = r.equals("battery") ? "battery below " + PackPolicy.BATTERY_MIN + " % and not charging" : "thermal status " + PackPolicy.thermalName(thermal)
-                    + (heatOverride ? " (critical or worse pauses even after Go on anyway)" : " (SEVERE or worse pauses; it goes on at MODERATE or better)");
+            String why = r.equals("battery") ? "battery below " + PackPolicy.BATTERY_MIN + " % and not charging" : "thermal status " + PackPolicy.thermalName(thermal);
             if (working) stepLog(j, "pausing: " + r + ": " + why + "; " + readings());
             else Log.i(TAG, "pausing: " + r + " (no job running): " + readings());
             if (inTool) engine.interrupt();
@@ -305,6 +309,7 @@ public final class PackService extends Service {
     private void work() {
         Job j = job;
         wake.acquire(7 * 3600_000L);
+        PackLock.beginJob();   // from now on no shader layer build starts in this process; one that runs is stopped and waited for (waitForLayer)
         try {
             // A job of a game this app version does not include (a job.json an APK with its profile made: the launcher remembers it across installs): its steps would
             // run with no profile in tools.zip and stop at an error no one can act on. One sentence instead, and no Retry (the card shows none for FIX_NONE)
@@ -329,6 +334,7 @@ public final class PackService extends Service {
             int i;
             while ((i = j.next()) >= 0) {
                 if (!waitWhileAuto(j)) break;
+                if (!waitForLayer(j, Job.STEPS[i])) break;
                 String s = Job.STEPS[i];
                 j.stepState(s, "running");
                 int starts = j.start(s);
@@ -337,7 +343,7 @@ public final class PackService extends Service {
                     stepLog(j, "stopping: the step was ended by Android " + (starts - 1) + " times before it finished (most likely for memory); " + readings());
                     j.ended(s);
                     j.stepState(s, "pending");
-                    j.fail(PrepareText.killed(Job.STEP_TEXT[i], starts - 1, s.equals("rewrite") ? "2.7" : "1.5"));
+                    j.fail(PrepareText.killed(Job.stepText(i), starts - 1, s.equals("rewrite") ? "2.7" : "1.5"));
                     save(j, true);
                     break;
                 }
@@ -379,12 +385,31 @@ public final class PackService extends Service {
             save(j, true);
         } catch (Exception e) {
             Log.e(TAG, "job", e);
-            j.fail(PrepareText.crashed(Job.STEP_TEXT[j.current()], String.valueOf(e)));
+            j.fail(PrepareText.crashed(Job.stepText(j.current()), String.valueOf(e)));
             save(j, true);
         } finally {
+            PackLock.endJob();
             if (wake.isHeld()) wake.release();
             main.post(this::finished);
         }
+    }
+
+    /**
+     * Waits while a shader layer build (LayerService, a game's shaders built while it plays) runs in this process: the two would run tools in one Python at once (PackLock). The
+     * build is asked to stop (PackEngine.interrupt, every 2 s until it has: the translation stops after the shader in hand, its results stay for the next build), and the card
+     * says {@link PackLock#WAITING}. An interrupt that lands only after the build ended can stop this job's next tool: that step then runs again, as after any interrupt.
+     * → false when the job is to stop (Pause) meanwhile
+     */
+    private boolean waitForLayer(Job j, String step) throws InterruptedException {
+        if (!PackLock.layerRunning()) return stopReason == null;
+        stepLog(j, "a shader build of a game being played runs in this process: it is asked to stop after the shader in hand, and the job waits for it");
+        j.stepNote(step, PackLock.WAITING);
+        save(j, true);
+        while (stopReason == null) {
+            engine.interrupt();
+            if (PackLock.awaitLayerEnd(2000)) { stepLog(j, "the shader build ended: the job goes on"); return stopReason == null; }
+        }
+        return false;
     }
 
     private void finished() {
@@ -527,6 +552,12 @@ public final class PackService extends Service {
                 tool = "scripts/pack_android.py";
                 argv = new String[] {dump.getPath(), "--version", v, "--out", pack.getPath(), "--shader-cache", j.shaderCache().getPath(), "--keep-code", "-j", "1", "--in-process",
                         "--made-by", "app " + BuildConfig.VERSION_NAME};   // the pack's own marker: the launcher updates its code by itself when only the tools change (Ondevice.ownPack)
+                // a code-only job (Job.codeOnly) makes a valid pack with no shader library: it takes a current one from the cache when there is one, else packs without
+                // (pack_android.py --optional-shaders); the game builds its shaders while it plays (android/SHADERS.md "Prepare without shaders")
+                if (j.codeOnly()) {
+                    argv = java.util.Arrays.copyOf(argv, argv.length + 1);
+                    argv[argv.length - 1] = "--optional-shaders";
+                }
                 break;
             }
             default:
@@ -545,12 +576,15 @@ public final class PackService extends Service {
             for (ShaderResults.Failed f : again) b.append("[retry] translating again, it failed before: ").append(f).append('\n');
             if (b.length() > 0) Files.write(log.toPath(), b.toString().getBytes(StandardCharsets.UTF_8), java.nio.file.StandardOpenOption.APPEND);
         }
-        int workers = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
+        int workers = PackPolicy.workers(Runtime.getRuntime().availableProcessors() - 2, thermal);   // heat: one worker, never a pause (PackPolicy)
         PackEngine.setenv("DM_GAME", j.titleId());
         PackEngine.setenv("DM_REWRITE_J", "1");
         PackEngine.setenv("NX_PACK_JOBS", String.valueOf(workers));
         PackEngine.setenv("J", s.equals("split") ? "1" : String.valueOf(workers));   // the split's J is its process pool: 1 = in this process
         PackEngine.setenv("DM_SPLIT_RESUME", splitScan.getPath());   // the split's kept scan results (only shader_split.py reads it)
+        // the dump the split's RomFS is of: a program n > 0 (a Switch 2 Edition's program 1) keeps its shaders in its application's add-ons, which the split then
+        // reads too, as pack_android.py does (scripts/pack_dump.py split_addons; BananaNative issue #356: only the base's RomFS was read)
+        PackEngine.setenv("DM_SPLIT_DUMP", s.equals("split") ? dump.getPath() : "");
         // a profile with a selected set: the split keeps the code of only those shaders (and their pixel shaders), as the shaders step builds only them; a full
         // package of Pokopia held 4.3 GB and its scan ran out of memory (docs/reference/memory.md, A shader split that keeps every shader's code in memory)
         PackEngine.setenv("DM_SPLIT_SELECTED", s.equals("split") && selection(j) != null ? "1" : "0");
@@ -577,7 +611,9 @@ public final class PackService extends Service {
         // (bare names: the linker finds them in the APK, as System.loadLibrary does; ctypes loads them in this process)
         PackEngine.setenv("DMSH_VK_RESULTS", xlate.getPath());
         // the delta update: entries of the pack's older libraries that the profile's manifest has unchanged are kept, only the rest translated (android/SHADERS.md#delta-updates)
-        PackEngine.setenv("DMSH_VK_DELTA_FROM", new File(pack, "shaders").getPath());
+        // and the library the run-time shader layer built for the game (<pack>/shaders/layer/lib/v-<V>, LayerService): its entries are taken only at the manifest's hash like any
+        // older library's, so a full-build entry the layer holds is kept and any other (a vertex entry padded for a request-only pair differs) is translated; no manifest row, no reuse
+        PackEngine.setenv("DMSH_VK_DELTA_FROM", new File(pack, "shaders").getPath() + File.pathSeparator + new File(pack, "shaders/layer/lib").getPath());
         PackEngine.setenv("XLATE", "libdmsh_xlate.so");
         PackEngine.setenv("SPIRV_VAL", "libSPIRV-Tools-shared.so");
         // a library without every shader is a failed step, never a finished one; with Try anyway (the player's choice, warned that parts may not show) it is written
@@ -585,7 +621,7 @@ public final class PackService extends Service {
         PackEngine.setenv("DMSH_VK_XLATE_J", "2");       // two translator calls at once: more threads of one process add little on the phone (android/ONDEVICE.md, The translator on the phone); the env file below can change it
         // worker interpreters (sub-interpreters of this process, each with its own GIL: the Python half no longer runs on one core), one a big or mid core, at most 4
         // (CpuCores; android/SHADERS.md#build); the library is the same for any count. J above is then the threads of all the workers together
-        PackEngine.setenv("DMSH_VK_PROCS", String.valueOf(CpuCores.shaderWorkers()));
+        PackEngine.setenv("DMSH_VK_PROCS", String.valueOf(PackPolicy.workers(CpuCores.shaderWorkers(), thermal)));
         // Tests: ondevice/env.txt, KEY=VALUE lines, overrides any of the above for the tools (e.g. DMSH_VK_XLATE_J=6 to compare the translator's threads)
         File envFile = new File(od, "env.txt");
         if (envFile.isFile()) for (String l : Files.readAllLines(envFile.toPath(), StandardCharsets.UTF_8)) {
@@ -608,7 +644,7 @@ public final class PackService extends Service {
         if (code == PackEngine.INTERRUPTED) return "interrupted";
         if (code != 0) {
             String why = tail.reason();   // the last [RED] line, or a traceback's last line after it (PrepareText.StopReason)
-            failure = PrepareText.toolStopped(Job.STEP_TEXT[i], code, why, log.getPath());
+            failure = PrepareText.toolStopped(Job.stepText(i), code, why, log.getPath());
             return s + " stopped with code " + code + (why != null ? ": " + why.replaceFirst("^\\[RED\\] ", "") : "") + " (log: " + log + ")";
         }
         if (s.equals("split")) {
@@ -852,26 +888,26 @@ public final class PackService extends Service {
         Notification.Builder b = new Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_banana_mono).setOnlyAlertOnce(true)
                 .setCategory(Notification.CATEGORY_PROGRESS).setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
                 .setContentIntent(PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
-        String name = j == null ? "a game" : j.name();
-        String sim = engine.simulated() ? " (simulated)" : "";
-        if (j == null) return b.setContentTitle("Preparing " + name + sim).setContentText("Starting…").build();
+        String name = j == null ? Tx.s(R.string.prepare_a_game) : j.name();
+        String sim = engine.simulated() ? Tx.s(R.string.prepare_simulated) : "";
+        if (j == null) return b.setContentTitle(Tx.s(R.string.prepare_preparing_name, name) + sim).setContentText(Tx.s(R.string.prepare_starting)).build();
         String state = j.state();
         int pct = (int) Math.round(j.overall() * 100);
         int i = j.current();
-        if (state.equals("done")) return b.setContentTitle(name + " is ready to play" + sim).setContentText("Open Banana Native and tap Play.").setAutoCancel(true).build();
+        if (state.equals("done")) return b.setContentTitle(Tx.s(R.string.prepare_name_is_ready_title, name) + sim).setContentText(Tx.s(R.string.prepare_open_and_tap_play)).setAutoCancel(true).build();
         boolean running = state.equals("running") && worker != null;
         boolean waiting = state.equals("paused") && worker != null;   // the policy's pause: it goes on by itself
-        b.setContentTitle((running ? "Preparing " : waiting ? "Waiting: " : state.equals("failed") ? "Could not prepare " : "Paused: ") + name + sim);
+        b.setContentTitle(Tx.s(running ? R.string.prepare_preparing_name : waiting ? R.string.prepare_waiting_name : state.equals("failed") ? R.string.prepare_could_not_prepare_name : R.string.prepare_paused_name, name) + sim);
         Intent pause = new Intent(this, PackService.class).setAction(ACTION_PAUSE).putExtra(EXTRA_FROM, "notification");
-        Notification.Action pauseAction = new Notification.Action.Builder(null, "Pause",
+        Notification.Action pauseAction = new Notification.Action.Builder(null, Tx.s(R.string.prepare_pause),
                 PendingIntent.getService(this, 1, pause, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)).build();
         if (waiting) {
             String why = Job.reasonText(j.reason()) + (j.reasonDetail().isEmpty() ? "" : "\n" + j.reasonDetail());
             b.setContentText(Job.reasonText(j.reason())).setStyle(new Notification.BigTextStyle().bigText(j.stepText() + " · " + pct + " %\n" + why))
-                    .setSubText("Step " + (i + 1) + " of " + Job.STEPS.length + " · " + pct + " %").setOngoing(true).addAction(pauseAction);
+                    .setSubText(Tx.s(R.string.prepare_step_n_of_m_pct, i + 1, Job.STEPS.length, pct)).setOngoing(true).addAction(pauseAction);
             if (j.canGoOn()) {
                 Intent goOn = new Intent(this, PackService.class).setAction(ACTION_GO_ON).putExtra(EXTRA_FROM, "notification");
-                b.addAction(new Notification.Action.Builder(null, "Go on anyway",
+                b.addAction(new Notification.Action.Builder(null, Tx.s(R.string.prepare_go_on_anyway),
                         PendingIntent.getService(this, 3, goOn, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)).build());
             }
             return b.build();
@@ -880,12 +916,12 @@ public final class PackService extends Service {
             long d = j.stepDone(i), t = j.stepTotal(i);
             if (t > 1) b.setProgress((int) Math.min(t, Integer.MAX_VALUE), (int) Math.min(d, t), false);
             else b.setProgress(100, pct, false);
-            b.setContentText(j.stepText() + j.quietText()).setSubText("Step " + (i + 1) + " of " + Job.STEPS.length + " · " + pct + " %").setOngoing(true).addAction(pauseAction);
+            b.setContentText(j.stepText() + j.quietText()).setSubText(Tx.s(R.string.prepare_step_n_of_m_pct, i + 1, Job.STEPS.length, pct)).setOngoing(true).addAction(pauseAction);
         } else {
             String why = state.equals("failed") ? j.error() : Job.reasonText(j.reason());
             b.setContentText(j.stepText() + " · " + pct + " %").setStyle(new Notification.BigTextStyle().bigText(j.stepText() + " · " + pct + " %\n" + why)).setOngoing(false);
             Intent resume = new Intent(this, PackService.class).setAction(ACTION_START).putExtra(EXTRA_JOB, j.file.getPath());
-            b.addAction(new Notification.Action.Builder(null, state.equals("failed") ? "Retry" : "Resume",
+            b.addAction(new Notification.Action.Builder(null, Tx.s(state.equals("failed") ? R.string.prepare_retry : R.string.prepare_resume),
                     PendingIntent.getForegroundService(this, 2, resume, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)).build());
         }
         return b.build();

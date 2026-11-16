@@ -33,6 +33,9 @@ public final class BananaBackgroundView extends View implements Choreographer.Fr
     private final java.util.HashMap<Long, Long> popped = new java.util.HashMap<>();   // BananaGrid.key → uptime (ms) of its pop
     private final Paint shard = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Runnable onPop;
+    private Bitmap picture;   // the user's background (Prefs.background 2), else null
+    private int mode;         // Prefs.background: 0 bananas, 1 plain, 2 picture
+    private final Paint scrim = new Paint(), picPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
 
     public BananaBackgroundView(Context c) {
         super(c);
@@ -44,13 +47,28 @@ public final class BananaBackgroundView extends View implements Choreographer.Fr
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
 
+    /** The background the user chose (Prefs.background): the bananas, nothing, or their picture under a veil that keeps the text readable */
+    public void setLook(int m) {
+        mode = m;
+        picture = null;
+        if (m == 2) {
+            java.io.File f = UiLook.backgroundFile(getContext());
+            if (f.isFile()) picture = android.graphics.BitmapFactory.decodeFile(f.getPath());
+            if (picture == null) mode = 1;
+        }
+        scrim.setColor(getContext().getColor(R.color.bn_bg));
+        scrim.setAlpha(150);
+        update();
+        invalidate();
+    }
+
     /** Animates while true and the system's animations are on (Settings: remove animations / animator duration scale 0 = still). */
     public void setRunning(boolean on) {
         wanted = on;
         update();
     }
 
-    private boolean running() { return wanted && attached && ValueAnimator.areAnimatorsEnabled(); }
+    private boolean running() { return mode == 0 && wanted && attached && ValueAnimator.areAnimatorsEnabled(); }
 
     private void update() {
         boolean running = running();
@@ -111,7 +129,7 @@ public final class BananaBackgroundView extends View implements Choreographer.Fr
      */
     public boolean popAt(float x, float y) {
         long k = BananaGrid.hit(x, y, getWidth(), getHeight(), phase * BananaGrid.SPEED_X_DP * density, phase * BananaGrid.SPEED_Y_DP * density, density);
-        if (k == BananaGrid.NONE) return false;
+        if (mode != 0 || k == BananaGrid.NONE) return false;
         long now = SystemClock.uptimeMillis();
         Long at = popped.get(k);
         if (at != null && now - at < RESPAWN_MS + GROW_MS) return false;
@@ -162,6 +180,17 @@ public final class BananaBackgroundView extends View implements Choreographer.Fr
     @Override protected void onDraw(Canvas canvas) {
         int w = getWidth(), h = getHeight();
         if (w == 0 || h == 0) return;
+        if (mode == 2 && picture != null) {   // centre-crop, then the veil
+            float k = Math.max(w / (float) picture.getWidth(), h / (float) picture.getHeight());
+            canvas.save();
+            canvas.translate((w - picture.getWidth() * k) / 2f, (h - picture.getHeight() * k) / 2f);
+            canvas.scale(k, k);
+            canvas.drawBitmap(picture, 0, 0, picPaint);
+            canvas.restore();
+            canvas.drawRect(0, 0, w, h, scrim);
+            return;
+        }
+        if (mode != 0) return;
         Bitmap b = banana();
         float step = BananaGrid.STEP_DP * density, row = BananaGrid.ROW_DP * density, half = b.getWidth() / 2f;
         // Rows alternate a half step sideways and a mirrored tilt, so the pattern repeats every step across and every two rows down.

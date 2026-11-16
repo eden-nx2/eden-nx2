@@ -21,15 +21,15 @@ final class PadMapUi {
 
     /** Settings › Button mapping: the default of every game */
     static void forDefault(Activity a, Runnable done) {
-        edit(a, "Button mapping", "For every game without its own mapping, from its next start.", Prefs.padMap(a), Prefs.xboxButtons(a) == 2 ? 2 : 0,
-                spec -> { Prefs.padMapDefault(a, spec); done.run(); }, "Reset to default", () -> { Prefs.padMapDefault(a, ""); done.run(); });
+        edit(a, Tx.s(R.string.common_button_mapping), Tx.s(R.string.game_for_every_game_without_its), Prefs.padMap(a), Prefs.xboxButtons(a) == 2 ? 2 : 0,
+                spec -> { Prefs.padMapDefault(a, spec); done.run(); }, Tx.s(R.string.game_reset_to_default), () -> { Prefs.padMapDefault(a, ""); done.run(); });
     }
 
     /** Game settings › Button mapping: this game's own; Reset follows Settings again */
     static void forGame(Activity a, Game g, Runnable done) {
         String id = g.titleId;
-        edit(a, "Button mapping · " + g.name, "For " + g.name + " only, from its next start. Reset: back to Settings' mapping.", Prefs.padMap(a, id),
-                Prefs.xboxButtons(a, id) == 2 ? 2 : 0, spec -> { Prefs.padMap(a, id, spec); done.run(); }, "Reset to default", () -> { Prefs.padMap(a, id, null); done.run(); });
+        edit(a, Tx.s(R.string.game_title_for, Tx.s(R.string.common_button_mapping), g.name), Tx.s(R.string.game_mapping_for_game_only, g.name), Prefs.padMap(a, id),
+                Prefs.xboxButtons(a, id) == 2 ? 2 : 0, spec -> { Prefs.padMap(a, id, spec); done.run(); }, Tx.s(R.string.game_reset_to_default), () -> { Prefs.padMap(a, id, null); done.run(); });
     }
 
     /** The value a settings row shows */
@@ -42,27 +42,27 @@ final class PadMapUi {
         PadMap m = PadMap.parse(spec, labelled);
         LinearLayout box = new LinearLayout(a);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.addView(Ui.small(a, note + " Tap a Switch button, then press the controller button for it."));
+        box.addView(Ui.small(a, note + " " + Tx.s(R.string.game_tap_a_switch_button)));
         Ui.Setting[] rows = new Ui.Setting[PadMap.SWITCH.length];
-        Runnable refresh = () -> { for (int sw : PadMap.EDIT_ORDER) rows[sw].value("Controller: " + m.pressedBy(sw)); };
+        Runnable refresh = () -> { for (int sw : PadMap.EDIT_ORDER) rows[sw].value(Tx.s(R.string.game_controller_colon, m.pressedBy(sw))); };
         for (int sw : PadMap.EDIT_ORDER) {
-            rows[sw] = new Ui.Setting(a, "🎮", "Switch " + PadMap.SWITCH_NAMES[sw], v -> capture(a, sw, src -> { m.assign(src, sw); refresh.run(); })).chevron(a);
+            rows[sw] = new Ui.Setting(a, "🎮", Tx.s(R.string.game_switch_button, PadMap.SWITCH_NAMES[sw]), v -> capture(a, sw, src -> { m.assign(src, sw); refresh.run(); })).chevron(a);
             Ui.add(box, rows[sw].view, 0);
         }
         refresh.run();
-        Ui.sheet(a, title, box).setPositiveButton("Save", (x, w) -> save.accept(m.edited() ? m.spec() : ""))
-                .setNeutralButton(resetName, (x, w) -> reset.run()).setNegativeButton("Cancel", null).show();
+        Ui.sheet(a, title, box).setPositiveButton(Tx.s(R.string.game_save), (x, w) -> save.accept(m.edited() ? m.spec() : ""))
+                .setNeutralButton(resetName, (x, w) -> reset.run()).setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /** Waits for one controller button (a key, an analog trigger past half way, or the hat) and hands its source on; Back or Cancel ends it */
     private static void capture(Activity a, int sw, java.util.function.IntConsumer picked) {
         FrameLayout f = new FrameLayout(a);
-        TextView t = Ui.small(a, "Press the controller button for Switch " + PadMap.SWITCH_NAMES[sw] + ".");
+        TextView t = Ui.small(a, Tx.s(R.string.game_press_button_for_switch, PadMap.SWITCH_NAMES[sw]));
         t.setTextSize(16);
         f.addView(t);
         f.setFocusable(true);
         f.setFocusableInTouchMode(true);
-        AlertDialog d = Ui.sheet(a, "Switch " + PadMap.SWITCH_NAMES[sw], f).setNegativeButton("Cancel", null).create();
+        AlertDialog d = Ui.sheet(a, Tx.s(R.string.game_switch_button, PadMap.SWITCH_NAMES[sw]), f).setNegativeButton(Tx.s(R.string.common_cancel), null).create();
         boolean[] done = {false};
         java.util.function.IntConsumer take = src -> {
             if (done[0] || src < 0) return;

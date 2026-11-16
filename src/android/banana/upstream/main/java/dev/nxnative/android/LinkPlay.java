@@ -39,50 +39,50 @@ final class LinkPlay {
 
     static String label(Context c, String id) {
         if (!"visit".equals(mode(c, id))) return "Off";
-        if (!LinkPlayConfig.valid(get(c, "addr", id), internet(c, id), room(c, id))) return "Join PC host - needs setup";
-        return internet(c, id) ? "Join PC host - Internet / Tailscale" : "Join PC host - same Wi-Fi";
+        if (!LinkPlayConfig.valid(get(c, "addr", id), internet(c, id), room(c, id))) return Tx.s(R.string.game_join_pc_host_needs_setup);
+        return internet(c, id) ? Tx.s(R.string.game_join_pc_host_internet_tailscale) : Tx.s(R.string.game_join_pc_host_same_wi);
     }
 
     static void dialog(MainActivity a, Game g, Runnable done) {
         String id = g.titleId;
-        new PadFocus.Builder(a).setTitle("Link Play")
-                .setSingleChoiceItems(new String[] {"Off", "Join PC host"}, "visit".equals(mode(a, id)) ? 1 : 0, (x, w) -> {
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.game_link_play))
+                .setSingleChoiceItems(new String[] {Tx.s(R.string.game_off), Tx.s(R.string.game_join_pc_host)}, "visit".equals(mode(a, id)) ? 1 : 0, (x, w) -> {
                     x.dismiss();
                     if (w == 0) {
                         if (p(a).edit().putString(k("mode", id), "off").commit()) done.run();
-                        else Toast.makeText(a, "Could not save Link Play settings.", Toast.LENGTH_LONG).show();
+                        else Toast.makeText(a, Tx.s(R.string.game_could_not_save_link_play), Toast.LENGTH_LONG).show();
                     } else visit(a, g, done);
-                }).setNegativeButton("Cancel", null).show();
+                }).setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     private static void visit(MainActivity a, Game g, Runnable done) {
         String id = g.titleId;
         LinearLayout box = new LinearLayout(a);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.addView(Ui.small(a, "Join a world hosted in Recompia on a PC. Enter the host's IPv4 address and, for Internet / Tailscale, its room code."));
+        box.addView(Ui.small(a, Tx.s(R.string.game_join_a_world_hosted_in)));
         EditText addr = new EditText(a);
         addr.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         addr.setSingleLine(true);
-        addr.setHint("Host IPv4 address (optional :port)");
+        addr.setHint(Tx.s(R.string.game_host_ipv4_address_optional_port));
         addr.setText(get(a, "addr", id));
         Ui.add(box, addr, 8);
 
         CheckBox inet = new CheckBox(a);
-        inet.setText("Internet / Tailscale");
+        inet.setText(Tx.s(R.string.game_internet_tailscale));
         inet.setChecked(internet(a, id));
         Ui.add(box, inet, 8);
-        box.addView(Ui.small(a, "Use the same Internet setting as the PC host. A room code is required when this is on."));
+        box.addView(Ui.small(a, Tx.s(R.string.game_use_the_same_internet_setting)));
         EditText code = new EditText(a);
         code.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         code.setSingleLine(true);
         code.setTypeface(android.graphics.Typeface.MONOSPACE);
-        code.setHint("Host room code: XXXX-XXXX-XXXX-XXXX");
+        code.setHint(Tx.s(R.string.game_host_room_code_xxxx_xxxx));
         code.setText(room(a, id));
         code.setEnabled(inet.isChecked());
         inet.setOnCheckedChangeListener((v, on) -> { code.setEnabled(on); code.setError(null); addr.setError(null); });
         Ui.add(box, code, 8);
-        box.addView(Ui.small(a, "Saved for next time, including when Link Play is off. Applies at the game's next start. In the game: PC > Link Play > Local connection > Visit."));
-        AlertDialog d = Ui.sheet(a, "Join PC host", box).setPositiveButton("Save", null).setNegativeButton("Cancel", null).create();
+        box.addView(Ui.small(a, Tx.s(R.string.game_saved_for_next_time_including)));
+        AlertDialog d = Ui.sheet(a, Tx.s(R.string.game_join_pc_host), box).setPositiveButton(Tx.s(R.string.game_save), null).setNegativeButton(Tx.s(R.string.common_cancel), null).create();
         d.setOnShowListener(ignored -> d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String address = addr.getText().toString(), rawCode = code.getText().toString();
             String error = LinkPlayConfig.addressError(address, inet.isChecked());
@@ -94,7 +94,7 @@ final class LinkPlay {
             boolean saved = p(a).edit().putString(k("addr", id), LinkPlayConfig.address(address))
                     .putString(k("room", id), normalizedCode != null ? normalizedCode : rawCode.trim())
                     .putBoolean(k("internet", id), inet.isChecked()).putString(k("mode", id), "visit").commit();
-            if (!saved) { Toast.makeText(a, "Could not save Link Play settings.", Toast.LENGTH_LONG).show(); return; }
+            if (!saved) { Toast.makeText(a, Tx.s(R.string.game_could_not_save_link_play), Toast.LENGTH_LONG).show(); return; }
             d.dismiss();
             done.run();
         }));

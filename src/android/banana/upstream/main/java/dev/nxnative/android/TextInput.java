@@ -125,8 +125,8 @@ final class TextInput {
         StringBuilder msg = new StringBuilder(r.sub);
         if (!r.guide.isEmpty()) msg.append(msg.length() > 0 ? "\n" : "").append(r.guide);
         if (min > 0) msg.append(msg.length() > 0 ? "\n" : "").append("At least ").append(min).append(min == 1 ? " character." : " characters.");
-        AlertDialog.Builder b = new PadFocus.Builder(a).setTitle(r.title.isEmpty() ? "Enter text" : r.title).setView(box)
-                .setPositiveButton("OK", null).setNegativeButton("Cancel", (x, w) -> finish(r, null)).setCancelable(true);
+        AlertDialog.Builder b = new PadFocus.Builder(a).setTitle(r.title.isEmpty() ? Tx.s(R.string.game_enter_text) : r.title).setView(box)
+                .setPositiveButton(android.R.string.ok, null).setNegativeButton(Tx.s(R.string.common_cancel), (x, w) -> finish(r, null)).setCancelable(true);
         if (msg.length() > 0) b.setMessage(msg);
         AlertDialog d = b.create();
         d.setCanceledOnTouchOutside(false);

@@ -41,7 +41,7 @@ final class Shortcuts {
     static void pin(Context c, Game g) {
         ShortcutManager sm = c.getSystemService(ShortcutManager.class);
         if (sm == null || !sm.isRequestPinShortcutSupported()) {
-            Toast.makeText(c, "This launcher cannot pin shortcuts.", Toast.LENGTH_LONG).show();
+            Toast.makeText(c, Tx.s(R.string.settings_this_launcher_cannot_pin_shortcuts), Toast.LENGTH_LONG).show();
             return;
         }
         ShortcutInfo info = new ShortcutInfo.Builder(c, id(g))
@@ -51,11 +51,11 @@ final class Shortcuts {
                 .setIntent(intent(c, g))
                 .build();
         try {
-            if (!sm.requestPinShortcut(info, null)) Toast.makeText(c, "The launcher did not accept the shortcut.", Toast.LENGTH_LONG).show();
+            if (!sm.requestPinShortcut(info, null)) Toast.makeText(c, Tx.s(R.string.settings_the_launcher_did_not_accept), Toast.LENGTH_LONG).show();
             else sm.updateShortcuts(Collections.singletonList(info));   // already pinned: a renamed game's label follows
         } catch (RuntimeException e) {
             android.util.Log.w("nxnative", "Shortcuts: pin " + g.titleId + " failed: " + e);
-            Toast.makeText(c, "Could not add the shortcut: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(c, Tx.s(R.string.settings_could_not_add_shortcut, e.getMessage()), Toast.LENGTH_LONG).show();
         }
     }
 

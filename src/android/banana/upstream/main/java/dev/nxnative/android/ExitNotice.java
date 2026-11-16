@@ -20,21 +20,21 @@ final class ExitNotice {
     /** No ApplicationExitInfo was found for the run's process */
     static final int NONE = -1;
 
-    static final String TITLE = "The game stopped unexpectedly";
-    static final String MEANING_TITLE = "What it means";
+    static String TITLE() { return Words.s("err_the_game_stopped_unexpectedly", "The game stopped unexpectedly"); }
+    static String MEANING_TITLE() { return Words.s("err_what_it_means", "What it means"); }
 
-    static final String JAVA = "The app ran into an error and had to close the game.";
-    static final String NATIVE = "The game ran into an error and crashed.";
-    static final String FATAL = "The game reached something the app cannot handle yet, so it was stopped.";
-    static final String GPU = "The GPU driver stopped responding, so the game had to close.";
-    static final String MEMORY = "Android closed it: the phone ran out of memory. Closing other apps before playing can help.";
-    static final String MEMORY_BG = "Android closed it while it was in the background: the phone ran out of memory. Unsaved progress is lost.";
-    static final String KILLED = "Android closed it without saying why. This is often for memory: closing other apps before playing can help.";
-    static final String ANR_TEXT = "Android closed it because it stopped responding.";
-    static final String RESOURCES = "Android closed it for using too much of the phone's resources.";
-    static final String PERMISSION = "Android closed it because one of the app's permissions changed.";
-    static final String HOST_ERROR = "The game ended with an error.";
-    static final String UNKNOWN_TEXT = "It closed without saying why.";
+    static String JAVA() { return Words.s("err_the_app_ran_into_an", "The app ran into an error and had to close the game."); }
+    static String NATIVE() { return Words.s("err_the_game_ran_into_an", "The game ran into an error and crashed."); }
+    static String FATAL() { return Words.s("err_the_game_reached_something_the", "The game reached something the app cannot handle yet, so it was stopped."); }
+    static String GPU() { return Words.s("err_the_gpu_driver_stopped_responding", "The GPU driver stopped responding, so the game had to close."); }
+    static String MEMORY() { return Words.s("err_android_closed_it_the_phone", "Android closed it: the phone ran out of memory. Closing other apps before playing can help."); }
+    static String MEMORY_BG() { return Words.s("err_android_closed_it_while_it", "Android closed it while it was in the background: the phone ran out of memory. Unsaved progress is lost."); }
+    static String KILLED() { return Words.s("err_android_closed_it_without_saying", "Android closed it without saying why. This is often for memory: closing other apps before playing can help."); }
+    static String ANR_TEXT() { return Words.s("err_android_closed_it_because_it", "Android closed it because it stopped responding."); }
+    static String RESOURCES() { return Words.s("err_android_closed_it_for_using", "Android closed it for using too much of the phone's resources."); }
+    static String PERMISSION() { return Words.s("err_android_closed_it_because_one", "Android closed it because one of the app's permissions changed."); }
+    static String HOST_ERROR() { return Words.s("err_the_game_ended_with_an", "The game ended with an error."); }
+    static String UNKNOWN_TEXT() { return Words.s("err_it_closed_without_saying_why", "It closed without saying why."); }
 
     /** The record's keys (last value wins); an empty map for no record */
     static Map<String, String> parse(String text) {
@@ -79,30 +79,30 @@ final class ExitNotice {
         boolean oomLine = log.toLowerCase(Locale.ROOT).contains("out of memory");
         // What the player did or an update: no notice
         if (reason == USER_REQUESTED || reason == USER_STOPPED || reason == PACKAGE_UPDATED || reason == PACKAGE_STATE_CHANGE) return null;
-        if (gpu) return GPU;
-        if ("java".equals(st) || reason == CRASH) return JAVA;
+        if (gpu) return GPU();
+        if ("java".equals(st) || reason == CRASH) return JAVA();
         if ("native".equals(st) || reason == CRASH_NATIVE || crashLine) {
-            if (oomLine) return MEMORY;
-            return fatal ? FATAL : NATIVE;   // die(): a FATAL line, then abort
+            if (oomLine) return MEMORY();
+            return fatal ? FATAL() : NATIVE();   // die(): a FATAL() line, then abort
         }
         if ("host_exit".equals(st)) {
             String rc = rec.get("rc");
-            return rc == null || rc.equals("0") ? null : HOST_ERROR;
+            return rc == null || rc.equals("0") ? null : HOST_ERROR();
         }
         // state=running: the process ended without the app seeing it
-        if (memoryKill(reason, desc)) return background ? MEMORY_BG : MEMORY;
+        if (memoryKill(reason, desc)) return background ? MEMORY_BG() : MEMORY();
         switch (reason) {
-            case ANR: return ANR_TEXT;
-            case EXCESSIVE_RESOURCE_USAGE: return RESOURCES;
-            case PERMISSION_CHANGE: return PERMISSION;
-            case SIGNALED: return status == 9 ? (background ? MEMORY_BG : KILLED) : NATIVE;   // SIGKILL from the system, else a crash signal
+            case ANR: return ANR_TEXT();
+            case EXCESSIVE_RESOURCE_USAGE: return RESOURCES();
+            case PERMISSION_CHANGE: return PERMISSION();
+            case SIGNALED: return status == 9 ? (background ? MEMORY_BG() : KILLED()) : NATIVE();   // SIGKILL from the system, else a crash signal
             case EXIT_SELF:
-                if (status >= 128 + 1 && status < 128 + 32) return NATIVE;   // the host's crash path ends with _exit(128 + signal)
-                if (fatal) return FATAL;
-                if (status != 0) return HOST_ERROR;
-                return log.contains("graceful exit") ? null : UNKNOWN_TEXT;   // the game's own exit (dm_host_shutdown) ends with 0 after "graceful exit"
+                if (status >= 128 + 1 && status < 128 + 32) return NATIVE();   // the host's crash path ends with _exit(128 + signal)
+                if (fatal) return FATAL();
+                if (status != 0) return HOST_ERROR();
+                return log.contains("graceful exit") ? null : UNKNOWN_TEXT();   // the game's own exit (dm_host_shutdown) ends with 0 after "graceful exit"
             case NONE: case UNKNOWN: case OTHER: case FREEZER: case DEPENDENCY_DIED: case INITIALIZATION_FAILURE: default:
-                return fatal ? FATAL : UNKNOWN_TEXT;
+                return fatal ? FATAL() : UNKNOWN_TEXT();
         }
     }
 
@@ -112,7 +112,7 @@ final class ExitNotice {
     /** The same with the log's likely cause (LogDigest.likely: what a line of the log means, from dm/tools/log_rules.tsv), when one was found */
     static String message(String name, String cause, String likely) {
         String n = name == null || name.isEmpty() || name.equals("null") ? "The game" : name;
-        return n + ": " + cause + (likely == null || likely.isEmpty() ? "" : "\n\nLikely cause: " + likely) + "\n\nShare log sends the log of that run, which says more.";
+        return n + ": " + cause + (likely == null || likely.isEmpty() ? "" : "\n\nLikely cause: " + likely) + Words.s("err_n_nshare_log_sends_the", "\n\nShare log sends the log of that run, which says more.");
     }
 
     /** The "What it means" dialog text: the plain-words meaning, with the technical cause below it */
@@ -127,7 +127,7 @@ final class ExitNotice {
 
     /** The log's block for an uncaught Java exception: "[RED] crash: " before every line of the trace, at most maxLines lines */
     static String crashBlock(String thread, String trace, int maxLines) {
-        StringBuilder b = new StringBuilder("[RED] crash: uncaught exception on thread ").append(thread).append(", the game process ends\n");
+        StringBuilder b = new StringBuilder("[RED] crash: uncaught exception on thread ").append(thread).append(Words.s("err_the_game_process_ends_n", ", the game process ends\n"));
         String[] l = trace == null ? new String[0] : trace.replace("\r", "").split("\n");
         int n = 0;
         for (String s : l) {

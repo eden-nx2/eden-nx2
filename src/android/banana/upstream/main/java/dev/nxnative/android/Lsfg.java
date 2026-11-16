@@ -73,13 +73,13 @@ final class Lsfg {
                     try (InputStream in = new FileInputStream(f)) { copy(in, copy); }
                     copy.setLastModified(f.lastModified());
                 }
-                note = "Lossless.dll from " + p;
+                note = Tx.s(R.string.game_dll_from, p.toString());
                 return copy;
             } catch (IOException | SecurityException e) {
-                note = "Lossless.dll at " + p + " could not be copied: " + e.getMessage();
+                note = Tx.s(R.string.game_dll_could_not_be_copied, p.toString(), e.getMessage());
             }
         }
-        if (looksLikeDll(copy)) { note = "Lossless.dll: the copy picked earlier"; return copy; }
+        if (looksLikeDll(copy)) { note = Tx.s(R.string.game_lossless_dll_the_copy_picked); return copy; }
         if (note.isEmpty() || !note.contains("could not")) note = "Lossless.dll not found (looked in Documents/Emulation/bios, Switch2, Download and the app's files)";
         return null;
     }
@@ -90,8 +90,8 @@ final class Lsfg {
             if (in == null) return "cannot open " + uri;
             copy(in, privateCopy(c));
         } catch (IOException | SecurityException e) { return e.getMessage(); }
-        if (!looksLikeDll(privateCopy(c))) { privateCopy(c).delete(); return "that file is not a Windows DLL"; }
-        note = "Lossless.dll: picked by hand";
+        if (!looksLikeDll(privateCopy(c))) { privateCopy(c).delete(); return Tx.s(R.string.game_that_file_is_not_a); }
+        note = Tx.s(R.string.game_lossless_dll_picked_by_hand);
         return null;
     }
 
@@ -122,17 +122,17 @@ final class Lsfg {
     /** The settings rows (main screen dialog and the in-game panel); apply runs after each change (in game: Native.frameGenSet). Returns the status line (null without LSFG in this build) */
     static TextView rows(Context c, LinearLayout box, String status, Runnable apply) {
         TextView head = new TextView(c);
-        head.setText("Frame generation (Lossless Scaling, your own Lossless.dll)");
+        head.setText(Tx.s(R.string.game_frame_generation_lossless_scaling_yo));
         head.setPadding(0, 24, 0, 0);
         box.addView(head);
-        if (!BuildConfig.NX_LSFG) { TextView t = new TextView(c); t.setText("Not in this build (built with -PnxLsfg=false)."); box.addView(t); return null; }
+        if (!BuildConfig.NX_LSFG) { TextView t = new TextView(c); t.setText(Tx.s(R.string.game_not_in_this_build_built)); box.addView(t); return null; }
         // The options only where they apply: everything below the switch only with frame generation on; the frames per game frame only with a fixed rate (with a
         // target the multiplier follows the target)
         LinearLayout opts = new LinearLayout(c), fixed = new LinearLayout(c);
         opts.setOrientation(LinearLayout.VERTICAL); fixed.setOrientation(LinearLayout.VERTICAL);
         Runnable vis = () -> { opts.setVisibility(on(c) ? View.VISIBLE : View.GONE); fixed.setVisibility(target(c) == 0 ? View.VISIBLE : View.GONE); };
         CheckBox on = new CheckBox(c);
-        on.setText("Frame generation (LSFG)");
+        on.setText(Tx.s(R.string.game_frame_generation_lsfg));
         on.setChecked(on(c));
         on.setOnCheckedChangeListener((b, v) -> { prefs(c).edit().putBoolean("lsfg", v).commit(); vis.run(); apply.run(); });
         box.addView(on);
@@ -140,15 +140,15 @@ final class Lsfg {
         st.setText(status);
         st.setTextSize(12);
         box.addView(st);
-        TextView l2 = new TextView(c); l2.setText("Target frame rate"); opts.addView(l2);
-        opts.addView(choice(c, TARGETS, target(c), new String[]{"Fixed", "60", "90", "120"}, v -> { prefs(c).edit().putInt("lsfg_target", v).commit(); vis.run(); apply.run(); }));
-        TextView l1 = new TextView(c); l1.setText("Frames per game frame"); fixed.addView(l1);
+        TextView l2 = new TextView(c); l2.setText(Tx.s(R.string.game_target_frame_rate)); opts.addView(l2);
+        opts.addView(choice(c, TARGETS, target(c), new String[]{Tx.s(R.string.game_fixed), "60", "90", "120"}, v -> { prefs(c).edit().putInt("lsfg_target", v).commit(); vis.run(); apply.run(); }));
+        TextView l1 = new TextView(c); l1.setText(Tx.s(R.string.game_frames_per_game_frame)); fixed.addView(l1);
         fixed.addView(choice(c, MULTS, multiplier(c), new String[]{"2x", "3x", "4x"}, v -> { prefs(c).edit().putInt("lsfg_mult", v).commit(); apply.run(); }));
         opts.addView(fixed);
-        TextView l3 = new TextView(c); l3.setText("Motion estimation resolution (lower is faster)"); opts.addView(l3);
+        TextView l3 = new TextView(c); l3.setText(Tx.s(R.string.game_motion_estimation_resolution_lower_i)); opts.addView(l3);
         opts.addView(choice(c, FLOWS, flow(c), new String[]{"25%", "50%", "75%", "100%"}, v -> { prefs(c).edit().putInt("lsfg_flow", v).commit(); apply.run(); }));
         TextView mode = new TextView(c);   // Eden ports only the performance shader set (lossless_dll.h PerformanceShader); the quality set would need its own chain
-        mode.setText("Mode: performance (the only shader set Eden's LSFG uses)");
+        mode.setText(Tx.s(R.string.game_mode_performance_the_only_shader));
         mode.setTextSize(12);
         opts.addView(mode);
         box.addView(opts);

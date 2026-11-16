@@ -30,7 +30,7 @@ public final class FrontendLaunch extends Activity {
         Game pg = tid == null ? pickedGame(i) : null;   // a .nup used where it is, named by its document or by a path the app cannot open
         if (pg != null) { byGame(pg); return; }
         if (!Environment.isExternalStorageManager() && !copiedGame(tid)) {   // a game copied into the app (GameCopy) needs no All files access
-            Toast.makeText(this, "Turn on All files access for " + getString(R.string.app_name) + ", then start the game again.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, Tx.s(R.string.err_turn_on_all_files_access, getString(R.string.app_name)), Toast.LENGTH_LONG).show();
             home(null);
             return;
         }
@@ -38,14 +38,14 @@ public final class FrontendLaunch extends Activity {
         String path = pathOf(i);
         if (path == null) {
             fail(i.getData() != null
-                    ? "The frontend sent " + i.getData() + ", which is not a file on this phone's storage by a path the app can read. Set the frontend to send the file's path, or its storage (SAF) URI from the phone's own storage."
-                    : "The frontend sent no game: send the .nup (or the game folder) as the intent's data, or the extra \"game\" with its path.");
+                    ? Tx.s(R.string.err_the_frontend_sent) + i.getData() + Tx.s(R.string.err_which_is_not_a_file)
+                    : Tx.s(R.string.err_the_frontend_sent_no_game));
             return;
         }
         File game = new File(Frontend.normal(path));
-        if (Nup.wrongCase(game)) { fail(game.getName() + ": rename it so that its name ends in \".nup\" or \".nsp\" (lower case); the game and the tools read only that name."); return; }
-        if (!game.exists()) { fail(game + " is not there (the frontend sent " + path + ")."); return; }
-        if (!game.canRead()) { fail(game + " cannot be read. Check that All files access is on."); return; }
+        if (Nup.wrongCase(game)) { fail(game.getName() + Tx.s(R.string.err_rename_it_so_that_its)); return; }
+        if (!game.exists()) { fail(game + Tx.s(R.string.err_is_not_there_the_frontend) + path + ")."); return; }
+        if (!game.canRead()) { fail(game + Tx.s(R.string.err_cannot_be_read_check_that)); return; }
         new Thread(() -> {
             String id = null, err = null;
             try { id = Pack.playableIdOf(game); } catch (IOException e) { err = e.getMessage(); }   // a .nup's TOC is hashed: off the main thread
@@ -119,7 +119,7 @@ public final class FrontendLaunch extends Activity {
         } catch (IOException e) {
             return null;
         }
-        if (PackCheck.blocking(this, p, game) != null || Pack.libraryProblem(packDir, id) != null) return null;
+        if (PackCheck.blocking(this, p, game) != null || Pack.libraryBlock(packDir, id, Prefs.layerEnv(this, id)) != null) return null;
         if (card != null) return card;
         Game g = new Game(id, p.name.isEmpty() ? id : p.name, game.getPath(), packDir.getPath());
         return Game.put(this, g);
@@ -131,7 +131,7 @@ public final class FrontendLaunch extends Activity {
             byGame(g);
             return;
         }
-        fail("No game with title ID " + tid + " is on Home. Add it in " + getString(R.string.app_name) + " first, or send the game's file instead.");
+        fail(Tx.s(R.string.err_no_game_with_title_id) + tid + Tx.s(R.string.err_is_on_home_add_it) + getString(R.string.app_name) + " first, or send the game's file instead.");
     }
 
     /** A card on the list: played when it can start now, else Home shows it (its Play says what is missing: a lost .nup offers to pick it again) */
@@ -158,7 +158,7 @@ public final class FrontendLaunch extends Activity {
     }
 
     private void fail(String why) {
-        new PadFocus.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert).setTitle("Cannot start the game").setMessage(why)
-                .setPositiveButton("OK", null).setOnDismissListener(d -> finish()).show();
+        new PadFocus.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert).setTitle(Tx.s(R.string.err_cannot_start_the_game)).setMessage(why)
+                .setPositiveButton(android.R.string.ok, null).setOnDismissListener(d -> finish()).show();
     }
 }

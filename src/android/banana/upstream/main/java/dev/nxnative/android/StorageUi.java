@@ -30,10 +30,12 @@ final class StorageUi {
         if (l != null) for (ActivityManager.RunningAppProcessInfo p : l) {
             if (p.processName == null) continue;
             if (p.processName.endsWith(":game")) return "A game is running: stop it first (its in-game panel › Stop the game).";
-            if (p.processName.endsWith(":pack")) return "Prepare is running: wait for it, or pause it, and close the app's Prepare first.";
+            // :pack also hosts the shader build of the games played (LayerService), and Android keeps it cached after: only a process that runs something refuses
+            if (p.processName.endsWith(":pack") && p.importance < ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED)
+                return Tx.s(R.string.game_prepare_or_a_shader_build);
         }
-        if (GameCopy.running()) return "A copy into the app is running: wait for it.";
-        for (Game g : games) if (SaveUi.busy(g.titleId) || PackUi.busy(g.titleId)) return "A save backup or a pack export of " + g.name + " is running: wait for it.";
+        if (GameCopy.running()) return Tx.s(R.string.game_a_copy_into_the_app);
+        for (Game g : games) if (SaveUi.busy(g.titleId) || PackUi.busy(g.titleId)) return Tx.s(R.string.game_backup_or_export_running, g.name);
         return null;
     }
 
@@ -65,7 +67,7 @@ final class StorageUi {
         List<Game> games = Game.load(a);
         String why = busy(a, games);
         if (why != null) { a.error(why); return; }
-        AlertDialog wait = new PadFocus.Builder(a).setMessage("Looking at the app's storage…").setCancelable(false).show();
+        AlertDialog wait = new PadFocus.Builder(a).setMessage(Tx.s(R.string.game_looking_at_the_app_s)).setCancelable(false).show();
         Context app = a.getApplicationContext();
         new Thread(() -> {
             StorageScan.Roots r = roots(app, games);
@@ -89,9 +91,9 @@ final class StorageUi {
         Runnable sum = () -> {
             long n = 0;
             for (int i = 0; i < boxes.size(); i++) if (boxes.get(i).isChecked()) n += order.get(i).bytes;
-            total.setText("Found " + StorageScan.bytes(StorageScan.total(items)) + " that can go; " + StorageScan.bytes(n) + " ticked. Saves are never listed or removed.");
+            total.setText(Tx.s(R.string.game_storage_found, StorageScan.bytes(StorageScan.total(items)), StorageScan.bytes(n)));
         };
-        if (items.isEmpty()) Ui.add(box, Ui.small(a, "Nothing to clean up."), 8);
+        if (items.isEmpty()) Ui.add(box, Ui.small(a, Tx.s(R.string.game_nothing_to_clean_up)), 8);
         for (Map.Entry<StorageScan.Kind, List<StorageScan.Item>> e : StorageScan.byKind(items).entrySet()) {
             StorageScan.Kind k = e.getKey();
             Ui.add(box, Ui.section(a, k.title + " · " + StorageScan.bytes(StorageScan.total(e.getValue()))), 16);
@@ -108,25 +110,25 @@ final class StorageUi {
         }
         sum.run();
         if (!games.isEmpty()) {
-            Ui.add(box, Ui.section(a, "A game's data"), 16);
-            Ui.add(box, Ui.small(a, "A game's pack and shaders are kept while it is in your list. Remove game data… shows what it takes first."), 2);
+            Ui.add(box, Ui.section(a, Tx.s(R.string.game_a_game_s_data)), 16);
+            Ui.add(box, Ui.small(a, Tx.s(R.string.game_a_game_s_pack_and)), 2);
         }
         AlertDialog[] d = {null};
-        for (Game g : games) Ui.add(box, Ui.button(a, "Remove " + g.name + " data…", Ui.Kind.TONAL, v -> { d[0].dismiss(); gameData(a, r, games, g); }), 6);
-        AlertDialog.Builder b = Ui.sheet(a, "Storage", box).setNegativeButton("Close", null);
-        if (!items.isEmpty()) b.setPositiveButton("Remove ticked", (x, w) -> {
+        for (Game g : games) Ui.add(box, Ui.button(a, Tx.s(R.string.game_remove_name_data, g.name), Ui.Kind.TONAL, v -> { d[0].dismiss(); gameData(a, r, games, g); }), 6);
+        AlertDialog.Builder b = Ui.sheet(a, Tx.s(R.string.game_storage), box).setNegativeButton(Tx.s(R.string.common_close), null);
+        if (!items.isEmpty()) b.setPositiveButton(Tx.s(R.string.game_remove_ticked), (x, w) -> {
             List<StorageScan.Item> pick = new ArrayList<>();
             for (int i = 0; i < boxes.size(); i++) if (boxes.get(i).isChecked()) pick.add(order.get(i));
             if (pick.isEmpty()) return;
-            confirm(a, r, "Remove " + pick.size() + " item" + (pick.size() == 1 ? "" : "s") + "?", pick, null);
+            confirm(a, r, Tx.n(R.plurals.game_remove_n_items, pick.size(), pick.size()), pick, null);
         });
         d[0] = b.show();
     }
 
     private static void gameData(MainActivity a, StorageScan.Roots r, List<Game> games, Game g) {
         List<StorageScan.Item> l = StorageScan.gameData(r, listed(List.of(g)).get(0), listed(games));
-        if (l.isEmpty()) { a.error(g.name + " has no data in the app's storage that can go (its pack is elsewhere, or there is none). Saves are never removed."); return; }
-        confirm(a, r, "Remove " + g.name + " data?", l, "The game stays in your list; Play then needs Prepare again (or Import pack…). Your saves stay.");
+        if (l.isEmpty()) { a.error(Tx.s(R.string.err_no_data_that_can_go, g.name)); return; }
+        confirm(a, r, Tx.s(R.string.game_remove_name_data_question, g.name), l, Tx.s(R.string.game_the_game_stays_in_your));
     }
 
     /** Names exactly what goes, then removes it off the UI thread (each item checked by the guard again) */
@@ -134,22 +136,22 @@ final class StorageUi {
         List<StorageScan.Item> l = StorageScan.distinct(pick);
         StringBuilder m = new StringBuilder();
         for (StorageScan.Item it : l) m.append("· ").append(it.label).append(" (").append(StorageScan.bytes(it.bytes)).append(")\n");
-        m.append("\n").append(StorageScan.bytes(StorageScan.total(l))).append(" in all. This cannot be undone.");
+        m.append("\n").append(Tx.s(R.string.game_in_all_cannot_be_undone, StorageScan.bytes(StorageScan.total(l))));
         if (note != null) m.append(" ").append(note);
-        else m.append(" Saves are never removed.");
-        Ui.confirmDanger(a, title, m, "Remove", () -> {
+        else m.append(" ").append(Tx.s(R.string.game_saves_never_removed));
+        Ui.confirmDanger(a, title, m, Tx.s(R.string.common_remove), () -> {
             String why = busy(a, Game.load(a));   // something may have started while the list showed
             if (why != null) { a.error(why); return; }
-            AlertDialog wait = new PadFocus.Builder(a).setMessage("Removing…").setCancelable(false).show();
+            AlertDialog wait = new PadFocus.Builder(a).setMessage(Tx.s(R.string.game_removing)).setCancelable(false).show();
             new Thread(() -> {
                 StorageScan.Result res = StorageScan.delete(r, l);
                 a.runOnUiThread(() -> {
                     wait.dismiss();
                     if (gone(a)) return;
                     a.refresh();
-                    String done = StorageScan.bytes(res.freed) + " freed.";
-                    if (res.problems.isEmpty()) new PadFocus.Builder(a).setMessage(done).setPositiveButton("OK", null).show();
-                    else Ui.explain(a, "Not everything was removed", done, String.join("\n", res.problems)).setPositiveButton("OK", null).show();
+                    String done = Tx.s(R.string.game_n_freed, StorageScan.bytes(res.freed));
+                    if (res.problems.isEmpty()) new PadFocus.Builder(a).setMessage(done).setPositiveButton(android.R.string.ok, null).show();
+                    else Ui.explain(a, Tx.s(R.string.game_not_everything_was_removed), done, String.join("\n", res.problems)).setPositiveButton(android.R.string.ok, null).show();
                 });
             }, "nxstorage-remove").start();
         });

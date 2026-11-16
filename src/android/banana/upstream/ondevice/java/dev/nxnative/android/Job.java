@@ -23,14 +23,19 @@ import java.util.Locale;
  * { "format": 1, "title_id", "name", "version", "dump", "work", "pack": the pack folder the job writes,
  *   "apk": { "engine", "dmsh_chain", "dmsh_vk_chain", "xlate_source", "version_code" }: what the outputs depend on (a change restarts the translation),
  *   "state": "pending" | "running" | "paused" | "done" | "failed", "reason": why paused (user, battery, thermal, timeout) or "", "error": why failed,
- *   "step": the current step, "steps": { "&lt;step&gt;": { "state": "pending" | "running" | "done", "done", "total", "stage" } }, "updated": ms }
+ *   "step": the current step, "steps": { "&lt;step&gt;": { "state": "pending" | "running" | "done", "done", "total", "stage" } }, "code_only": true for a job with no shader translation (create / adopt codeOnly), "updated": ms }
  * </pre>
  * A "running" job whose service is gone (the process was killed, the phone rebooted) is resumed by the service (START_STICKY) or the launcher's Resume.
  */
 final class Job {
     static final int FORMAT = 2;   // 2: the shaders step writes the library too (vk_android_build.py's result cache); 1 had a library step of its own
     static final String[] STEPS = {"identify", "rewrite", "split", "shaders", "pack"};
-    static final String[] STEP_TEXT = {"Checking the dump", "Rewriting the game's code", "Finding the shaders", "Translating shaders", "Finishing the pack"};
+    static String stepText(int i) {
+        String[] t = {Tx.s(R.string.prepare_step_checking_the_dump), Tx.s(R.string.prepare_step_rewriting_the_game_s_code),
+                      Tx.s(R.string.prepare_step_finding_the_shaders), Tx.s(R.string.prepare_step_translating_shaders),
+                      Tx.s(R.string.prepare_step_finishing_the_pack)};   // read at each use: the language can change while the process lives
+        return t[i];
+    }
     /** Each step's share of the progress bar, roughly its time on the phone (ONDEVICE.md "Time and power"); the shaders' share is counted by shader */
     private static final int[] WEIGHT = {1, 5, 12, 78, 4};
     static final int REWRITE = 1, SHADERS = 3, PACK = 4;
@@ -56,7 +61,14 @@ final class Job {
      * A new job for a checked dump; not written yet. pack: where its pack goes, the app's packs/&lt;title ID&gt; (AppStorage.pack); the working files stay in the
      * dump's work folder (&lt;dump&gt;/../&lt;id&gt;-work/ondevice)
      */
-    static Job create(DumpCheck.Result r, File appPack) throws JSONException {
+    static Job create(DumpCheck.Result r, File appPack) throws JSONException { return create(r, appPack, false); }
+
+    /**
+     * codeOnly: a Prepare with no shader translation (the default for a game the shader layer covers, ShaderLibs.layerCovers): identify, rewrite and pack, with the shader
+     * steps (split, shaders) recorded done as not wanted and the pack made without a library (pack_android.py --optional-shaders). The job ends "done" and the game plays,
+     * building its shaders while it runs; the translation of the whole set is a later job the player starts (adopt with shaders). Job.json "code_only"
+     */
+    static Job create(DumpCheck.Result r, File appPack, boolean codeOnly) throws JSONException {
         JSONObject o = new JSONObject().put("format", FORMAT).put("title_id", r.titleId).put("name", Profile.of(r.titleId) != null ? Profile.of(r.titleId).name : r.titleId).put("version", r.version)
                 .put("dump", r.dump.getPath()).put("work", r.work.getPath()).put("apk", apk()).put("state", "pending").put("reason", "").put("error", "")
                 .put("step", STEPS[0]).put("created", System.currentTimeMillis()).put("try_anyway", r.untested);
@@ -67,7 +79,9 @@ final class Job {
         JSONObject steps = new JSONObject();
         for (String s : STEPS) steps.put(s, new JSONObject().put("state", "pending").put("done", 0).put("total", 0).put("stage", ""));
         o.put("steps", steps);
-        return new Job(fileOf(r.work), o);
+        Job j = new Job(fileOf(r.work), o);
+        if (codeOnly) j.codeOnly(true);
+        return j;
     }
 
     /**
@@ -86,6 +100,8 @@ final class Job {
         }
         // the code only: the pack step takes the library already in the pack (pack_android.py --shader-cache <pack>/shaders: current there, so it stays as it is)
         if (!shaders && !ready && !fake) j.o.put("shader_cache", new File(packDir, "shaders").getPath());
+        // the code only, and the pack has no library of this APK's version: nothing to take (the pack step packs without, --optional-shaders), the shader steps are not wanted
+        if (!shaders && !ready && Pack.libraryOf(packDir) == null) j.codeOnly(true);
         if (ready) j.o.put("state", "done");
         j.o.put("adopted", packDir.getPath());
         return j;
@@ -122,6 +138,7 @@ final class Job {
 
     /** Whether the job's translated shaders came from another chain (or engine) than this APK's: then they are translated again */
     synchronized boolean apkChanged() {
+        if (codeOnly()) return false;   // no translated shaders in it
         JSONObject a = o.optJSONObject("apk"), b = apk();
         if (a == null) return true;
         for (String k : new String[] {"engine", "dmsh_chain", "dmsh_vk_chain", "xlate_source"}) if (!b.optString(k).equals(a.optString(k))) return true;
@@ -130,6 +147,10 @@ final class Job {
 
     /** Starts the chain's steps over with this APK's versions; the caller deletes their outputs */
     synchronized void resetChainSteps() throws JSONException {
+        if (codeOnly()) {   // no shader step to start over: nothing of the job depends on the chain
+            o.put("apk", apk());
+            return;
+        }
         // the split is the dump's and stays valid, but a finished job deleted it: then it is made again too
         int from = Outputs.complete(new File(dir(), "split")) ? FIRST_CHAIN_STEP : FIRST_CHAIN_STEP - 1;
         for (int i = from; i < STEPS.length; i++) o.getJSONObject("steps").put(STEPS[i], new JSONObject().put("state", "pending").put("done", 0).put("total", 0).put("stage", ""));
@@ -169,6 +190,17 @@ final class Job {
     synchronized File dump() { return new File(o.optString("dump")); }
     synchronized File work() { return new File(o.optString("work")); }
     synchronized File pack() { return new File(o.optString("pack")); }
+    /** A job with no shader translation (create / adopt codeOnly): its split and shaders steps are done as not wanted, and its pack step packs without a library when none is current */
+    synchronized boolean codeOnly() { return o.optBoolean("code_only"); }
+    synchronized void codeOnly(boolean on) {
+        try {
+            o.put("code_only", on);
+            if (on) for (String s : STEPS) if (s.equals("split") || s.equals("shaders")) stepState(s, "done");
+        } catch (JSONException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     /** The folder of shader libraries (v-<V>/) the pack step copies from: the job's own build (ondevice/lib), or the pack's shaders/ when only the code is redone */
     synchronized File shaderCache() { String s = o.optString("shader_cache", ""); return s.isEmpty() ? new File(dir(), "lib") : new File(s); }
 
@@ -421,7 +453,7 @@ final class Job {
         boolean[] done = new boolean[n], present = new boolean[n];
         for (int i = 0; i < n; i++) { done[i] = "done".equals(stepState(STEPS[i])); present[i] = true; }
         present[REWRITE] = Outputs.codeComplete(pack(), codeModules());
-        present[SHADERS] = Outputs.libraryComplete(shaderCache(), BuildConfig.NX_DMSH_VK_CHAIN);
+        present[SHADERS] = codeOnly() || Outputs.libraryComplete(shaderCache(), BuildConfig.NX_DMSH_VK_CHAIN);   // a code-only job has no library to lose
         boolean[] r = Outputs.redo(done, present, USES);
         java.util.List<String> out = new java.util.ArrayList<>();
         try {
@@ -436,6 +468,16 @@ final class Job {
             throw new IllegalStateException(e);
         }
         return out;
+    }
+
+    /**
+     * Whether the job translates the whole shader set and stopped in it (paused or failed, its next step the split or the shaders): for a game the shader layer covers it
+     * can finish without them (codeOnly: the pack step packs with no library), so a translation that keeps failing or waiting never keeps the game from playing
+     */
+    synchronized boolean canSkipShaders() {
+        if (codeOnly() || !("paused".equals(state()) || "failed".equals(state()))) return false;
+        int n = next();
+        return n >= 0 && (STEPS[n].equals("split") || STEPS[n].equals("shaders"));
     }
 
     /** The first step not done, -1 when all are */
@@ -459,6 +501,7 @@ final class Job {
     synchronized double overall() {
         double sum = 0, all = 0;
         for (int i = 0; i < STEPS.length; i++) {
+            if (codeOnly() && (i == SHADERS || STEPS[i].equals("split"))) continue;   // not part of this job
             all += WEIGHT[i];
             JSONObject j = step(STEPS[i]);
             if ("done".equals(j.optString("state"))) sum += WEIGHT[i];
@@ -498,7 +541,7 @@ final class Job {
     /** "about 12 min left", "about 1 h 05 min left", "under a minute left"; "" while unknown */
     static String etaText(long s) {
         if (s < 0) return "";
-        if (s < 60) return "under a minute left";
+        if (s < 60) return Tx.s(R.string.prepare_under_a_minute_left);
         long m = (s + 59) / 60;
         return m < 60 ? "about " + m + " min left" : String.format(Locale.getDefault(), "about %d h %02d min left", m / 60, m % 60);
     }
@@ -514,7 +557,7 @@ final class Job {
         long done = shadersDone(), total = shadersTotal(), kept = shadersKept(), left = shadersLeft();
         String eta = etaText(shadersEta());
         if (total == 0 && (kept > 0 || "done".equals(stepState(STEPS[SHADERS])))) {
-            return "Shaders up to date: nothing to translate";
+            return Tx.s(R.string.prepare_shaders_up_to_date_nothing_3);
         }
         if (kept > 0) {
             String base = String.format(Locale.getDefault(), "Translating %,d new shaders (the other %,d are reused)", total, kept);
@@ -524,7 +567,7 @@ final class Job {
             if (!eta.isEmpty()) base += " · " + eta;
             return base;
         }
-        return STEP_TEXT[SHADERS] + ": " + shadersCountText();
+        return stepText(SHADERS) + ": " + shadersCountText();
     }
 
     /** The card's line under the bar: "37 % · 21,548 shaders left · about 35 min left · the other 70 are reused" (the parts it knows) */
@@ -541,7 +584,7 @@ final class Job {
         if (i == SHADERS) {
             String stage = step(STEPS[i]).optString("stage");
             if (!note.isEmpty())   // after the translation the step's own name would mislead: "Writing the shader library: 120 of 720 MB"
-                return stage.equals("library") || stage.equals("check") || stage.equals("done") ? PrepareText.capital(note) : PrepareText.withNote(STEP_TEXT[i], note, "");
+                return stage.equals("library") || stage.equals("check") || stage.equals("done") ? PrepareText.capital(note) : PrepareText.withNote(stepText(i), note, "");
             if (stage.equals("library") || stage.equals("done")) return "Writing the shader library";
             if (stage.equals("check")) return "Checking the shader library";
             if (keeping()) return PrepareText.keepText(stepDone(i), stepTotal(i));
@@ -552,15 +595,15 @@ final class Job {
             String part = step(STEPS[i]).optString("stage");
             // the module being rewritten stays on the card while the rewriter's progress lines give its share (pack_android.py's "stage: rewriting main (1 of 3)")
             String what = step(STEPS[i]).optString("note");
-            String base = what.isEmpty() ? STEP_TEXT[i] + " (a few minutes)" : PrepareText.withNote(STEP_TEXT[i], what, "");
+            String base = what.isEmpty() ? stepText(i) + " (a few minutes)" : PrepareText.withNote(stepText(i), what, "");
             return part.equals("code") && t > 0 ? base + " (" + Math.min(100, d * 100 / t) + " %)" : base;
         }
-        if (!note.isEmpty()) return PrepareText.withNote(STEP_TEXT[i], note, "");
+        if (!note.isEmpty()) return PrepareText.withNote(stepText(i), note, "");
         long d = stepDone(i), t = stepTotal(i);
         String part = step(STEPS[i]).optString("stage");   // shader_split.py's "progress: <done>/<total> <n>%" inside a large file
         String what = step(STEPS[i]).optString("note");   // the phase the count is of: "Finding the shaders: reading 1,442 files · 203 of 1,442 files"
-        if (!what.isEmpty()) return PrepareText.withNote(STEP_TEXT[i], what, PrepareText.countText(STEPS[i].equals("split"), d, t, part));
-        return PrepareText.stepCountText(STEP_TEXT[i], STEPS[i].equals("split"), d, t, part);   // the split counts files: "Finding the shaders: 1,203 of 1,890 files"
+        if (!what.isEmpty()) return PrepareText.withNote(stepText(i), what, PrepareText.countText(STEPS[i].equals("split"), d, t, part));
+        return PrepareText.stepCountText(stepText(i), STEPS[i].equals("split"), d, t, part);   // the split counts files: "Finding the shaders: 1,203 of 1,890 files"
     }
 
     /** One line for the screen and the notification: what the job is doing or why it stopped */
@@ -568,13 +611,13 @@ final class Job {
         String s = state();
         String step = "step " + (current() + 1) + " of " + STEPS.length;
         switch (s) {
-            case "done": return "Ready to play.";
-            case "failed": return PrepareText.failedText(STEP_TEXT[current()], error(), o.has("fix"));
+            case "done": return codeOnly() ? PrepareText.READY_CODE_ONLY() : Tx.s(R.string.prepare_ready_to_play_2);
+            case "failed": return PrepareText.failedText(stepText(current()), error(), o.has("fix"));
             case "pending": return "Not started yet.";
             case "paused": return "Paused: " + reasonText(reason()) + ". " + stepText() + "." + (reasonDetail().isEmpty() ? "" : "\n" + capital(reasonDetail()) + ".")
-                    + (canGoOn() && serviceAlive ? "\nIf the phone is not hot, tap Go on anyway." : "");
+                    + (canGoOn() && serviceAlive ? Tx.s(R.string.prepare_nif_the_phone_is_not) : "");
             case "running": return serviceAlive ? stepText() + " (" + step + ")" + quietText() + "."
-                    : "Interrupted at " + stepText() + ". Tap Resume to go on.";
+                    : "Interrupted at " + stepText() + Tx.s(R.string.prepare_tap_resume_to_go_on);
             default: return s;
         }
     }

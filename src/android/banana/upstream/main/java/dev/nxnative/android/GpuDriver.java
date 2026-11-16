@@ -33,10 +33,17 @@ import java.util.Locale;
 final class GpuDriver {
     private GpuDriver() {}
 
-    /** The driver the picker marks " (recommended)": an installed one whose meta.json name starts with this; empty = none marked. Empty on purpose: on the PNM-N49 System
-     *  stays fastest (44 fps vs 20-22 on Turnip, android/README.md "Custom GPU drivers"); the best Turnip measured is T30 (Mr_Purple, PurpleVK 26.3) */
-    static final String RECOMMENDED_NAME_PREFIX = "";
-    static boolean recommended(Info i) { return !RECOMMENDED_NAME_PREFIX.isEmpty() && i.name.startsWith(RECOMMENDED_NAME_PREFIX); }
+    /** The driver the picker and the download list mark " (recommended)": the Qualcomm build 891.14 of StevenMXZ/Adreno-Tools-Drivers (release tag v891.14; the best results seen on
+     *  Qualcomm GPUs, wiki GPU-Drivers). An installed driver matches by "891.14" in its meta.json name or its folder name (a zip without a name takes the asset's, "v891.14").
+     *  It is only marked: the app never picks a driver by itself, a game's recommend row still decides the default */
+    static final String RECOMMENDED_VERSION = "891.14", RECOMMENDED_REPO = "StevenMXZ/Adreno-Tools-Drivers", RECOMMENDED_TAG = "v891.14";
+    static boolean recommended(Info i) { return i.name.contains(RECOMMENDED_VERSION) || i.dir.getName().contains(RECOMMENDED_VERSION); }
+
+    /** Whether a driver is a Mesa one (Turnip, Freedreno): its meta.json name, vendor or library says so. A display hint only (the warning below), never a choice of the host */
+    static boolean isMesa(Info i) {
+        String s = (i.name + " " + i.vendor + " " + i.library).toLowerCase(java.util.Locale.ROOT);
+        return s.contains("turnip") || s.contains("mesa") || s.contains("freedreno");
+    }
 
     static final class Info {
         final File dir; final String name, version, vendor, library;
@@ -97,7 +104,7 @@ final class GpuDriver {
     /** The host's switch for a run of a game (before env.txt, whose lines win) and a line for the log */
     static String env(Context c, String titleId, List<String> env) {
         Info i = selected(c, titleId);
-        if (i == null) return "GPU driver: system";
+        if (i == null) return Tx.s(R.string.game_gpu_driver_system);
         env.add("DM_VK_DRIVER=" + i.dir.getPath());
         return "GPU driver: " + i.label() + " (" + i.dir + ")";
     }
@@ -167,7 +174,7 @@ final class GpuDriver {
      *  thread, also after a failure; may be null). Nothing it throws reaches the app: a failed install is a message and changes no pick. */
     static void installInBackground(Activity a, String what, Job job, Runnable after) {
         Context app = a.getApplicationContext();
-        AlertDialog wait = new PadFocus.Builder(a).setMessage("Installing " + what + "…").setCancelable(false).create();
+        AlertDialog wait = new PadFocus.Builder(a).setMessage(Tx.s(R.string.game_installing_what, what)).setCancelable(false).create();
         wait.show();
         new Thread(() -> {
             Info got = null; String fail = null;
@@ -176,7 +183,7 @@ final class GpuDriver {
             final Info i = got; final String f = fail;
             UI.post(() -> {
                 if (!a.isFinishing() && !a.isDestroyed()) { try { wait.dismiss(); } catch (RuntimeException ignored) { /* its window is gone */ } }
-                Toast.makeText(app, f != null ? "GPU driver not installed: " + f : "GPU driver installed and picked: " + i.label(), Toast.LENGTH_LONG).show();
+                Toast.makeText(app, f != null ? Tx.s(R.string.game_gpu_driver_not_installed, f) : Tx.s(R.string.game_gpu_driver_installed_picked, i.label()), Toast.LENGTH_LONG).show();
                 if (after != null) after.run();
             });
         }, "driver-install").start();
@@ -190,7 +197,7 @@ final class GpuDriver {
             Info sel = null;
             for (Info d : installed(a)) if (d.dir.getName().equals(pick)) sel = d;
             select(a, sel);
-            Toast.makeText(a, "GPU driver: " + (sel == null ? "system" : sel.label()), Toast.LENGTH_SHORT).show();
+            Toast.makeText(a, Tx.s(R.string.game_gpu_driver_colon, sel == null ? Tx.s(R.string.game_system_driver) : sel.label()), Toast.LENGTH_SHORT).show();
         };
         if (zip != null) installInBackground(a, new File(zip).getName(), () -> install(a, new File(zip)), doPick);
         else if (doPick != null) doPick.run();
@@ -201,30 +208,29 @@ final class GpuDriver {
         List<Info> inst = installed(a);
         Info sel = selected(a);
         List<String> labels = new ArrayList<>();
-        labels.add("System (the phone's own driver)");
+        labels.add(Tx.s(R.string.game_system_the_phone_s_own));
         int checked = 0;
         for (int k = 0; k < inst.size(); k++) { labels.add(inst.get(k).label() + (recommended(inst.get(k)) ? " (recommended)" : "")); if (sel != null && inst.get(k).dir.equals(sel.dir)) checked = k + 1; }
-        new PadFocus.Builder(a).setTitle("GPU driver (takes effect at the next game start)")
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.game_gpu_driver_takes_effect_at))
                 .setSingleChoiceItems(labels.toArray(new String[0]), checked, (d, w) -> { select(a, w == 0 ? null : inst.get(w - 1)); d.dismiss(); })
-                .setPositiveButton("Install…", (d, w) -> installDialog(a, request))
-                .setNeutralButton(sel != null ? "Remove picked…" : "Close", (d, w) -> {
+                .setPositiveButton(Tx.s(R.string.game_install), (d, w) -> installDialog(a, request))
+                .setNeutralButton(sel != null ? Tx.s(R.string.game_remove_picked) : Tx.s(R.string.common_close), (d, w) -> {
                     if (sel == null) return;
-                    Ui.confirmDanger(a, "Remove " + sel.label() + "?", "Deleted: this driver's copy inside the app (" + sel.dir + ").\n\nKept: the zip you installed it from, "
-                            + "your games, packs and saves. The game uses the phone's own driver until you pick another.", "Remove driver", () -> {
+                    Ui.confirmDanger(a, Tx.s(R.string.game_remove_driver_question, sel.label()), Tx.s(R.string.game_remove_driver_message, sel.dir.toString()), Tx.s(R.string.game_remove_driver), () -> {
                         DriverZip.deleteTree(sel.dir); select(a, null);
-                        Toast.makeText(a, "Removed " + sel.label() + "; the system driver is used", Toast.LENGTH_LONG).show();
+                        Toast.makeText(a, Tx.s(R.string.game_driver_removed, sel.label()), Toast.LENGTH_LONG).show();
                     });
                 })
-                .setNegativeButton("Cancel", null).show();
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     private static void installDialog(Activity a, int request) {
         List<File> zips = found(a);   // names only, in the app's own folder
         List<String> labels = new ArrayList<>();
-        for (File f : zips) labels.add(f.getName() + "  (the app's gpu_drivers folder)");
-        labels.add("Pick a zip…");
-        labels.add("Download…");   // DriverFetch: GitHub releases, only on a tap
-        new PadFocus.Builder(a).setTitle("Install a driver zip (with meta.json)")
+        for (File f : zips) labels.add(f.getName() + Tx.s(R.string.game_the_app_s_gpu_drivers));
+        labels.add(Tx.s(R.string.game_pick_a_zip));
+        labels.add(Tx.s(R.string.game_download));   // DriverFetch: GitHub releases, only on a tap
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.game_install_a_driver_zip_with))
                 .setItems(labels.toArray(new String[0]), (d, w) -> {
                     if (w == zips.size() + 1) { DriverFetch.dialog(a, request); return; }
                     if (w == zips.size()) {
@@ -234,12 +240,12 @@ final class GpuDriver {
                     }
                     File z = zips.get(w);
                     installInBackground(a, z.getName(), () -> install(a, z), null);
-                }).setNegativeButton("Cancel", null).show();
+                }).setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /** The picker's result (MainActivity.onActivityResult) */
     static void picked(Activity a, Uri uri) {
         String last = uri.getLastPathSegment();
-        installInBackground(a, last == null ? "the driver" : last.replaceAll(".*[/:]", ""), () -> install(a, uri), null);
+        installInBackground(a, last == null ? Tx.s(R.string.game_the_driver) : last.replaceAll(".*[/:]", ""), () -> install(a, uri), null);
     }
 }

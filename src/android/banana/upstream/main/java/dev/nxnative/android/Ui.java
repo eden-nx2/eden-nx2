@@ -109,6 +109,7 @@ final class Ui {
         t.setLetterSpacing(0.08f);
         t.setPadding(dp(c, 4), 0, 0, 0);
         t.setAccessibilityHeading(true);
+        t.setTag("section");   // the wide Settings page splits its column at these (MainActivity.buildSettings)
         return t;
     }
 
@@ -138,17 +139,17 @@ final class Ui {
         Details(Context c) {
             super(c);
             setOrientation(VERTICAL);
-            toggle = button(c, "Details", Kind.QUIET, v -> open(!isOpen()));
+            toggle = button(c, Tx.s(R.string.game_details), Kind.QUIET, v -> open(!isOpen()));
             toggle.setPadding(dp(c, 4), 0, dp(c, 4), 0);
             addView(toggle, wrap());
             text = small(c, "");
             text.setTextIsSelectable(true);
             text.setVisibility(GONE);
             addView(text, fill());
-            copy = button(c, "Copy details", Kind.QUIET, v -> {
+            copy = button(c, Tx.s(R.string.common_copy_details), Kind.QUIET, v -> {
                 android.content.ClipboardManager cm = c.getSystemService(android.content.ClipboardManager.class);
                 if (cm != null) cm.setPrimaryClip(android.content.ClipData.newPlainText("Banana Native details", text.getText()));
-                android.widget.Toast.makeText(c, "Details copied", android.widget.Toast.LENGTH_SHORT).show();
+                android.widget.Toast.makeText(c, Tx.s(R.string.common_details_copied), android.widget.Toast.LENGTH_SHORT).show();
             });
             copy.setPadding(dp(c, 4), 0, dp(c, 4), 0);
             copy.setVisibility(GONE);
@@ -161,8 +162,8 @@ final class Ui {
         void open(boolean on) {
             text.setVisibility(on ? VISIBLE : GONE);
             copy.setVisibility(on ? VISIBLE : GONE);
-            toggle.setText(on ? "Hide details" : "Details");
-            toggle.setContentDescription(on ? "Hide details" : "Show details");
+            toggle.setText(on ? Tx.s(R.string.common_hide_details) : Tx.s(R.string.common_details));
+            toggle.setContentDescription(on ? Tx.s(R.string.common_hide_details) : Tx.s(R.string.common_show_details));
         }
 
         /** The details to show (the view hides when there are none); an open view stays open */
@@ -194,8 +195,8 @@ final class Ui {
         t.setPadding(dp(a, 10), dp(a, 5), dp(a, 12), dp(a, 5));
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
-        t.setContentDescription(s + ": tap for details");
-        t.setOnClickListener(v -> new PadFocus.Builder(a).setTitle(title).setMessage(message).setPositiveButton("OK", null).show());
+        t.setContentDescription(Tx.s(R.string.common_tap_for_details, s));
+        t.setOnClickListener(v -> new PadFocus.Builder(a).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, null).show());
         return t;
     }
 
@@ -205,21 +206,50 @@ final class Ui {
         TextView t = text(c, n.isEmpty() ? "?" : n.substring(0, n.offsetByCodePoints(0, 1)).toUpperCase(java.util.Locale.ROOT), sizeDp * 0.4f, R.color.bn_on_banana, 800);
         t.setGravity(Gravity.CENTER);
         t.setIncludeFontPadding(false);
-        t.setBackground(round(col(c, R.color.bn_banana), dp(c, 16), 0, 0));
+        t.setBackground(round(col(c, R.color.bn_banana), dp(c, 22), 0, 0));
         t.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         t.setLayoutParams(new LinearLayout.LayoutParams(dp(c, sizeDp), dp(c, sizeDp)));
         return t;
     }
 
+    /** The picture cut to the box of its visible pixels, drawn in on the sides by a hair so no clear corner is left */
+    private static android.graphics.Bitmap visibleBox(android.graphics.Bitmap b) {
+        final int N = 64;
+        android.graphics.Bitmap sm = android.graphics.Bitmap.createScaledBitmap(b, N, N, true);
+        int x0 = N, y0 = N, x1 = -1, y1 = -1;
+        for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+            if (android.graphics.Color.alpha(sm.getPixel(x, y)) > 200) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        if (x1 < 0 || (x0 == 0 && y0 == 0 && x1 == N - 1 && y1 == N - 1)) return b;
+        int w = b.getWidth(), h = b.getHeight();
+        int l = x0 * w / N, t = y0 * h / N, r = (x1 + 1) * w / N, bt = (y1 + 1) * h / N;
+        int inx = Math.max(1, (r - l) / 24), iny = Math.max(1, (bt - t) / 24);
+        l += inx; r -= inx; t += iny; bt -= iny;
+        return r - l < 8 || bt - t < 8 ? b : android.graphics.Bitmap.createBitmap(b, l, t, r - l, bt - t);
+    }
+
+    /** The average colour of a picture's visible pixels (opaque result) */
+    private static int iconBase(android.graphics.Bitmap b) {
+        android.graphics.Bitmap sm = android.graphics.Bitmap.createScaledBitmap(b, 16, 16, true);
+        long r = 0, g = 0, bl = 0, n = 0;
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            int p = sm.getPixel(x, y);
+            if (android.graphics.Color.alpha(p) < 200) continue;
+            r += android.graphics.Color.red(p); g += android.graphics.Color.green(p); bl += android.graphics.Color.blue(p); n++;
+        }
+        return n == 0 ? 0xFF2A2A2E : android.graphics.Color.rgb((int) (r / n), (int) (g / n), (int) (bl / n));
+    }
+
     /** Shows a picture (the game's icon) in a tile made by tile(), in place of its letter and with the same rounded corners. Pass null to get the letter back */
     static void tileIcon(TextView t, android.graphics.Bitmap b) {
         Context c = t.getContext();
-        if (b == null) { t.setTextColor(col(c, R.color.bn_on_banana)); t.setBackground(round(col(c, R.color.bn_banana), dp(c, 16), 0, 0)); return; }
+        if (b == null) { t.setTextColor(col(c, R.color.bn_on_banana)); t.setBackground(round(col(c, R.color.bn_banana), dp(c, 22), 0, 0)); return; }
+        if (b.hasAlpha()) b = visibleBox(b);   // a picture with a clear margin (rounded corners, an inset) is cut to what it shows, so it fills the tile
         android.graphics.drawable.Drawable d = new android.graphics.drawable.BitmapDrawable(c.getResources(), b);
+        if (b.hasAlpha()) d = new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{new android.graphics.drawable.ColorDrawable(iconBase(b)), d});   // a picture with clear parts sits on its own colour, not on the page
         t.setBackground(d);
         t.setTextColor(android.graphics.Color.TRANSPARENT);   // only hidden, so the letter is still there if the tile is reused for another game
         t.setOutlineProvider(new android.view.ViewOutlineProvider() {
-            @Override public void getOutline(View v, android.graphics.Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), dp(c, 16)); }
+            @Override public void getOutline(View v, android.graphics.Outline o) { o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), dp(c, 22)); }
         });
         t.setClipToOutline(true);
     }
@@ -230,8 +260,8 @@ final class Ui {
     static LinearLayout card(Context c) {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setBackground(round(col(c, R.color.bn_card), dp(c, 20), col(c, R.color.bn_card_stroke), dp(c, 1)));
-        int p = dp(c, 18);
+        l.setBackground(round(col(c, R.color.bn_card), dp(c, 24), col(c, R.color.bn_card_stroke), dp(c, 1)));
+        int p = dp(c, 14);
         l.setPadding(p, p, p, p);
         return l;
     }
@@ -239,7 +269,7 @@ final class Ui {
     /** A card for list rows (settings, the Readiness check): the rows reach close to its edges */
     static LinearLayout listCard(Context c) {
         LinearLayout l = card(c);
-        l.setPadding(dp(c, 6), dp(c, 6), dp(c, 6), dp(c, 6));
+        l.setPadding(dp(c, 4), dp(c, 3), dp(c, 4), dp(c, 3));
         return l;
     }
 
@@ -247,7 +277,7 @@ final class Ui {
     static LinearLayout inner(Context c, int fillRes) {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setBackground(round(col(c, fillRes), dp(c, 16), 0, 0));
+        l.setBackground(round(col(c, fillRes), dp(c, 18), 0, 0));
         int p = dp(c, 14);
         l.setPadding(p, p, p, p);
         return l;
@@ -292,14 +322,33 @@ final class Ui {
     static LinearLayout page(Activity a, FrameLayout frame, int maxWidthDp) { return page(a, frame, maxWidthDp, false); }
 
     /** The same; with a bar below the page (ReleasePage's Update / Later), which takes the navigation bar's inset itself: the page keeps a plain 16 dp under its last row */
-    static LinearLayout page(Activity a, FrameLayout frame, int maxWidthDp, boolean barBelow) {
+    static LinearLayout page(Activity a, FrameLayout frame, int maxWidthDp, boolean barBelow) { return page(a, frame, maxWidthDp, barBelow, false); }
+
+    /** A page that never scrolls up or down (Home: its games scroll sideways in their own row): the frame takes no vertical drag and does not move */
+    private static final class FixedScroll extends ScrollView {
+        FixedScroll(Context c) { super(c); }
+        @Override public boolean onInterceptTouchEvent(android.view.MotionEvent e) { return false; }
+        @Override public boolean onTouchEvent(android.view.MotionEvent e) { return false; }
+        @Override public void scrollTo(int x, int y) { }
+        /** The column is exactly as high as the window leaves: a split page's right pane then has a bound and scrolls itself, instead of growing as tall as its rows */
+        @Override protected void measureChildWithMargins(View child, int widthSpec, int widthUsed, int heightSpec, int heightUsed) {
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) child.getLayoutParams();
+            int w = getChildMeasureSpec(widthSpec, getPaddingLeft() + getPaddingRight() + lp.leftMargin + lp.rightMargin + widthUsed, lp.width);
+            int h = Math.max(0, MeasureSpec.getSize(heightSpec) - getPaddingTop() - getPaddingBottom() - lp.topMargin - lp.bottomMargin);
+            child.measure(w, MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY));
+        }
+        @Override public boolean requestChildRectangleOnScreen(View child, android.graphics.Rect r, boolean immediate) { return false; }
+    }
+
+    static LinearLayout page(Activity a, FrameLayout frame, int maxWidthDp, boolean barBelow, boolean fixed) {
         // Edge to edge on every Android: from Android 15 targetSdk 35 makes it so, but before it the window keeps its content clear of the bars itself and
         // consumes the insets, so the listener below never ran and the column had no gutter and no width limit (cards from edge to edge on Android 13)
         a.getWindow().setDecorFitsSystemWindows(false);
         View scrim = new View(a);
         scrim.setBackgroundColor((col(a, R.color.bn_bg) & 0x00FFFFFF) | 0xEE000000);
-        ScrollView scroll = new ScrollView(a);
+        ScrollView scroll = fixed ? new FixedScroll(a) : new ScrollView(a);
         scroll.setFillViewport(true);
+        if (fixed) scroll.setVerticalScrollBarEnabled(false);
         scroll.setClipToPadding(false);
         scroll.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);
         LinearLayout content = new LinearLayout(a);
@@ -312,7 +361,7 @@ final class Ui {
             int w = a.getResources().getDisplayMetrics().widthPixels;
             int gutter = dp(a, a.getResources().getConfiguration().screenWidthDp < 360 ? 16 : 20);
             int side = Math.max(gutter, (w - i.left - i.right - dp(a, maxWidthDp)) / 2);
-            v.setPadding(side + i.left, i.top + dp(a, 8), side + i.right, barBelow ? dp(a, 16) : i.bottom + dp(a, 24));
+            v.setPadding(side + i.left, i.top + dp(a, 8), side + i.right, barBelow ? dp(a, 16) : i.bottom + dp(a, fixed ? 2 : 24));   // the fixed pages end right above the navigation bar
             scrim.getLayoutParams().height = i.top;
             scrim.requestLayout();
             return in;
@@ -352,7 +401,7 @@ final class Ui {
     }
 
     /** The back button of a page's header */
-    static ImageView back(Context c, View.OnClickListener l) { return iconButton(c, R.drawable.ic_back, "Back", Kind.TONAL, l); }
+    static ImageView back(Context c, View.OnClickListener l) { return iconButton(c, R.drawable.ic_back, Tx.s(R.string.common_back), Kind.TONAL, l); }
 
     /**
      * Makes a card one touch target that a D-pad or controller can reach: focusable, with an accent ring while focused (the ring replaces the edge, so nothing moves),
@@ -360,7 +409,7 @@ final class Ui {
      */
     static void focusCard(Context c, LinearLayout card, View.OnClickListener l) {
         android.graphics.drawable.StateListDrawable s = new android.graphics.drawable.StateListDrawable();
-        s.addState(new int[]{android.R.attr.state_focused}, round(col(c, R.color.bn_card), dp(c, 20), col(c, R.color.bn_accent), dp(c, 2.5f)));
+        s.addState(new int[]{android.R.attr.state_focused}, round(col(c, R.color.bn_card), dp(c, 24), col(c, R.color.bn_banana_deep), dp(c, 3.5f)));
         s.addState(new int[]{}, card.getBackground());
         card.setBackground(s);
         card.setFocusable(true);
@@ -460,7 +509,7 @@ final class Ui {
             label.setSingleLine(true);
             label.setIncludeFontPadding(false);
             LinearLayout.LayoutParams lp = wrap();
-            lp.leftMargin = dp(c, 10);
+            lp.setMarginStart(dp(c, 10));
             addView(label, lp);
             setIcon(drawable);
             setContentDescription(s);
@@ -503,7 +552,7 @@ final class Ui {
         r.addView(a, weight());
         if (b != null) {
             LinearLayout.LayoutParams lp = weight();
-            lp.leftMargin = dp(c, 10);
+            lp.setMarginStart(dp(c, 10));
             r.addView(b, lp);
         }
         return r;
@@ -547,25 +596,26 @@ final class Ui {
 
         Setting(Context c, String emoji, String title, View.OnClickListener l) {
             view = row(c);
-            view.setPadding(dp(c, 10), dp(c, 7), dp(c, 10), dp(c, 7));
-            view.setMinimumHeight(dp(c, 52));
+            view.setPadding(dp(c, 8), dp(c, 4), dp(c, 8), dp(c, 4));
+            view.setMinimumHeight(dp(c, 44));
             view.setBackground(ripple(c, round(Color.TRANSPARENT, dp(c, 12), 0, 0)));
             view.setOnClickListener(l);
-            tile = text(c, emoji, 17, R.color.bn_text, 400);
+            tile = text(c, emoji, 15, R.color.bn_text, 400);
             tile.setGravity(Gravity.CENTER);
             tile.setIncludeFontPadding(false);
             tile.setBackground(round(col(c, R.color.bn_tint), dp(c, 11), 0, 0));
             tile.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            view.addView(tile, new LinearLayout.LayoutParams(dp(c, 36), dp(c, 36)));
+            view.addView(tile, new LinearLayout.LayoutParams(dp(c, 32), dp(c, 32)));
             LinearLayout col = new LinearLayout(c);
             col.setOrientation(LinearLayout.VERTICAL);
             col.setPadding(dp(c, 12), 0, dp(c, 8), 0);
-            this.title = text(c, title, 15, R.color.bn_text, 600);
+            this.title = text(c, title, 14, R.color.bn_text, 600);
             this.title.setMaxLines(3);   // one line at the normal font scale (titles are kept short); a large font scale wraps it rather than cut it
             this.title.setEllipsize(TextUtils.TruncateAt.END);
             col.addView(this.title);
             value = small(c, "");
-            value.setMaxLines(8);
+            value.setTextSize(12);
+            value.setMaxLines(8);   // a description wraps instead of being cut
             value.setEllipsize(TextUtils.TruncateAt.END);
             value.setVisibility(View.GONE);   // shown by value(…) when there is one
             LinearLayout.LayoutParams vp = fill();
@@ -716,10 +766,10 @@ final class Ui {
             boolean on = k == sel;
             LinearLayout tab = new LinearLayout(c);
             tab.setOrientation(LinearLayout.VERTICAL);
-            TextView t = text(c, labels[k], 15, on ? R.color.bn_accent : R.color.bn_text_2, on ? 700 : 600);
+            TextView t = text(c, labels[k], 14, on ? R.color.bn_accent : R.color.bn_text_2, on ? 700 : 600);
             t.setSingleLine(true);
             t.setGravity(Gravity.CENTER);
-            t.setPadding(dp(c, 12), dp(c, 10), dp(c, 12), dp(c, 8));
+            t.setPadding(dp(c, 7), dp(c, 10), dp(c, 7), dp(c, 8));
             tab.addView(t);
             View bar = new View(c);
             bar.setBackground(round(col(c, R.color.bn_accent), dp(c, 2), 0, 0));
@@ -731,7 +781,7 @@ final class Ui {
             tab.setClickable(true);
             tab.setFocusable(true);
             tab.setSelected(on);
-            tab.setContentDescription(labels[k] + (on ? ", tab, selected" : ", tab"));
+            tab.setContentDescription(Tx.s(on ? R.string.common_tab_selected : R.string.common_tab, labels[k]));
             tab.setOnClickListener(v -> { if (i != sel) pick.accept(i); });
             row.addView(tab, wrap());
         }
@@ -808,7 +858,7 @@ final class Ui {
      */
     static void confirmDanger(Activity a, String title, CharSequence message, String yes, Runnable r) {
         AlertDialog d = new PadFocus.Builder(a).setTitle(title).setMessage(message)
-                .setPositiveButton(yes, (x, w) -> r.run()).setNegativeButton("Cancel", null).create();
+                .setPositiveButton(yes, (x, w) -> r.run()).setNegativeButton(Tx.s(R.string.common_cancel), null).create();
         d.setOnShowListener(x -> {
             Button b = d.getButton(AlertDialog.BUTTON_POSITIVE);
             if (b != null) b.setTextColor(col(a, R.color.bn_danger));

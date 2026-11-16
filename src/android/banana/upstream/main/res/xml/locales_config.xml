@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The languages the launcher has (Languages.java; android/README.md, Languages). Adding one: a values-<lang>/strings.xml, a line here, a line in Languages.LIST -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="es" />
+    <locale android:name="tr" />
+    <locale android:name="zh-CN" />
+    <locale android:name="fr" />
+    <locale android:name="ar" />
+    <locale android:name="pl" />
+</locale-config>

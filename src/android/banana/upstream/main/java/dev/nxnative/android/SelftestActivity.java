@@ -52,18 +52,18 @@ public final class SelftestActivity extends Activity implements SurfaceHolder.Ca
         if (Native.openLog(log.getPath()) != 0) { status.setText("FAIL: cannot open the log " + log); return; }
         Native.note("graphics selftest: nxnative " + BuildConfig.VERSION_NAME + " (" + BuildConfig.NX_COMMIT + "); device " + Build.MANUFACTURER + " " + Build.MODEL
                 + ", Android " + Build.VERSION.RELEASE + " (SDK " + Build.VERSION.SDK_INT + "), " + Build.SUPPORTED_ABIS[0]);
-        status.setText(Native.hasSelftest() ? "Graphics self-test: waiting for the surface" : "FAIL: this host has no nxhost_vk_selftest");
+        status.setText(Native.hasSelftest() ? Tx.s(R.string.ready_graphics_self_test_waiting_for) : Tx.s(R.string.ready_fail_this_host_has_no));
     }
 
     @Override public void surfaceCreated(SurfaceHolder h) {
         if (running || !Native.hasSelftest()) { Native.setSurface(h.getSurface()); return; }
         running = true;
-        status.setText("Graphics self-test running (" + FRAMES + " frames, about " + FRAMES / 60 + " s)");
+        status.setText(Tx.s(R.string.ready_selftest_running, FRAMES, FRAMES / 60));
         Thread t = new Thread(null, () -> {
             int rc = Native.selftest(h.getSurface(), FRAMES);
             ui.post(() -> {
                 status.setTextColor(rc == 0 ? Color.GREEN : Color.RED);
-                status.setText((rc == 0 ? "PASS" : "FAIL") + " (return code " + rc + ")\nBack to return; Share log sends this run's log.");
+                status.setText(Tx.s(rc == 0 ? R.string.ready_selftest_pass : R.string.ready_selftest_fail, rc));
             });
         }, "nxselftest", 1 << 20);
         t.start();

@@ -67,7 +67,7 @@ public final class ReadinessActivity extends Activity {
         frame.setBackgroundColor(Ui.col(this, R.color.bn_bg));
         setContentView(frame);
         LinearLayout content = Ui.page(this, frame, 640);   // the same gutter, width and header as the launcher's pages
-        content.addView(Ui.header(this, Ui.back(this, v -> leave()), "Readiness check", null));
+        content.addView(Ui.header(this, Ui.back(this, v -> leave()), Tx.s(R.string.ready_readiness_check), null));
         // The verdict: a mark, one line, the counts; then Run again and the report. Each check below shows its details on a tap (failures and warnings open)
         LinearLayout top = Ui.add(content, Ui.card(this), 16);
         LinearLayout vr = Ui.row(this);
@@ -78,17 +78,17 @@ public final class ReadinessActivity extends Activity {
         LinearLayout vc = new LinearLayout(this);
         vc.setOrientation(LinearLayout.VERTICAL);
         vc.setPadding(Ui.dp(this, 14), 0, 0, 0);
-        verdict = Ui.heading(this, "Checking…");
+        verdict = Ui.heading(this, Tx.s(R.string.ready_checking));
         vc.addView(verdict);
         summary = Ui.small(this, "");
         vc.addView(summary);
         vr.addView(vc, Ui.weight());
         top.addView(vr);
         setMark(-1);
-        Button share = Ui.button(this, "Share", Ui.Kind.TONAL, v -> share());
+        Button share = Ui.button(this, Tx.s(R.string.ready_share), Ui.Kind.TONAL, v -> share());
         share.setOnLongClickListener(v -> { copy(this, report); return true; });
-        Ui.add(top, Ui.pair(this, Ui.button(this, "Run again", Ui.Kind.TONAL, v -> run()), share), 16);
-        Ui.add(top, Ui.button(this, "Copy report", Ui.Kind.QUIET, v -> copy(this, report)), 6, Ui.wrap());
+        Ui.add(top, Ui.pair(this, Ui.button(this, Tx.s(R.string.ready_run_again), Ui.Kind.TONAL, v -> run()), share), 16);
+        Ui.add(top, Ui.button(this, Tx.s(R.string.common_copy_report), Ui.Kind.QUIET, v -> copy(this, report)), 6, Ui.wrap());
         list = Ui.add(content, new LinearLayout(this), 0);
         list.setOrientation(LinearLayout.VERTICAL);
         try {
@@ -109,7 +109,7 @@ public final class ReadinessActivity extends Activity {
     private void run() {
         if (running) return;
         running = true;
-        verdict.setText("Checking…");
+        verdict.setText(Tx.s(R.string.ready_checking));
         summary.setText("");
         setMark(-1);
         Context app = getApplicationContext();
@@ -151,10 +151,10 @@ public final class ReadinessActivity extends Activity {
         List<Readiness.Check> phone = phoneChecks(c);
         GpuDriver.Info d = GpuDriver.selected(c);
         List<Readiness.Check> gpu = new ArrayList<>();
-        gpu.add(new Readiness.Check("GPU and driver", stale ? Readiness.Status.WARNING : f.containsKey("gpu.name") ? Readiness.Status.INFO : f.containsKey("error") ? Readiness.Status.FAIL : Readiness.Status.WARNING, Readiness.gpu(f)
-                + (stale ? ". The GPU driver was changed while this screen was open: leave it and open it again to check the new one." : ""), "driver"));
-        gpu.add(new Readiness.Check("GPU driver picked", Readiness.Status.INFO, (d == null ? "System" : d.label()) + " (Settings › GPU driver).", "driver"));
-        r.sections.add(new Section("This phone", phone));
+        gpu.add(new Readiness.Check(Tx.s(R.string.ready_gpu_and_driver), stale ? Readiness.Status.WARNING : f.containsKey("gpu.name") ? Readiness.Status.INFO : f.containsKey("error") ? Readiness.Status.FAIL : Readiness.Status.WARNING, Readiness.gpu(f)
+                + (stale ? Tx.s(R.string.ready_the_gpu_driver_was_changed) : ""), "driver"));
+        gpu.add(new Readiness.Check(Tx.s(R.string.ready_gpu_driver_picked), Readiness.Status.INFO, (d == null ? Tx.s(R.string.common_system) : d.label()) + Tx.s(R.string.ready_settings_gpu_driver), "driver"));
+        r.sections.add(new Section(Tx.s(R.string.ready_this_phone), phone));
         r.sections.add(new Section("GPU", gpu));
         StringBuilder rep = new StringBuilder(header(c, null)).append('\n');
         int fails = 0, warns = 0;
@@ -172,11 +172,11 @@ public final class ReadinessActivity extends Activity {
                 // This screen probes the main screen's driver only (the driver opens once a process, vka_driver_open): a game with another driver of its own is
                 // checked on that one when it starts, and that check can differ from this screen's
                 GpuDriver.Info g = GpuDriver.selected(c, p.titleId);
-                String gl = g == null ? "System" : g.label(), ml = d == null ? "System" : d.label();
+                String gl = g == null ? Tx.s(R.string.common_system) : g.label(), ml = d == null ? Tx.s(R.string.common_system) : d.label();
                 boolean same = g == null ? d == null : d != null && g.dir.equals(d.dir);
-                l.add(same ? new Readiness.Check("Its own GPU driver", Readiness.Status.INFO, gl + ", the one this screen checked.", "driver")
-                        : new Readiness.Check("Its own GPU driver", Readiness.Status.WARNING, "This game uses its own GPU driver, " + gl + "; this screen checked " + ml
-                                + ". The check before the game starts uses the game's driver, and its result can differ from this one.", "driver"));
+                l.add(same ? new Readiness.Check(Tx.s(R.string.ready_its_own_gpu_driver), Readiness.Status.INFO, gl + Tx.s(R.string.ready_the_one_this_screen_checked), "driver")
+                        : new Readiness.Check(Tx.s(R.string.ready_its_own_gpu_driver), Readiness.Status.WARNING, Tx.s(R.string.ready_this_game_uses_its_own) + gl + Tx.s(R.string.ready_this_screen_checked) + ml
+                                + Tx.s(R.string.ready_the_check_before_the_game), "driver"));
             }
             String name = p.titleId;   // a game is named as the user's dump names it (its card), else by its title ID
             for (Game g : added) if (g.titleId.equals(p.titleId)) { name = g.name; break; }
@@ -196,10 +196,10 @@ public final class ReadinessActivity extends Activity {
         int phoneFails = Readiness.of(phone, Readiness.Status.FAIL).size();
         int phoneWarns = Readiness.of(phone, Readiness.Status.WARNING).size();
         r.level = fails > 0 || phoneFails > 0 ? 2 : warns > 0 ? 1 : 0;
-        r.verdict = r.level == 2 ? "Not ready" : r.level == 1 ? "Ready, with limits" : "Ready";
-        r.summary = r.level == 2 ? (fails > 0 ? fails + (fails == 1 ? " game lacks" : " games lack") + " what it needs" : "") + (fails > 0 && phoneFails > 0 ? "; " : "")
+        r.verdict = r.level == 2 ? Tx.s(R.string.ready_not_ready) : r.level == 1 ? Tx.s(R.string.ready_ready_with_limits) : Words.s("home_ready", "Ready");
+        r.summary = r.level == 2 ? (fails > 0 ? fails + (fails == 1 ? " game lacks" : " games lack") + Tx.s(R.string.ready_what_it_needs) : "") + (fails > 0 && phoneFails > 0 ? "; " : "")
                 + (phoneFails > 0 ? phoneFails + " phone problem" + (phoneFails == 1 ? "" : "s") : "") + "."
-                : r.level == 1 ? warns + (warns == 1 ? " game runs" : " games run") + " with less here." : phoneWarns > 0 ? "Every game's needs are met; see the warnings below." : "Every game's needs are met.";
+                : r.level == 1 ? warns + (warns == 1 ? " game runs" : " games run") + Tx.s(R.string.ready_with_less_here) : phoneWarns > 0 ? Tx.s(R.string.ready_every_game_s_needs_are_2) : Tx.s(R.string.ready_every_game_s_needs_are);
         return r;
     }
 
@@ -270,7 +270,7 @@ public final class ReadinessActivity extends Activity {
         switch (fix) {
             case "driver": return "Pick a GPU driver";
             case "access": return "Allow file access";
-            default: return "Open the app's settings";
+            default: return Tx.s(R.string.ready_open_the_app_s_settings);
         }
     }
 
@@ -291,13 +291,13 @@ public final class ReadinessActivity extends Activity {
 
     private void share() {
         Intent send = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_SUBJECT, "nxnative readiness report").putExtra(Intent.EXTRA_TEXT, report);
-        startActivity(Intent.createChooser(send, "Share the readiness report"));
+        startActivity(Intent.createChooser(send, Tx.s(R.string.ready_share_the_readiness_report)));
     }
 
     static void copy(Context c, String text) {
         ClipboardManager cm = c.getSystemService(ClipboardManager.class);
-        if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("Readiness report", text));
-        Toast.makeText(c, "Readiness report copied", Toast.LENGTH_SHORT).show();
+        if (cm != null) cm.setPrimaryClip(ClipData.newPlainText(Tx.s(R.string.ready_readiness_report), text));
+        Toast.makeText(c, Tx.s(R.string.ready_readiness_report_copied), Toast.LENGTH_SHORT).show();
     }
 
     // ---- What the launcher knows without Vulkan (shared with GameActivity) ----
@@ -319,33 +319,33 @@ public final class ReadinessActivity extends Activity {
         if (PickedNup.is(c, g.gameDir)) {   // a .nup used where it is: read through the picker's permission, no All files access needed
             try {
                 Nup n = Nup.open(f);
-                return new Readiness.Check("Game files", Readiness.Status.PASS, f.getName() + ": a .nup used where it is (picked with the file picker; " + n.packages.size()
-                        + " packages, its table of contents checked). It needs no All files access.", null);
+                return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.PASS, f.getName() + Tx.s(R.string.ready_a_nup_used_where_it) + n.packages.size()
+                        + Tx.s(R.string.ready_packages_its_table_of_contents), null);
             } catch (IOException e) {
-                return new Readiness.Check("Game files", Readiness.Status.FAIL, e instanceof PickedNup.Lost ? GameFile.goneText(f.getName()) + " (its card's button picks it.)"
-                        : f.getName() + " cannot be used: " + e.getMessage(), null);
+                return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.FAIL, e instanceof PickedNup.Lost ? GameFile.goneText(f.getName()) + Tx.s(R.string.ready_its_card_s_button_picks_2)
+                        : f.getName() + Tx.s(R.string.ready_cannot_be_used) + e.getMessage(), null);
             }
         }
         if (GameFile.gone(f.exists(), Environment.isExternalStorageManager() || CopyPlan.inApp(AppStorage.root(c), g.gameDir)))
-            return new Readiness.Check("Game files", Readiness.Status.FAIL, GameFile.goneText(f.getName()) + " (" + f + "; its card's button picks it.)", null);
+            return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.FAIL, GameFile.goneText(f.getName()) + " (" + f + Tx.s(R.string.ready_its_card_s_button_picks), null);
         if (Nup.isNup(f)) {
             try {
                 Nup n = Nup.open(f);
                 StringBuilder s = new StringBuilder();
                 for (Nup.Pkg p : n.packages) s.append(s.length() == 0 ? "" : ", ").append(p.selector() != null ? p.selector() : "kind " + p.kind);
-                return new Readiness.Check("Game files", Readiness.Status.PASS, f + ": a .nup that reads and checks (" + s + ").", null);
+                return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.PASS, f + Tx.s(R.string.ready_a_nup_that_reads_and) + s + ").", null);
             } catch (IOException e) {
-                return new Readiness.Check("Game files", Readiness.Status.FAIL, f + " cannot be used: " + e.getMessage(), f.canRead() ? null : "access");
+                return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.FAIL, f + Tx.s(R.string.ready_cannot_be_used) + e.getMessage(), f.canRead() ? null : "access");
             }
         }
-        if (!f.isDirectory() || !f.canRead()) return new Readiness.Check("Game files", Readiness.Status.FAIL, f + " is not a folder this app can read.", "access");
-        if (Pack.npdmOf(f) == null) return new Readiness.Check("Game files", Readiness.Status.FAIL, f + " has no main.npdm (base/exefs/, updates/<version>/exefs/ or exefs/).", null);
-        return new Readiness.Check("Game files", Readiness.Status.PASS, f + ": a folder that reads.", null);
+        if (!f.isDirectory() || !f.canRead()) return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.FAIL, f + Tx.s(R.string.ready_is_not_a_folder_this), "access");
+        if (Pack.npdmOf(f) == null) return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.FAIL, f + Tx.s(R.string.ready_has_no_main_npdm_base), null);
+        return new Readiness.Check(Tx.s(R.string.home_game_files), Readiness.Status.PASS, f + Tx.s(R.string.ready_a_folder_that_reads), null);
     }
 
     /** The report's first lines: the build, the phone, Android, and the game when there is one */
     static String header(Context c, String game) {
-        return "nxnative readiness report: " + Prefs.buildTag(c) + "\nSigner: " + Prefs.signerId(c) + " (SHA-256 of the signing certificate, first 16 hex digits)\nPhone: " + Build.MANUFACTURER + " " + Build.MODEL + " (" + Build.SOC_MANUFACTURER + " " + Build.SOC_MODEL + "), Android "
+        return Tx.s(R.string.ready_nxnative_readiness_report) + Prefs.buildTag(c) + "\nSigner: " + Prefs.signerId(c) + Tx.s(R.string.ready_sha_256_of_the_signing) + Build.MANUFACTURER + " " + Build.MODEL + " (" + Build.SOC_MANUFACTURER + " " + Build.SOC_MODEL + "), Android "
                 + Build.VERSION.RELEASE + " (SDK " + Build.VERSION.SDK_INT + "), " + Build.SUPPORTED_ABIS[0] + (game == null ? "" : "\nGame: " + game);
     }
 
@@ -361,7 +361,7 @@ public final class ReadinessActivity extends Activity {
             rows.add(e.getKey() + "=" + AdvancedTable.redact(e.getKey(), e.getValue()[0]) + " (Advanced, " + e.getValue()[1] + ")");
         }
         if (gameOnly && rows.isEmpty()) return "";   // "none" is said once, by the first block
-        s.append("-- Settings changed from the defaults").append(titleId == null ? " (every game)" : " (this game)");
+        s.append(Tx.s(R.string.ready_settings_changed_from_the_defaults)).append(titleId == null ? " (every game)" : " (this game)");
         if (rows.isEmpty()) return s.append(": none --\n").toString();
         s.append(" (").append(rows.size()).append(") --\n");
         for (String r : rows) s.append(r).append('\n');
@@ -379,7 +379,7 @@ public final class ReadinessActivity extends Activity {
                 String t = new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
                 String first = t.contains("\n[") ? t.substring(t.indexOf("\n[") + 1) : t;
                 int end = first.indexOf("-- facts --");
-                s.append("-- last start of ").append(p.titleId).append(" (").append(DateUtils.getRelativeTimeSpanString(f.lastModified())).append(") --\n")
+                s.append(Tx.s(R.string.ready_last_start_of)).append(p.titleId).append(" (").append(DateUtils.getRelativeTimeSpanString(f.lastModified())).append(") --\n")
                         .append(end >= 0 ? first.substring(0, end) : first);
             } catch (IOException ignored) { /* left out */ }
         }
@@ -389,29 +389,29 @@ public final class ReadinessActivity extends Activity {
     private static List<Readiness.Check> phoneChecks(Context c) {
         List<Readiness.Check> l = new ArrayList<>();
         boolean arm64 = java.util.Arrays.asList(Build.SUPPORTED_64_BIT_ABIS).contains("arm64-v8a");
-        l.add(new Readiness.Check("Phone", arm64 ? Readiness.Status.PASS : Readiness.Status.FAIL,
-                Build.MANUFACTURER + " " + Build.MODEL + ", Android " + Build.VERSION.RELEASE + (arm64 ? ", 64-bit ARM" : ": not a 64-bit ARM phone, which the app needs"), null));
+        l.add(new Readiness.Check(Tx.s(R.string.ready_phone), arm64 ? Readiness.Status.PASS : Readiness.Status.FAIL,
+                Build.MANUFACTURER + " " + Build.MODEL + ", Android " + Build.VERSION.RELEASE + (arm64 ? ", 64-bit ARM" : Tx.s(R.string.ready_not_a_64_bit_arm)), null));
         ActivityManager am = c.getSystemService(ActivityManager.class);
         ActivityManager.MemoryInfo m = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(m);
-        l.add(new Readiness.Check("Memory", Readiness.Status.INFO, String.format(Locale.ROOT, "%.1f GiB as Android reports it (less than the label), %.1f GiB free now%s.",
-                m.totalMem / (double) (1L << 30), m.availMem / (double) (1L << 30), m.lowMemory ? ", which Android counts as low" : ""), null));
+        l.add(new Readiness.Check(Tx.s(R.string.ready_memory), Readiness.Status.INFO, String.format(Locale.ROOT, "%.1f GiB as Android reports it (less than the label), %.1f GiB free now%s.",
+                m.totalMem / (double) (1L << 30), m.availMem / (double) (1L << 30), m.lowMemory ? Tx.s(R.string.ready_which_android_counts_as_low) : ""), null));
         boolean access = Environment.isExternalStorageManager();
-        l.add(new Readiness.Check("All files access", access ? Readiness.Status.PASS : Readiness.Status.WARNING,   // games copied into the app (GameCopy) run without it
-                access ? "Granted." : "Not granted: the app reads .nup files picked with the file picker and dump folders copied into it, not a dump folder elsewhere "
-                        + "on the phone.", "access"));
+        l.add(new Readiness.Check(Tx.s(R.string.ready_all_files_access), access ? Readiness.Status.PASS : Readiness.Status.WARNING,   // games copied into the app (GameCopy) run without it
+                access ? "Granted." : Tx.s(R.string.ready_not_granted_the_app_reads)
+                        + Tx.s(R.string.ready_on_the_phone), "access"));
         try {
             File ext = c.getExternalFilesDir(null);
             long free = new StatFs((ext != null ? ext : c.getFilesDir()).getPath()).getAvailableBytes();
             double gb = free / 1e9;
-            l.add(new Readiness.Check("Free storage", gb >= 10 ? Readiness.Status.PASS : Readiness.Status.WARNING, String.format(Locale.ROOT, "%.1f GB free%s", gb,
-                    gb >= 10 ? "." : ": a game's pack takes several GB."), null));
+            l.add(new Readiness.Check(Tx.s(R.string.ready_free_storage), gb >= 10 ? Readiness.Status.PASS : Readiness.Status.WARNING, String.format(Locale.ROOT, "%.1f GB free%s", gb,
+                    gb >= 10 ? "." : Tx.s(R.string.ready_a_game_s_pack_takes)), null));
         } catch (IllegalArgumentException e) { /* no such folder: left out */ }
         UsageStatsManager us = c.getSystemService(UsageStatsManager.class);
-        if (am.isBackgroundRestricted()) l.add(new Readiness.Check("Battery", Readiness.Status.WARNING, "Battery use is Restricted: Android may stop the app in the background.", "app"));
+        if (am.isBackgroundRestricted()) l.add(new Readiness.Check(Tx.s(R.string.ready_battery), Readiness.Status.WARNING, Tx.s(R.string.ready_battery_use_is_restricted_android), "app"));
         else if (us != null && us.getAppStandbyBucket() == UsageStatsManager.STANDBY_BUCKET_RESTRICTED)
-            l.add(new Readiness.Check("Battery", Readiness.Status.WARNING, "The app is in Android's restricted standby group: it may be stopped in the background.", "app"));
-        else l.add(new Readiness.Check("Battery", Readiness.Status.PASS, "No restriction.", null));
+            l.add(new Readiness.Check(Tx.s(R.string.ready_battery), Readiness.Status.WARNING, Tx.s(R.string.ready_the_app_is_in_android), "app"));
+        else l.add(new Readiness.Check(Tx.s(R.string.ready_battery), Readiness.Status.PASS, Tx.s(R.string.ready_no_restriction), null));
         // The game's process (:game) as Android remembers its ends: the newest, and kills for memory in the last 7 days
         try {
             List<ApplicationExitInfo> exits = am.getHistoricalProcessExitReasons(c.getPackageName(), 0, 0);
@@ -421,20 +421,20 @@ public final class ReadinessActivity extends Activity {
                 if (lastGame == null || e.getTimestamp() > lastGame.getTimestamp()) lastGame = e;
                 if (e.getTimestamp() >= since && memoryKill(e)) { kills++; lastKill = Math.max(lastKill, e.getTimestamp()); }
             }
-            if (lastGame == null) l.add(new Readiness.Check("Last game exit", Readiness.Status.INFO, "No game has run yet.", null));
+            if (lastGame == null) l.add(new Readiness.Check(Tx.s(R.string.ready_last_game_exit), Readiness.Status.INFO, Tx.s(R.string.ready_no_game_has_run_yet), null));
             else {
                 CharSequence when = DateUtils.getRelativeTimeSpanString(lastGame.getTimestamp(), System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS);
                 int why = lastGame.getReason();
                 boolean normal = why == ApplicationExitInfo.REASON_EXIT_SELF || why == ApplicationExitInfo.REASON_USER_REQUESTED || why == ApplicationExitInfo.REASON_USER_STOPPED;
-                String what = memoryKill(lastGame) ? "stopped by Android for memory" : why == ApplicationExitInfo.REASON_CRASH || why == ApplicationExitInfo.REASON_CRASH_NATIVE ? "crashed"
-                        : why == ApplicationExitInfo.REASON_ANR ? "stopped responding" : normal ? "ended normally" : "ended (" + exitName(why) + ")";
+                String what = memoryKill(lastGame) ? Tx.s(R.string.ready_stopped_by_android_for_memory) : why == ApplicationExitInfo.REASON_CRASH || why == ApplicationExitInfo.REASON_CRASH_NATIVE ? "crashed"
+                        : why == ApplicationExitInfo.REASON_ANR ? Tx.s(R.string.ready_stopped_responding) : normal ? Tx.s(R.string.ready_ended_normally) : "ended (" + exitName(why) + ")";
                 String desc = lastGame.getDescription();
-                l.add(new Readiness.Check("Last game exit", normal ? Readiness.Status.PASS : Readiness.Status.WARNING, "The last game " + what + ", " + when + (desc != null && !desc.isEmpty() && !normal ? " (" + desc + ")" : "")
-                        + (normal ? "." : ". Settings › Share log sends its log."), null));
+                l.add(new Readiness.Check(Tx.s(R.string.ready_last_game_exit), normal ? Readiness.Status.PASS : Readiness.Status.WARNING, Tx.s(R.string.ready_the_last_game) + what + ", " + when + (desc != null && !desc.isEmpty() && !normal ? " (" + desc + ")" : "")
+                        + (normal ? "." : Tx.s(R.string.ready_settings_share_log_sends_its)), null));
             }
-            if (kills > 0) l.add(new Readiness.Check("Memory kills", Readiness.Status.WARNING, kills + (kills == 1 ? " game was" : " games were") + " stopped for memory in the last 7 days, the last "
+            if (kills > 0) l.add(new Readiness.Check(Tx.s(R.string.ready_memory_kills), Readiness.Status.WARNING, kills + (kills == 1 ? " game was" : " games were") + Tx.s(R.string.ready_stopped_for_memory_in_the)
                     + DateUtils.getRelativeTimeSpanString(lastKill, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS) + ". Close other apps before playing.", null));
-            else l.add(new Readiness.Check("Memory kills", Readiness.Status.PASS, "None in the last 7 days.", null));
+            else l.add(new Readiness.Check(Tx.s(R.string.ready_memory_kills), Readiness.Status.PASS, Tx.s(R.string.ready_none_in_the_last_7), null));
         } catch (RuntimeException e) { /* not available on this phone: left out */ }
         if (GameActivity.testApp()) {   // the test app's switches (env.txt): a report says which were on
             File env = new File(c.getExternalFilesDir(null), "env.txt");
@@ -442,7 +442,7 @@ public final class ReadinessActivity extends Activity {
             try {
                 if (env.isFile()) for (String kv : GameActivity.envLines(new String(Files.readAllBytes(env.toPath()), StandardCharsets.UTF_8))) keys.add(kv.substring(0, kv.indexOf('=')).trim());
             } catch (IOException | SecurityException e) { keys.add("(env.txt unreadable)"); }
-            l.add(new Readiness.Check("Diagnostic switches", Readiness.Status.INFO, keys.isEmpty() ? "None in env.txt." : "On in env.txt: " + String.join(", ", keys) + ".", null));
+            l.add(new Readiness.Check(Tx.s(R.string.ready_diagnostic_switches), Readiness.Status.INFO, keys.isEmpty() ? Tx.s(R.string.ready_none_in_env_txt) : Tx.s(R.string.ready_on_in_env_txt) + String.join(", ", keys) + ".", null));
         }
         return l;
     }
@@ -456,12 +456,12 @@ public final class ReadinessActivity extends Activity {
 
     private static String exitName(int reason) {
         switch (reason) {
-            case ApplicationExitInfo.REASON_SIGNALED: return "a signal";
-            case ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE: return "too many resources";
-            case ApplicationExitInfo.REASON_FREEZER: return "frozen in the background";
-            case ApplicationExitInfo.REASON_PERMISSION_CHANGE: return "a permission change";
-            case ApplicationExitInfo.REASON_DEPENDENCY_DIED: return "a dependency ended";
-            case ApplicationExitInfo.REASON_INITIALIZATION_FAILURE: return "start failed";
+            case ApplicationExitInfo.REASON_SIGNALED: return Tx.s(R.string.ready_a_signal);
+            case ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE: return Tx.s(R.string.ready_too_many_resources);
+            case ApplicationExitInfo.REASON_FREEZER: return Tx.s(R.string.ready_frozen_in_the_background);
+            case ApplicationExitInfo.REASON_PERMISSION_CHANGE: return Tx.s(R.string.ready_a_permission_change);
+            case ApplicationExitInfo.REASON_DEPENDENCY_DIED: return Tx.s(R.string.ready_a_dependency_ended);
+            case ApplicationExitInfo.REASON_INITIALIZATION_FAILURE: return Tx.s(R.string.ready_start_failed);
             default: return "reason " + reason;
         }
     }

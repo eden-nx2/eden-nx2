@@ -75,13 +75,13 @@ final class SaveUi {
     static File target(Context c, Game g) { return exports(c, g) ? appBackups(c, g) : backups(g); }
 
     /** The Manage sheet's line under Back up saves */
-    static String backupLine(Context c, Game g) { return exports(c, g) ? "As a .zip, to a place you pick" : "To " + backups(g); }
+    static String backupLine(Context c, Game g) { return exports(c, g) ? Tx.s(R.string.game_as_a_zip_to_a) : Tx.s(R.string.game_backup_to, backups(g).toString()); }
 
     private static boolean ready(MainActivity a, Game g, String what) {
         File save = Folders.save(a, g);
         if (save != null && !CopyPlan.inApp(AppStorage.root(a), save.getPath()) && a.needAccess()) return false;   // a save folder on shared storage (picked in Folders)
-        if (busy(g.titleId)) { a.error("A save backup or restore of " + g.name + " is still working."); return false; }
-        if (gameRunning(a, g)) { a.error(g.name + " is running (it holds its save): stop it first (its in-game panel › Stop the game), then " + what + ". The game may be writing its save."); return false; }
+        if (busy(g.titleId)) { a.error(Tx.s(R.string.err_save_still_working, g.name)); return false; }
+        if (gameRunning(a, g)) { a.error(Tx.s(R.string.err_game_running_holds_save, g.name, what)); return false; }
         return true;
     }
 
@@ -112,32 +112,31 @@ final class SaveUi {
     }
 
     static void backup(MainActivity a, Game g) {
-        if (!ready(a, g, "back up")) return;
+        if (!ready(a, g, Tx.s(R.string.game_back_up))) return;
         File save = Folders.save(a, g);
-        if (!hasSave(save)) { a.error(g.name + " has no save yet: nothing to back up."); return; }
+        if (!hasSave(save)) { a.error(Tx.s(R.string.err_no_save_yet, g.name)); return; }
         if (exports(a, g)) {   // the picker first: the backup is made when the user has said where its zip goes
             pendingFor = g;
             Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/zip")
                     .putExtra(Intent.EXTRA_TITLE, SaveZip.zipName(g.titleId, stamp()));
-            Toast.makeText(a, "Pick where the backup goes (a .zip)", Toast.LENGTH_LONG).show();
+            Toast.makeText(a, Tx.s(R.string.game_pick_where_the_backup_goes), Toast.LENGTH_LONG).show();
             a.startActivityForResult(i, CREATE_EXPORT);
             return;
         }
         File to = backups(g);
-        run(a, g, "Backing up " + g.name + "'s save…", () -> SaveStore.backup(save, to, stamp()), (r, err) -> {
-            if (err != null) { Ui.explain(a, "No backup made", "The save could not be backed up. It was only read, never changed.", err + "\nSave: " + save).setPositiveButton("OK", null).show(); return; }
+        run(a, g, Tx.s(R.string.game_backing_up_save, g.name), () -> SaveStore.backup(save, to, stamp()), (r, err) -> {
+            if (err != null) { Ui.explain(a, Tx.s(R.string.game_no_backup_made), Tx.s(R.string.game_the_save_could_not_be), err + "\nSave: " + save).setPositiveButton(android.R.string.ok, null).show(); return; }
             SaveStore.Backup b = (SaveStore.Backup) r;
-            Ui.explain(a, "Saves backed up", b.files + " files, " + SaveStore.size(b.bytes) + (b.device ? ", with the device save" : "") + ", checked file by file. "
-                    + "The app never deletes a backup.", b.dir.getPath()).setPositiveButton("OK", null).show();
+            Ui.explain(a, Tx.s(R.string.game_saves_backed_up), Tx.s(R.string.game_backup_summary, b.files, SaveStore.size(b.bytes), b.device ? Tx.s(R.string.game_with_the_device_save) : ""), b.dir.getPath()).setPositiveButton(android.R.string.ok, null).show();
         });
     }
 
     /** The backup made in app storage, then written as a zip to the picked document, read back and checked */
     private static void exportTo(MainActivity a, Game g, Uri doc) {
-        if (!ready(a, g, "back up")) return;
+        if (!ready(a, g, Tx.s(R.string.game_back_up))) return;
         File save = Folders.save(a, g);
         ContentResolver cr = a.getContentResolver();
-        run(a, g, "Backing up " + g.name + "'s save…", () -> {
+        run(a, g, Tx.s(R.string.game_backing_up_save, g.name), () -> {
             SaveStore.Backup b = SaveStore.backup(save, appBackups(a, g), stamp());
             try (OutputStream o = cr.openOutputStream(doc, "wt")) {
                 if (o == null) throw new IOException("the picked place gave nothing to write to");
@@ -152,14 +151,13 @@ final class SaveUi {
             return b;
         }, (r, err) -> {
             if (err != null) {
-                Ui.explain(a, "Backup not exported", "The zip could not be written or did not check out. The save was only read, never changed.", err + "\nZip: " + doc)
-                        .setPositiveButton("OK", null).show();
+                Ui.explain(a, Tx.s(R.string.game_backup_not_exported), Tx.s(R.string.game_the_zip_could_not_be), err + "\nZip: " + doc)
+                        .setPositiveButton(android.R.string.ok, null).show();
                 return;
             }
             SaveStore.Backup b = (SaveStore.Backup) r;
-            Ui.explain(a, "Saves backed up", b.files + " files, " + SaveStore.size(b.bytes) + (b.device ? ", with the device save" : "") + ", in the zip you picked, checked "
-                    + "file by file. Import save… brings it back. A copy stays in the app (Restore saves lists it).", "Zip: " + doc + "\nIn the app: " + b.dir)
-                    .setPositiveButton("OK", null).show();
+            Ui.explain(a, Tx.s(R.string.game_saves_backed_up), Tx.s(R.string.game_backup_zip_summary, b.files, SaveStore.size(b.bytes), b.device ? Tx.s(R.string.game_with_the_device_save) : ""), "Zip: " + doc + Tx.s(R.string.game_nin_the_app) + b.dir)
+                    .setPositiveButton(android.R.string.ok, null).show();
         });
     }
 
@@ -173,33 +171,33 @@ final class SaveUi {
         String[] labels = new String[l.size() + 1];
         for (int i = 0; i < l.size(); i++) {
             SaveStore.Backup b = l.get(i);
-            String from = b.source.isEmpty() ? "" : "\nfrom " + new File(b.source).getParentFile().getName() + "/" + new File(b.source).getName();
-            labels[i] = SaveStore.when(b.name) + "\n" + b.files + " files, " + SaveStore.size(b.bytes) + (b.device ? " (with the device save)" : "") + from;
+            String from = b.source.isEmpty() ? "" : "\n" + Tx.s(R.string.game_backup_from, new File(b.source).getParentFile().getName() + "/" + new File(b.source).getName());
+            labels[i] = SaveStore.when(b.name) + "\n" + Tx.s(R.string.game_files_size_device, b.files, SaveStore.size(b.bytes), b.device ? Tx.s(R.string.game_with_the_device_save) : "") + from;
         }
-        labels[l.size()] = "Import save… (a .zip or a folder)";
-        new PadFocus.Builder(a).setTitle(l.isEmpty() ? "No backups of " + g.name + " here yet" : "Restore " + g.name + "'s save from")
+        labels[l.size()] = Tx.s(R.string.game_import_save_a_zip_or);
+        new PadFocus.Builder(a).setTitle(l.isEmpty() ? Tx.s(R.string.game_no_backups_of_name, g.name) : Tx.s(R.string.game_restore_save_from, g.name))
                 .setItems(labels, (d, w) -> {
                     if (w == l.size()) importPick(a, g);
                     else confirm(a, g, l.get(w).dir, SaveStore.when(l.get(w).name), null);
                 })
-                .setNegativeButton("Cancel", null).show();
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /** Import save…: a .zip or a folder, through the system picker */
     static void importPick(MainActivity a, Game g) {
         if (!ready(a, g, "import")) return;
-        new PadFocus.Builder(a).setTitle("Import " + g.name + "'s save from")
-                .setItems(new String[] {"A .zip (from Back up saves, or a zipped save folder)", "A save folder"}, (d, w) -> {
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.game_import_save_from, g.name))
+                .setItems(new String[] {Tx.s(R.string.game_a_zip_from_back_up), Tx.s(R.string.game_a_save_folder)}, (d, w) -> {
                     pendingFor = g;
                     if (w == 0) {
                         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
                         a.startActivityForResult(i, PICK_IMPORT_ZIP);
                     } else {
-                        Toast.makeText(a, "Pick the save folder (the one that holds the save's files)", Toast.LENGTH_LONG).show();
+                        Toast.makeText(a, Tx.s(R.string.game_pick_the_save_folder_the), Toast.LENGTH_LONG).show();
                         a.startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), PICK_IMPORT_DIR);
                     }
                 })
-                .setNegativeButton("Cancel", null).show();
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /** MainActivity.onActivityResult: the documents of Back up saves (export) and Import save… */
@@ -218,7 +216,7 @@ final class SaveUi {
         if (!ready(a, g, "import")) return;
         ContentResolver cr = a.getContentResolver();
         File base = new File(AppStorage.root(a), "save-import"), st = new File(base, stamp());
-        run(a, g, "Reading the save…", () -> {
+        run(a, g, Tx.s(R.string.game_reading_the_save), () -> {
             SaveStore.deleteTree(base);   // an import left there when its question was cancelled
             if (tree) copyTree(cr, doc, new File(st, name(cr, DocumentsContract.buildDocumentUriUsingTree(doc, DocumentsContract.getTreeDocumentId(doc)), "save")));
             else try (InputStream in = cr.openInputStream(doc)) {
@@ -229,10 +227,10 @@ final class SaveUi {
         }, (r, err) -> {
             if (err != null) {
                 SaveStore.deleteTree(st);
-                Ui.explain(a, "Not imported", "That " + (tree ? "folder" : "zip") + " could not be read as a save. Nothing was changed.", err + "\n" + doc).setPositiveButton("OK", null).show();
+                Ui.explain(a, Tx.s(R.string.game_not_imported), tree ? Tx.s(R.string.game_folder_not_a_save) : Tx.s(R.string.game_zip_not_a_save), err + "\n" + doc).setPositiveButton(android.R.string.ok, null).show();
                 return;
             }
-            confirm(a, g, (File) r, tree ? "the picked folder" : "the picked zip", () -> SaveStore.deleteTree(st));
+            confirm(a, g, (File) r, tree ? Tx.s(R.string.game_the_picked_folder) : Tx.s(R.string.game_the_picked_zip), () -> SaveStore.deleteTree(st));
         });
     }
 
@@ -266,7 +264,7 @@ final class SaveUi {
                 try (InputStream in = cr.openInputStream(DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0))); OutputStream o = new FileOutputStream(f)) {
                     if (in == null) throw new IOException("cannot open " + n);
                     for (int k; (k = in.read(buf)) > 0; ) {
-                        if ((left[1] -= k) < 0) throw new IOException("the folder holds more than " + (SaveZip.MAX_BYTES >> 30) + " GiB: it is not a save");
+                        if ((left[1] -= k) < 0) throw new IOException("the folder holds more than " + (SaveZip.MAX_BYTES >> 30) + Tx.s(R.string.game_gib_it_is_not_a));
                         o.write(buf, 0, k);
                     }
                 }
@@ -277,23 +275,21 @@ final class SaveUi {
     private static void confirm(MainActivity a, Game g, File from, String what, Runnable after) {
         File save = Folders.save(a, g);
         String why = SaveStore.refuseSource(from, save);
-        if (why != null) { if (after != null) after.run(); a.error("Not restored: " + why + "."); return; }
+        if (why != null) { if (after != null) after.run(); a.error(Tx.s(R.string.err_not_restored, why)); return; }
         String st = stamp();
         File to = target(a, g);
-        Ui.confirmDanger(a, "Restore " + g.name + "'s save?", "Your current save is replaced with " + what + ". It is backed up first (checked), so Restore "
-                + "saves… can undo this. No backup is deleted.\n\nSave: " + save + "\nBackup of it: " + new File(to, st + SaveStore.BEFORE_RESTORE),
-                "Restore", () -> {
+        Ui.confirmDanger(a, Tx.s(R.string.game_restore_save_question, g.name), Tx.s(R.string.game_restore_save_message, what, save.toString(), new File(to, st + SaveStore.BEFORE_RESTORE).toString()),
+                Tx.s(R.string.game_restore), () -> {
                     if (!ready(a, g, "restore")) { if (after != null) after.run(); return; }
-                    run(a, g, "Restoring " + g.name + "'s save…", () -> SaveStore.restore(from, save, to, st), (r, err) -> {
+                    run(a, g, Tx.s(R.string.game_restoring_save, g.name), () -> SaveStore.restore(from, save, to, st), (r, err) -> {
                         if (after != null) after.run();
                         if (err != null) {
-                            Ui.explain(a, "Not restored", "The save is as it was" + (SaveStore.pending(save) ? ", but for a swap that finishes at the next backup, restore or game start" : "")
-                                    + ".", err + "\nSave: " + save).setPositiveButton("OK", null).show();
+                            Ui.explain(a, Tx.s(R.string.game_not_restored), SaveStore.pending(save) ? Tx.s(R.string.game_save_as_it_was_but_swap) : Tx.s(R.string.game_save_as_it_was), err + "\nSave: " + save).setPositiveButton(android.R.string.ok, null).show();
                             return;
                         }
                         SaveStore.Restored x = (SaveStore.Restored) r;
-                        Toast.makeText(a, "Restored " + x.now.files + " files (" + SaveStore.size(x.now.bytes) + (x.parts.contains(SaveStore.DEVICE) ? ", with the device save" : "") + ")"
-                                + (x.before != null ? "; the old save is in " + x.before.dir : ""),
+                        Toast.makeText(a, Tx.s(R.string.game_restored_files, x.now.files, SaveStore.size(x.now.bytes), x.parts.contains(SaveStore.DEVICE) ? Tx.s(R.string.game_with_the_device_save) : "")
+                                + (x.before != null ? Tx.s(R.string.game_the_old_save_is_in, x.before.dir.toString()) : ""),
                                 Toast.LENGTH_LONG).show();
                     });
                 });

@@ -53,7 +53,7 @@ final class GameUpscaler {
         if (s == null) Prefs.of(c).edit().remove(Prefs.gameKey("ndsr_sharp", titleId)).commit(); else Prefs.of(c).edit().putFloat(Prefs.gameKey("ndsr_sharp", titleId), s).commit();
         push(c, titleId);
     }
-    static String sharpName(float s) { for (int i = 0; i < SHARPS.length; i++) if (SHARPS[i] == s) return SHARP_NAMES[i]; return SHARP_NAMES[0]; }
+    static String sharpName(float s) { for (int i = 0; i < SHARPS.length; i++) if (SHARPS[i] == s) return Tx.arr(R.array.arr_fsr_sharp)[i]; return Tx.arr(R.array.arr_fsr_sharp)[0]; }
     static String sharpName(Context c, String titleId) { return sharpName(sharp(c, titleId)); }
     static int sharpIndex(float s) { for (int i = 0; i < SHARPS.length; i++) if (SHARPS[i] == s) return i; return 0; }
 
@@ -72,11 +72,11 @@ final class GameUpscaler {
         push(c, titleId);
     }
 
-    // A game on the DLSS stand-in: its Upscaler row is the stand-in's mode (DlssTune.MODE_NAMES), stored per game only (no main-screen default: no other game has the stand-in)
+    // A game on the DLSS stand-in: its Upscaler row is the stand-in's mode (Tx.arr(R.array.arr_dlss_modes)), stored per game only (no main-screen default: no other game has the stand-in)
     static boolean ownDlssMode(Context c, String titleId) { return Prefs.of(c).contains(Prefs.gameKey("dlss_mode", titleId)); }
     static int dlssMode(Context c, String titleId) {   // the game's own, else the recommended one (Prefs.recommended), else the stand-in's default
         int r = Recommend.index(Recommend.DLSS_MODES, Prefs.rec(c, titleId, Recommend.UPSCALER)), d = r >= 0 ? r : DlssTune.MODE_DEFAULT;
-        return DlssTune.clamp(Prefs.of(c).getInt(Prefs.gameKey("dlss_mode", titleId), d), DlssTune.MODE_NAMES.length, d);
+        return DlssTune.clamp(Prefs.of(c).getInt(Prefs.gameKey("dlss_mode", titleId), d), Tx.arr(R.array.arr_dlss_modes).length, d);
     }
     static void dlssMode(Context c, String titleId, Integer v) {
         if (v == null) Prefs.of(c).edit().remove(Prefs.gameKey("dlss_mode", titleId)).commit(); else Prefs.of(c).edit().putInt(Prefs.gameKey("dlss_mode", titleId), v).commit();
@@ -120,16 +120,16 @@ final class GameUpscaler {
     static void rows(Context c, String titleId, LinearLayout box) {
         if (Prefs.dlssGame(titleId)) { dlssRows(c, titleId, box); return; }
         TextView head = new TextView(c);
-        head.setText("Upscaler");
+        head.setText(Tx.s(R.string.common_upscaler));
         head.setPadding(0, 24, 0, 0);
         box.addView(head);
         RadioGroup g = new RadioGroup(c);
         for (int i = 0; i < MODES.length; i++) { RadioButton b = new RadioButton(c); b.setText(MODES[i]); b.setId(3100 + i); g.addView(b); if (i == mode(c, titleId)) b.setChecked(true); }
         box.addView(g);
-        TextView l = new TextView(c); l.setText("FSR sharpness"); box.addView(l);
+        TextView l = new TextView(c); l.setText(Tx.s(R.string.common_fsr_sharpness)); box.addView(l);
         RadioGroup s = new RadioGroup(c);
         s.setOrientation(LinearLayout.HORIZONTAL);
-        for (int i = 0; i < SHARPS.length; i++) { RadioButton b = new RadioButton(c); b.setText(SHARP_NAMES[i]); b.setId(3200 + i); s.addView(b); if (SHARPS[i] == sharp(c, titleId)) b.setChecked(true); }
+        for (int i = 0; i < SHARPS.length; i++) { RadioButton b = new RadioButton(c); b.setText(Tx.arr(R.array.arr_fsr_sharp)[i]); b.setId(3200 + i); s.addView(b); if (SHARPS[i] == sharp(c, titleId)) b.setChecked(true); }
         s.setOnCheckedChangeListener((gr, id) -> sharp(c, titleId, SHARPS[id - 3200]));
         box.addView(s);
         Runnable shown = () -> { int v = mode(c, titleId) == MODE_FSR ? android.view.View.VISIBLE : android.view.View.GONE; l.setVisibility(v); s.setVisibility(v); };
@@ -140,18 +140,18 @@ final class GameUpscaler {
     /** A game on the DLSS stand-in: "Upscaler" (the stand-in's mode) with Motion clarity and Temporal sharpness under GSR 2, the sharpness alone ("FSR sharpness") under FSR 1. Each applied at once */
     private static void dlssRows(Context c, String titleId, LinearLayout box) {
         TextView head = new TextView(c);
-        head.setText("Upscaler");
+        head.setText(Tx.s(R.string.common_upscaler));
         head.setPadding(0, 24, 0, 0);
         box.addView(head);
         RadioGroup g = new RadioGroup(c);
-        for (int i = 0; i < DlssTune.MODE_NAMES.length; i++) { RadioButton b = new RadioButton(c); b.setText(DlssTune.MODE_NAMES[i]); b.setId(3300 + i); g.addView(b); if (i == dlssMode(c, titleId)) b.setChecked(true); }
+        for (int i = 0; i < Tx.arr(R.array.arr_dlss_modes).length; i++) { RadioButton b = new RadioButton(c); b.setText(Tx.arr(R.array.arr_dlss_modes)[i]); b.setId(3300 + i); g.addView(b); if (i == dlssMode(c, titleId)) b.setChecked(true); }
         box.addView(g);
         TextView clHead = new TextView(c); box.addView(clHead);
-        android.view.View cl = StepSlider.view(c, "Motion clarity", DlssTune.clarityNames(), clarity(c, titleId), GameSettings.CLARITY_LEFT, GameSettings.CLARITY_RIGHT,
+        android.view.View cl = StepSlider.view(c, Tx.s(R.string.game_motion_clarity), DlssTune.clarityNames(), clarity(c, titleId), GameSettings.CLARITY_LEFT, GameSettings.CLARITY_RIGHT,
                                                clHead::setText, i -> clarity(c, titleId, i));
         box.addView(cl);
         TextView shHead = new TextView(c); box.addView(shHead);
-        android.view.View sh = StepSlider.view(c, DlssTune.sharpTitle(dlssMode(c, titleId)), DlssTune.sharpNames(), dlssSharp(c, titleId), "Softer", "Sharper",
+        android.view.View sh = StepSlider.view(c, DlssTune.sharpTitle(dlssMode(c, titleId)), DlssTune.sharpNames(), dlssSharp(c, titleId), Tx.s(R.string.game_softer), Tx.s(R.string.game_sharper),
                                                t -> shHead.setText(DlssTune.sharpTitle(dlssMode(c, titleId)) + t.substring(t.indexOf(':'))), i -> dlssSharp(c, titleId, i));
         box.addView(sh);
         Runnable shown = () -> {

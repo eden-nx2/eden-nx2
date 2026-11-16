@@ -21,6 +21,10 @@ final class Prefs {
     static boolean overlay(Context c) { return of(c).getBoolean("overlay", true); }
     static void overlay(Context c, boolean on) { of(c).edit().putBoolean("overlay", on).commit(); }
 
+    /** Home's tile order the player chose (GameOrder: game ids, one per line); empty: the order the games were added in */
+    static java.util.List<String> gameOrder(Context c) { return GameOrder.decode(of(c).getString("game_order", "")); }
+    static void gameOrder(Context c, java.util.List<String> ids) { of(c).edit().putString("game_order", GameOrder.encode(ids)).commit(); }
+
     /** The bananas popped on the launcher's background (BananaBackgroundView), all time; shown in Settings › About */
     static long bananasPopped(Context c) { return of(c).getLong("bananas_popped", 0); }
     static long addBananaPopped(Context c) { long n = bananasPopped(c) + 1; of(c).edit().putLong("bananas_popped", n).commit(); return n; }
@@ -29,12 +33,24 @@ final class Prefs {
     static boolean overlayItem(Context c, String key) { return of(c).getBoolean("overlay_" + key, true); }
     static void overlayItem(Context c, String key, boolean on) { of(c).edit().putBoolean("overlay_" + key, on).commit(); }
 
+    /**
+     * The "Building shaders (N)" label over the game (LayerStatus.shown): Off, the count alone (default: tiny, it says the game is still filling its shaders and no more), or the full words.
+     * A build that is paused (hot phone, low battery, full storage) is always said, in every choice. A choice made before this setting existed (the Overlay's old "shaders" item switched
+     * off) reads as Off. Hiding the label never stops the build
+     */
+    static int layerLabel(Context c) {
+        android.content.SharedPreferences p = of(c);
+        if (!p.contains("layer_label")) return p.getBoolean("overlay_shaders", true) ? LayerStatus.LABEL_NUMBER : LayerStatus.LABEL_OFF;
+        return Math.max(LayerStatus.LABEL_OFF, Math.min(LayerStatus.LABEL_FULL, p.getInt("layer_label", LayerStatus.LABEL_NUMBER)));
+    }
+    static void layerLabel(Context c, int v) { of(c).edit().putInt("layer_label", v).commit(); }
+
     /** The game's window size (Game resolution): DM_WINDOW_SIZE for the host (loader.c window_apply), "1920x1080" (Phone 1080p, the default), "original" (the game's own, 2880x1620 in Donkey Kong Bananza), "1280x720" (Phone 720p: less GPU time a frame), "2560x1440" (Phone 1440p: for QHD screens), "960x540" (Phone 540p: for weaker GPUs) or "848x480" (Phone 480p). DM_WINDOW_SIZE in env.txt overrides it for a run.
      *  A game whose profile has graphics_scale rows gets the graphics scale and operation mode that give the size instead (Profile.resolutionEnv).
      *  Listed from the largest. The stored value is the size itself, so the order can change; the default is WINDOW_DEFAULT. */
     static final String[] WINDOWS = {"original", "2560x1440", "1920x1080", "1280x720", "960x540", "848x480"},
-            WINDOW_NAMES = {"Original (the game's own size)", "Phone 1440p (2560x1440)", "Phone 1080p (1920x1080)", "Phone 720p (1280x720)", "Phone 540p (960x540)", "Phone 480p (848x480)"},
-            WINDOW_SHORT = {"Original", "1440p", "1080p", "720p", "540p", "480p"};
+            WINDOW_NAMES = {Tx.s(R.string.game_original_the_game_s_own), Tx.s(R.string.game_phone_1440p_2560x1440), Tx.s(R.string.game_phone_1080p_1920x1080), Tx.s(R.string.game_phone_720p_1280x720), Tx.s(R.string.game_phone_540p_960x540), Tx.s(R.string.game_phone_480p_848x480)},
+            WINDOW_SHORT = {Tx.s(R.string.game_original), "1440p", "1080p", "720p", "540p", "480p"};
     static final String WINDOW_DEFAULT = "1920x1080";   // Phone 1080p
     /** A window size's name in the lists, its short name for a settings row (short); the value itself when it is none of WINDOWS (an env.txt-style size) */
     static String windowName(String v, boolean shortName) {
@@ -52,6 +68,11 @@ final class Prefs {
     static void rumbleDefault(Context c, boolean on) { of(c).edit().putBoolean("rumble", on).commit(); }
     static boolean rumble(Context c, String titleId) { return of(c).getBoolean(gameKey("rumble", titleId), rumble(c)); }
     static void rumble(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("rumble", titleId), on).commit(); }
+    static boolean ownRumble(Context c, String titleId) { return of(c).contains(gameKey("rumble", titleId)); }
+    /** null: back to the default (the main screen's value) */
+    static void rumbleOwn(Context c, String titleId, Boolean on) {
+        if (on == null) of(c).edit().remove(gameKey("rumble", titleId)).commit(); else rumble(c, titleId, on);
+    }
     /** Use fast cores (Native.pinThreads): the main screen's default (off: not measured yet, and it may work against the ADPF hint session of vka_perf.c), then each game's own */
     static boolean pinThreads(Context c) { return of(c).getBoolean("pin_threads", false); }
     static void pinThreadsDefault(Context c, boolean on) { of(c).edit().putBoolean("pin_threads", on).commit(); }
@@ -68,7 +89,7 @@ final class Prefs {
     static void xboxButtons(Context c, String titleId, Integer v) {
         if (v == null) of(c).edit().remove(gameKey("xbox_buttons", titleId)).commit(); else of(c).edit().putInt(gameKey("xbox_buttons", titleId), v).commit();
     }
-    static String xboxLabel(int v) { return XBOX_NAMES[v]; }
+    static String xboxLabel(int v) { return Tx.arr(R.array.arr_xbox)[v]; }
     /** The in-game panel's Player 1 (PadOrder): the chosen gamepad's InputDevice descriptor, for every game; "" = automatic */
     static String padFirst(Context c) { return of(c).getString("pad_first", ""); }
     static void padFirst(Context c, String key) { of(c).edit().putString("pad_first", key == null ? "" : key).commit(); }
@@ -86,6 +107,13 @@ final class Prefs {
     static final String[] ROTATION_NAMES = {"Landscape", "Automatic"};
     static boolean rotationAuto(Context c) { return of(c).getBoolean("rotation_auto", false); }
     static void rotationAuto(Context c, boolean on) { of(c).edit().putBoolean("rotation_auto", on).commit(); }
+    /** A game's own value if it has one, else the main screen's */
+    static boolean rotationAuto(Context c, String titleId) { return of(c).getBoolean(gameKey("rotation_auto", titleId), rotationAuto(c)); }
+    static boolean ownRotationAuto(Context c, String titleId) { return of(c).contains(gameKey("rotation_auto", titleId)); }
+    /** null: back to the default */
+    static void rotationAuto(Context c, String titleId, Boolean on) {
+        if (on == null) of(c).edit().remove(gameKey("rotation_auto", titleId)).commit(); else of(c).edit().putBoolean(gameKey("rotation_auto", titleId), on).commit();
+    }
     static final String[] DISPLAY_NAMES = {"Fit (keep aspect)", "Stretch to screen"};
     static boolean stretch(Context c, String titleId) { return of(c).getBoolean(gameKey("stretch", titleId), false); }
     static void stretch(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("stretch", titleId), on).commit(); }
@@ -99,6 +127,13 @@ final class Prefs {
     /** Settings › Controller: in-game panel (PadPanel.OPEN_*): how a controller opens and closes the in-game panel, for every game; Home, or − and + held, by default */
     static int panelPad(Context c) { return PadPanel.open(of(c).getInt("panel_pad", PadPanel.OPEN_BOTH)); }
     static void panelPad(Context c, int v) { of(c).edit().putInt("panel_pad", PadPanel.open(v)).commit(); }
+    /** A game's own value if it has one, else the main screen's */
+    static int panelPad(Context c, String titleId) { return PadPanel.open(of(c).getInt(gameKey("panel_pad", titleId), panelPad(c))); }
+    static boolean ownPanelPad(Context c, String titleId) { return of(c).contains(gameKey("panel_pad", titleId)); }
+    /** null: back to the default */
+    static void panelPad(Context c, String titleId, Integer v) {
+        if (v == null) of(c).edit().remove(gameKey("panel_pad", titleId)).commit(); else of(c).edit().putInt(gameKey("panel_pad", titleId), PadPanel.open(v)).commit();
+    }
     /** The one-time hint over the game that says how the panel opens (GameActivity.panelHint), once it has been shown */
     static boolean panelHinted(Context c) { return of(c).getBoolean("panel_hint", false); }
     static void panelHinted(Context c, boolean v) { of(c).edit().putBoolean("panel_hint", v).commit(); }
@@ -108,9 +143,15 @@ final class Prefs {
      *  The limit is one of PACE_CAPS: 0 = 60 fps (the game's fastest rate, where the measured rate is clamped), or at most that many frames a second (paceOf) */
     static final int[] PACE_CAPS = {0, 45, 40, 30, 20};   // saved as the rate itself (fps_cap), not an index: 20 was added last, the others keep their meaning
     static boolean paced(String titleId) { Profile p = Profile.of(titleId); return p != null && p.decoupled; }
+    /** Games that count frames and keep their speed by skipping late frames' presents through their own draw flag (fps_decouple skip: dm/host/android/mtf_speed.c). No frame
+     *  limit and no change to presentation: the game's own interval holds a shown frame for the frames skipped before it */
+    static boolean frameSkip(String titleId) { Profile p = Profile.of(titleId); return p != null && p.frameSkip; }
+    /** Games that show Full game speed at low frame rates (decouple): the paced ones and the frame-skip ones */
+    static boolean fullSpeed(String titleId) { return paced(titleId) || frameSkip(titleId); }
     /** Games the host's frame limiter caps (hle_fpslock.c fps_limit_wait, DM_FPS_LIMIT): the paced ones, and those whose profile sets a default limit (game.tsv fps_limit, a game
      *  with no limiter of its own the host can write). Both get a frame limit (PACE_CAPS) in place of 60 / 30 / 20 locking */
-    /** Full game speed at low frame rates (per game, default on), for paced games: sead's controller hands the game the measured frame rate (hle_fpslock.c sead_rate).
+    /** Full game speed at low frame rates (per game, default on), for paced games: sead's controller hands the game the measured frame rate (hle_fpslock.c sead_rate); for frame-skip
+     *  games: frames behind real time are not presented (mtf_speed.c).
      *  Off: the game's own 60 / interval, as on the console (DM_FPS_DECOUPLE=0 at start, Native.decoupleSet while it runs). Game settings and the in-game panel share it */
     static boolean decouple(Context c, String titleId) { return of(c).getBoolean(gameKey("decouple", titleId), true); }
     static void decouple(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("decouple", titleId), on).commit(); }
@@ -130,14 +171,14 @@ final class Prefs {
     static void gameOption(Context c, String titleId, String env, boolean on) { of(c).edit().putBoolean(gameKey("opt_" + env, titleId), on).commit(); }
     static boolean hold60(Context c, String titleId) { return of(c).getBoolean(gameKey("hold60", titleId), Recommend.bool(rec(c, titleId, Recommend.HOLD60), false)); }
     static void hold60(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("hold60", titleId), on).commit(); }
-    static final String HOLD60_TEXT = "Off: the game drops to 30 fps when it cannot keep 60, as on the console. On: the game always runs its 60 fps mode and Banana Native does not hold frames, so it never drops to 30; the frame rate is less even and the game runs a little slower while under 60. Only with the 60 fps cap";
+    static String HOLD60_TEXT() { return Tx.s(R.string.game_hold60_text); }
     static boolean limited(String titleId) { Profile p = Profile.of(titleId); return p != null && (p.decoupled || p.fpsLimit > 0); }
     /** The profile's default frame limit (game.tsv fps_limit), 0 without one */
     static int profileLimit(String titleId) { Profile p = Profile.of(titleId); return p == null ? 0 : p.fpsLimit; }
     /** A saved cap as one of PACE_CAPS: the highest at or below it, 20 below that (the main screen's 15 for the other games). Since 20 was added a saved 20 or 15 (only the main
      *  screen's default can be one) is 20 fps here, where it was 30 */
     static int paceOf(int v) { return v <= 0 || v >= 60 ? 0 : v >= 45 ? 45 : v >= 40 ? 40 : v >= 30 ? 30 : 20; }
-    static String paceLabel(int v) { return (v <= 0 ? 60 : v) + " fps"; }   // 0 is 60: the game's own fastest rate, where the decoupling's rate is clamped
+    static String paceLabel(int v) { return Tx.s(R.string.game_n_fps, v <= 0 ? 60 : v); }   // 0 is 60: the game's own fastest rate, where the decoupling's rate is clamped
     /** A limited game's cap as saved, without capOf (which turns 45 and 40 into 30 for the other games): its own, else its profile's fps_limit, else the main screen's default, as one of PACE_CAPS */
     static int paceCap(Context c, String titleId) {
         int pl = profileLimit(titleId);
@@ -263,7 +304,7 @@ final class Prefs {
         if (setting.equals(Recommend.UPSCALER)) {
             boolean dl = dlssGame(titleId);
             int i = Recommend.index(dl ? Recommend.DLSS_MODES : Recommend.UPSCALERS, v);
-            String n = i < 0 ? v : (dl ? DlssTune.MODE_NAMES : GameUpscaler.MODES)[i];
+            String n = i < 0 ? v : (dl ? Tx.arr(R.array.arr_dlss_modes) : Tx.arr(R.array.arr_upscaler_modes))[i];
             return n.contains(" (") ? n.substring(0, n.indexOf(" (")) : n;
         }
         if (setting.equals(Recommend.DRS)) { int i = Recommend.index(Recommend.DRS_VALUES, v); return i < 0 ? v : DRS_NAMES[i]; }
@@ -292,9 +333,9 @@ final class Prefs {
      *  always up to 100 %; {100, 100} is off: the full size and no upscaling. Stored as an index into DRS, the main screen's default then each game's own */
     static boolean drsGame(String titleId) { Profile p = Profile.of(titleId); return p != null && p.drs; }
     /** A game whose DLSS runs on the host's GSR2 stand-in (game.tsv dlss_standin): its Upscaler row in Game settings and the in-game panel offers the stand-in's modes, with Motion clarity and Temporal sharpness (GameUpscaler, DlssTune) */
-    /** Whether this game's frame limit only paces the presents (game.tsv fps_limit_present): the cap screens add PRESENT_ONLY_NOTE */
+    /** Whether this game's frame limit only paces the presents (game.tsv fps_limit_present): the cap screens add PRESENT_ONLY_NOTE() */
     static boolean presentOnly(String titleId) { Profile p = Profile.of(titleId); return p != null && p.presentOnly; }
-    static final String PRESENT_ONLY_NOTE = "Experimental for this game: the cap only limits how often the picture is shown, not the game itself. Expect bugs (for example the game running slower or faster).";
+    static String PRESENT_ONLY_NOTE() { return Tx.s(R.string.game_present_only_note); }
     static boolean dlssGame(String titleId) { Profile p = Profile.of(titleId); return p != null && p.dlss; }
     static final int[][] DRS = {{100, 100}, {80, 100}, {70, 100}, {60, 100}, {50, 100}, {40, 100}, {30, 100}};   // 30 %: the game's rate table stops at 3x (640x360 at 1080p)
     static final String[] DRS_NAMES = {"Off", "80%", "70%", "60%", "50%", "40%", "30%"};   // the lowest render size, as % of the window (always up to 100 %)
@@ -493,7 +534,30 @@ final class Prefs {
     static String gameLang(Context c, String titleId) { return of(c).getString(gameKey("lang", titleId), null); }
     static void gameLang(Context c, String titleId, String code) { put(c, gameKey("lang", titleId), code); }
 
+    /** The optional shader update's row (GameSettings) was dismissed for this game at this shader library version (BuildConfig.NX_DMSH_VK_CHAIN): it comes back with the next version */
+    static boolean shaderUpdateDismissed(Context c, String titleId, String chain) { return chain.equals(of(c).getString(gameKey("shader_update_dismissed", titleId), "")); }
+    static void dismissShaderUpdate(Context c, String titleId, String chain) { put(c, gameKey("shader_update_dismissed", titleId), chain); }
+    /** The folded row opened again (GameSettings: a tap on "Shaders: built while playing") */
+    static void undismissShaderUpdate(Context c, String titleId) { put(c, gameKey("shader_update_dismissed", titleId), null); }
+
     static String gameEnv(Context c, String titleId) { return of(c).getString(gameKey("env", titleId), ""); }
+
+    /**
+     * Game settings › Shaders while playing (on by default; the game page's shaders row and its Advanced section; Settings › Advanced links DM_VK_LAYER here): off gives
+     * the host DM_VK_LAYER=0 (GameActivity), so nothing is built while the game runs, and a game with no shader library is then held back from Play as before (Shaders needed)
+     */
+    static boolean layerBuild(Context c, String titleId) { return of(c).getBoolean(gameKey("layer_build", titleId), true); }
+    static void layerBuild(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("layer_build", titleId), on).commit(); }
+
+    /** The game's own lines as the shader layer's rules read them (ShaderLibs.layerCovers): with DM_VK_LAYER=0 added while {@link #layerBuild} is off */
+    static String layerEnv(Context c, String titleId) {
+        String e = gameEnv(c, titleId);
+        return layerBuild(c, titleId) ? e : (e.isEmpty() ? "" : e + "\n") + "DM_VK_LAYER=0";
+    }
+
+    /** The one-time explanation at the first start of a game that builds its shaders as it plays (MainActivity.launch) was shown */
+    static boolean layerExplained(Context c, String titleId) { return of(c).getBoolean(gameKey("layer_explained", titleId), false); }
+    static void markLayerExplained(Context c, String titleId) { of(c).edit().putBoolean(gameKey("layer_explained", titleId), true).commit(); }
     static void gameEnv(Context c, String titleId, String text) { put(c, gameKey("env", titleId), text == null || text.trim().isEmpty() ? null : text.trim()); }
 
     private static void put(Context c, String key, String v) {
@@ -575,4 +639,20 @@ final class Prefs {
      *  shipped (16:9). GameActivity passes DM_PATCH_VARIANT=<variant> and DM_VK_PICTURE_ASPECT=<label>; the pack holds both versions (pack_android.py rewrite_variants) */
     static String aspect(Context c, String titleId) { return of(c).getString(gameKey("aspect", titleId), null); }
     static void aspect(Context c, String titleId, String label) { put(c, gameKey("aspect", titleId), label); }
+
+    // ---- Look: theme, background, UI sounds (Settings › Appearance) ----
+    static final String[] THEME_NAMES = {"Follow the system", "Light", "Dark"};
+    static final String[] BACKGROUND_NAMES = {"Bananas", "Plain", "My picture"};
+    /** The launcher's theme: 0 follows the system, 1 light, 2 dark (NxApp.applyTheme) */
+    static int theme(Context c) { return of(c).getInt("ui_theme", 0); }
+    static void theme(Context c, int v) { of(c).edit().putInt("ui_theme", v).commit(); }
+    /** The launcher's background: 0 drifting bananas (the default), 1 plain, 2 the user's picture (UiLook.backgroundFile) */
+    static int background(Context c) { return of(c).getInt("ui_background", 0); }
+    static void background(Context c, int v) { of(c).edit().putInt("ui_background", v).commit(); }
+    /** The launcher's click and focus sounds (UiSound); on by default */
+    static boolean uiSounds(Context c) { return of(c).getBoolean("ui_sounds", true); }
+    static void uiSounds(Context c, boolean on) { of(c).edit().putBoolean("ui_sounds", on).commit(); }
+    /** Test builds: Home shows sample games (MainActivity.refreshDemo) */
+    static boolean demoGames(Context c) { return of(c).getBoolean("demo_games", false); }
+    static void demoGames(Context c, boolean on) { of(c).edit().putBoolean("demo_games", on).commit(); }
 }

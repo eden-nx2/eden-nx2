@@ -34,6 +34,9 @@ final class Game implements GameList.View {
     }
 
     @Override public String titleId() { return titleId; }
+
+    /** The game's place in Home's order (GameOrder): its title ID and pack, never its position in the list */
+    String orderId() { return GameOrder.id(titleId, packDir); }
     @Override public String gameDir() { return gameDir; }
     @Override public long used() { return used; }
 
@@ -174,7 +177,8 @@ final class Game implements GameList.View {
             if (!p.titleId.equalsIgnoreCase(g.titleId) || p.unfinishedModule() != null) return false;
             if (!BuildCheck.build(p, new File(g.gameDir)).ok()) return false;
             File pd = new File(g.packDir);
-            return Pack.libraryProblem(pd, g.titleId) == null || Pack.playableLibrary(pd, g.titleId) != null || Pack.legacyLibrary(pd, g.titleId) != null;
+            return Pack.libraryProblem(pd, g.titleId) == null || Pack.playableLibrary(pd, g.titleId) != null || Pack.legacyLibrary(pd, g.titleId) != null
+                    || Pack.shadersOnDemand(pd, g.titleId, null);   // (no context here for the player's lines: a layer switched off by them is not seen; only the merge's preference)
         } catch (IOException | RuntimeException | OutOfMemoryError e) {
             return false;
         }

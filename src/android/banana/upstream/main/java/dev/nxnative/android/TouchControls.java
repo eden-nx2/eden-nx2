@@ -125,6 +125,18 @@ final class TouchControls extends View {
     /** The "On-screen controls" setting, kept for every game: Auto (hidden while a gamepad is connected), On or Off */
     static int mode(Context c) { int m = Prefs.open(c, "touch_controls").getInt("mode", MODE_AUTO); return m >= 0 && m < MODE_NAMES.length ? m : MODE_AUTO; }
     static void mode(Context c, int m) { Prefs.open(c, "touch_controls").edit().putInt("mode", m).commit(); }
+    /** A game's own mode if it has one, else the main screen's (key mode@<title ID>, same file) */
+    static int mode(Context c, String titleId) {
+        int m = Prefs.open(c, "touch_controls").getInt(Prefs.gameKey("mode", titleId), mode(c));
+        return m >= 0 && m < MODE_NAMES.length ? m : mode(c);
+    }
+    static boolean ownMode(Context c, String titleId) { return Prefs.open(c, "touch_controls").contains(Prefs.gameKey("mode", titleId)); }
+    /** null: back to the default */
+    static void mode(Context c, String titleId, Integer m) {
+        android.content.SharedPreferences.Editor e = Prefs.open(c, "touch_controls").edit();
+        if (m == null) e.remove(Prefs.gameKey("mode", titleId)); else e.putInt(Prefs.gameKey("mode", titleId), m);
+        e.commit();
+    }
     /** Settings › Show / hide button: the small button at the top centre that shows or hides the controls (on by default), for every game */
     static boolean toggleButton(Context c) { return Prefs.open(c, "touch_controls").getBoolean("button", true); }
     static void toggleButton(Context c, boolean on) { Prefs.open(c, "touch_controls").edit().putBoolean("button", on).commit(); }
@@ -347,10 +359,10 @@ final class TouchControls extends View {
     /** The picture's position on this screen (the in-game panel's Picture rows): Top / Centre / Bottom of the free space */
     void positionRows(Context ctx, LinearLayout box) {
         TextView t = new TextView(ctx);
-        t.setText("Position (this screen)");
+        t.setText(Tx.s(dev.nxnative.android.R.string.game_position_this_screen));
         android.widget.RadioGroup rg = new android.widget.RadioGroup(ctx);
         rg.setOrientation(LinearLayout.HORIZONTAL);
-        String[] names = {"Top", "Centre", "Bottom"};
+        String[] names = {Tx.s(dev.nxnative.android.R.string.game_top), Tx.s(dev.nxnative.android.R.string.game_centre), Tx.s(dev.nxnative.android.R.string.game_bottom)};
         float[] at = {0, 0.5f, 1};
         for (int i = 0; i < 3; i++) {
             android.widget.RadioButton b = new android.widget.RadioButton(ctx);
@@ -570,12 +582,12 @@ final class TouchControls extends View {
             line.setColor(Color.argb(220, 255, 255, 255));
             c.drawRoundRect(tool[k], 8 * u, 8 * u, line);
             text.setColor(k == 4 || cur ? Color.BLACK : Color.WHITE);
-            c.drawText(TOOL[k], tool[k].centerX(), tool[k].centerY() - (text.descent() + text.ascent()) / 2, text);
+            c.drawText(Tx.arr(dev.nxnative.android.R.array.arr_touch_tool)[k], tool[k].centerX(), tool[k].centerY() - (text.descent() + text.ascent()) / 2, text);
         }
         text.setTextSize(13 * u);
         text.setColor(Color.argb(230, 255, 255, 255));
-        String hint = dragG >= 0 && dragG < GROUPS ? GROUP_NAME[dragG] + ": drag to move, a second finger to resize (" + Math.round(gsc[dragG] * 100) + " %)"
-                : dragG == GROUPS ? "picture: drag into the black bars" : "Drag a control or the picture; pinch a control to resize it";
+        String hint = dragG >= 0 && dragG < GROUPS ? Tx.s(dev.nxnative.android.R.string.game_group_drag_to_move, GROUP_NAME[dragG], Math.round(gsc[dragG] * 100))
+                : dragG == GROUPS ? Tx.s(dev.nxnative.android.R.string.game_picture_drag_into_the_black) : Tx.s(dev.nxnative.android.R.string.game_drag_a_control_or_the);
         c.drawText(hint, w / 2f, y + bh + 22 * u, text);
     }
 
@@ -622,7 +634,7 @@ final class TouchControls extends View {
     void controlRows(Context ctx, LinearLayout box) {
         RadioGroup mg = new RadioGroup(ctx);
         mg.setOrientation(RadioGroup.HORIZONTAL);
-        for (int i = 0; i < MODE_NAMES.length; i++) { RadioButton b = new RadioButton(ctx); b.setId(4000 + i); b.setText(MODE_NAMES[i]); mg.addView(b); }
+        for (int i = 0; i < MODE_NAMES.length; i++) { RadioButton b = new RadioButton(ctx); b.setId(4000 + i); b.setText(Tx.arr(dev.nxnative.android.R.array.arr_touch_mode)[i]); mg.addView(b); }
         mg.check(4000 + mode);
         mg.setOnCheckedChangeListener((g, id) -> { mode(ctx, id - 4000); setMode(id - 4000); });
         box.addView(mg);
@@ -632,11 +644,11 @@ final class TouchControls extends View {
         os.setMax(90); os.setProgress(Math.round(opacity * 100) - 10);   // 10..100 %
         ss.setMax(90); ss.setProgress(Math.round(scale * 100) - 60);     // 60..150 %
         os.setKeyProgressIncrement(5); ss.setKeyProgressIncrement(5);   // the D-pad's left / right: 5 % a press
-        hb.setText("Vibrate on press"); hb.setChecked(haptics);
-        lb.setText("Show the log over the game"); lb.setChecked(showLog(ctx));
-        tb.setText("Show / hide button (top centre)"); tb.setChecked(button);
+        hb.setText(Tx.s(dev.nxnative.android.R.string.game_vibrate_on_press)); hb.setChecked(haptics);
+        lb.setText(Tx.s(dev.nxnative.android.R.string.game_show_the_log_over_the)); lb.setChecked(showLog(ctx));
+        tb.setText(Tx.s(dev.nxnative.android.R.string.game_show_hide_button_top_centre)); tb.setChecked(button);
         tb.setOnCheckedChangeListener((b, v) -> setToggleButton(v));
-        Runnable labels = () -> { ol.setText("Opacity " + (os.getProgress() + 10) + " %"); sl.setText("Size " + (ss.getProgress() + 60) + " %"); };
+        Runnable labels = () -> { ol.setText(Tx.s(dev.nxnative.android.R.string.game_opacity_pct, os.getProgress() + 10)); sl.setText(Tx.s(dev.nxnative.android.R.string.game_size_percent, ss.getProgress() + 60)); };
         labels.run();
         SeekBar.OnSeekBarChangeListener live = new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar b, int v, boolean user) {
@@ -655,11 +667,11 @@ final class TouchControls extends View {
         hb.setOnCheckedChangeListener((b, v) -> { haptics = v; save(); });
         lb.setOnCheckedChangeListener((b, v) -> prefs().edit().putBoolean("log", v).commit());
         android.widget.Button reset = new android.widget.Button(ctx);
-        reset.setText("Reset the controls");
+        reset.setText(Tx.s(dev.nxnative.android.R.string.game_reset_the_controls));
         reset.setOnClickListener(v -> { os.setProgress(50); ss.setProgress(40); hb.setChecked(true); });   // 60 % opacity, 100 % size, the tick on
         box.addView(ol); box.addView(os); box.addView(sl); box.addView(ss); box.addView(hb); box.addView(lb); box.addView(tb); box.addView(reset);
         android.widget.Button ed = new android.widget.Button(ctx);   // the layout editor (runs onEditStart); the picture's position is in the panel's Picture rows (positionRows)
-        ed.setText("Edit the controls layout…");
+        ed.setText(Tx.s(dev.nxnative.android.R.string.game_edit_the_controls_layout));
         ed.setOnClickListener(v -> startEditLayout());
         box.addView(ed);
     }

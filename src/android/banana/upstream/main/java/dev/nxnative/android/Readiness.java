@@ -55,19 +55,19 @@ final class Readiness {
     /** What the host needs whatever the game: vka_dev.c stops without the first ones (Vulkan 1.3, the queue, timeline semaphores, dynamic rendering), and without
      *  placed memory maps, update-after-bind texture tables or a swapchain it runs but draws or shows nothing (its [RED] lines say so) */
     static final List<Req> HOST = Collections.unmodifiableList(List.of(
-            new Req(true, "android.sdk", "33", "Android 13 or newer: the app is built for it"),
-            new Req(true, "vk.instance", "1.3", "Vulkan 1.3 loader: the graphics replay is written for Vulkan 1.3"),
-            new Req(true, "vk.api", "1.3", "Vulkan 1.3 GPU driver: the graphics replay is written for Vulkan 1.3"),
-            new Req(true, "queue.graphicsCompute", "1", "A graphics and compute queue: everything is submitted to one such queue"),
-            new Req(true, "feature.timelineSemaphore", "1", "Timeline semaphores: the game's fences are built on them"),
-            new Req(true, "feature.dynamicRendering", "1", "Dynamic rendering: every render pass is recorded with it"),
-            new Req(true, "ext.VK_KHR_swapchain", "1", "Swapchain: without it no picture reaches the screen"),
-            new Req(true, "ext.VK_KHR_map_memory2", "1", "Memory map 2: placed memory maps need it"),
-            new Req(true, "ext.VK_EXT_map_memory_placed", "1", "Placed memory maps: the game's GPU memory is mapped at the game's own addresses; without them nothing is drawn"),
-            new Req(true, "feature.memoryMapPlaced", "1", "Placed memory maps: the game's GPU memory is mapped at the game's own addresses; without them nothing is drawn"),
-            new Req(true, "feature.descriptorBindingSampledImageUpdateAfterBind", "1", "Texture tables (update after bind): the game's texture pools live in them"),
-            new Req(true, "feature.descriptorBindingPartiallyBound", "1", "Texture tables (partially bound): the game's texture pools live in them"),
-            new Req(true, "feature.runtimeDescriptorArray", "1", "Texture tables (runtime arrays): the game's texture pools live in them")));
+            new Req(true, "android.sdk", "33", Words.s("ready_android_13_or_newer_the", "Android 13 or newer: the app is built for it")),
+            new Req(true, "vk.instance", "1.3", Words.s("ready_vulkan_1_3_loader_the", "Vulkan 1.3 loader: the graphics replay is written for Vulkan 1.3")),
+            new Req(true, "vk.api", "1.3", Words.s("ready_vulkan_1_3_gpu_driver", "Vulkan 1.3 GPU driver: the graphics replay is written for Vulkan 1.3")),
+            new Req(true, "queue.graphicsCompute", "1", Words.s("ready_a_graphics_and_compute_queue", "A graphics and compute queue: everything is submitted to one such queue")),
+            new Req(true, "feature.timelineSemaphore", "1", Words.s("ready_timeline_semaphores_the_game_s", "Timeline semaphores: the game's fences are built on them")),
+            new Req(true, "feature.dynamicRendering", "1", Words.s("ready_dynamic_rendering_every_render_pas", "Dynamic rendering: every render pass is recorded with it")),
+            new Req(true, "ext.VK_KHR_swapchain", "1", Words.s("ready_swapchain_without_it_no_picture", "Swapchain: without it no picture reaches the screen")),
+            new Req(true, "ext.VK_KHR_map_memory2", "1", Words.s("ready_memory_map_2_placed_memory", "Memory map 2: placed memory maps need it")),
+            new Req(true, "ext.VK_EXT_map_memory_placed", "1", Words.s("ready_placed_memory_maps_the_game", "Placed memory maps: the game's GPU memory is mapped at the game's own addresses; without them nothing is drawn")),
+            new Req(true, "feature.memoryMapPlaced", "1", Words.s("ready_placed_memory_maps_the_game", "Placed memory maps: the game's GPU memory is mapped at the game's own addresses; without them nothing is drawn")),
+            new Req(true, "feature.descriptorBindingSampledImageUpdateAfterBind", "1", Words.s("ready_texture_tables_update_after_bind", "Texture tables (update after bind): the game's texture pools live in them")),
+            new Req(true, "feature.descriptorBindingPartiallyBound", "1", Words.s("ready_texture_tables_partially_bound_the", "Texture tables (partially bound): the game's texture pools live in them")),
+            new Req(true, "feature.runtimeDescriptorArray", "1", Words.s("ready_texture_tables_runtime_arrays_the", "Texture tables (runtime arrays): the game's texture pools live in them"))));
 
     /** A profile's req rows as build.gradle hands them over (Profile.reqs): "level|fact|min|what" rows, ';' between them; a malformed row is skipped */
     static List<Req> parseReqs(String table) {
@@ -134,8 +134,8 @@ final class Readiness {
             if (have == null && vulkan && (err != null || unchecked != null)) {   // nothing to compare with: said once
                 if (!seen.contains("error")) {
                     seen.add("error");
-                    out.add(err != null ? new Check("GPU features", Status.FAIL, "The GPU driver could not be used (" + err + "): the game needs Vulkan 1.3.", "driver")
-                            : new Check("GPU features", Status.WARNING, "Not checked (" + unchecked + "): whether this GPU has what the game needs is not known.", null));
+                    out.add(err != null ? new Check(Words.s("ready_gpu_features", "GPU features"), Status.FAIL, Words.s("ready_the_gpu_driver_could_not", "The GPU driver could not be used (") + err + Words.s("ready_the_game_needs_vulkan_1", "): the game needs Vulkan 1.3."), "driver")
+                            : new Check(Words.s("ready_gpu_features", "GPU features"), Status.WARNING, "Not checked (" + unchecked + Words.s("ready_whether_this_gpu_has_what", "): whether this GPU has what the game needs is not known."), null));
                 }
                 continue;
             }
@@ -145,15 +145,15 @@ final class Readiness {
             seen.add(key);
             if ("1".equals(facts.get("memory.fdAlias")) && compare("1", r.min) >= 0 &&
                     (r.fact.equals("ext.VK_EXT_map_memory_placed") || r.fact.equals("feature.memoryMapPlaced") || r.fact.equals("ext.VK_KHR_map_memory2"))) {
-                out.add(new Check(r.title, Status.PASS, "Guest-address memory is available through a tested exported-memory alias (memory.fdAlias=1).", null));
+                out.add(new Check(r.title, Status.PASS, Words.s("ready_guest_address_memory_is_available", "Guest-address memory is available through a tested exported-memory alias (memory.fdAlias=1)."), null));
                 continue;
             }
             boolean ok = have != null && compare(have, r.min) >= 0;
-            String shown = have == null ? "not reported" : "reports " + have;
+            String shown = have == null ? Words.s("ready_not_reported", "not reported") : "reports " + have;
             if (ok) out.add(new Check(r.title, Status.PASS, "Present (" + label(r.fact) + " " + have + ", needs " + r.min + ").", null));
             else {
                 if (r.required) { failed.add(r.fact); failed.add("title " + r.title); }
-                String msg = (r.required ? "This device lacks it; this game needs it. " : "Missing: this game runs without it, with less. ")
+                String msg = (r.required ? Words.s("ready_this_device_lacks_it_this", "This device lacks it; this game needs it. ") : Words.s("ready_missing_this_game_runs_without", "Missing: this game runs without it, with less. "))
                         + (r.why.isEmpty() ? "" : r.why.substring(0, 1).toUpperCase(Locale.ROOT) + r.why.substring(1) + ". ")
                         + "(" + label(r.fact) + " " + shown + ", needs " + r.min + ")";
                 out.add(new Check(r.title, r.required ? Status.FAIL : Status.WARNING, msg, r.fact.equals("ram_gib") ? "memory" : "driver", r.fact));
@@ -166,8 +166,8 @@ final class Readiness {
     static Check status(String status) {
         if (status == null || status.isEmpty() || status.equals("playable")) return null;
         if (status.equals("bring-up"))
-            return new Check("Status on Android", Status.WARNING, "This game is still being brought up on Android: it may stop or draw wrongly on any phone, this one included.", null);
-        return new Check("Status on Android", Status.INFO, status, null);
+            return new Check(Words.s("ready_status_on_android", "Status on Android"), Status.WARNING, Words.s("ready_this_game_is_still_being", "This game is still being brought up on Android: it may stop or draw wrongly on any phone, this one included."), null);
+        return new Check(Words.s("ready_status_on_android", "Status on Android"), Status.INFO, status, null);
     }
 
     /** Of a game's environment (KEY=VALUE, in start's order), the lines that pick its GPU driver: what the readiness facts must be read on */
@@ -222,7 +222,7 @@ final class Readiness {
     /** The [RED] line for an unknown DM_ name of a user line (from: env.txt, the game's settings, env-<id>.txt) */
     static String unknownLine(String name, String from, java.util.Set<String> known) {
         String near = closest(name, known);
-        return "[RED] " + name + " (" + from + ") is not a switch of this build: nothing reads it" + (near != null ? "; did you mean " + near + "?" : "") + " (docs/env_switches.tsv lists the switches)";
+        return "[RED] " + name + " (" + from + Words.s("ready_is_not_a_switch_of", ") is not a switch of this build: nothing reads it") + (near != null ? Words.s("ready_did_you_mean", "; did you mean ") + near + "?" : "") + Words.s("ready_docs_env_switches_tsv_lists", " (docs/env_switches.tsv lists the switches)");
     }
 
     static String[] driverEnv(List<String> env) {
@@ -282,7 +282,7 @@ final class Readiness {
 
     /** The GPU and driver in one line: name, driver name and info, driver ID and version, and a custom driver's name */
     static String gpu(Map<String, String> f) {
-        if (!f.containsKey("gpu.name")) return "GPU not reported" + (f.containsKey("error") ? " (" + f.get("error") + ")" : f.containsKey("unchecked") ? " (" + f.get("unchecked") + ")" : "");
+        if (!f.containsKey("gpu.name")) return Words.s("ready_gpu_not_reported", "GPU not reported") + (f.containsKey("error") ? " (" + f.get("error") + ")" : f.containsKey("unchecked") ? " (" + f.get("unchecked") + ")" : "");
         StringBuilder s = new StringBuilder(f.get("gpu.name"));
         s.append(", Vulkan ").append(f.getOrDefault("vk.api", "?"));
         s.append("; driver ").append(f.getOrDefault("driver.name", "?"));
@@ -290,7 +290,7 @@ final class Readiness {
         if (!info.isEmpty()) s.append(" (").append(info).append(')');
         s.append(", driver ID ").append(f.getOrDefault("driver.id", "?")).append(", version ").append(f.getOrDefault("driver.version", "?"));
         String custom = f.getOrDefault("driver.custom", "");
-        s.append(custom.isEmpty() ? ", the system's driver" : ", custom driver " + custom);
+        s.append(custom.isEmpty() ? Words.s("ready_the_system_s_driver", ", the system's driver") : ", custom driver " + custom);
         return s.toString();
     }
 
@@ -298,11 +298,11 @@ final class Readiness {
     static String summary(String titleId, Map<String, String> f, List<Check> l) {
         StringBuilder s = new StringBuilder("[readiness] ").append(titleId).append(": ");
         s.append(any(l, Status.FAIL) ? "FAIL" : any(l, Status.WARNING) ? "WARN" : "PASS");
-        s.append("; ").append(gpu(f)).append("; RAM ").append(f.get("ram_gib")).append(" GiB, Android SDK ").append(f.get("android.sdk"));
+        s.append("; ").append(gpu(f)).append("; RAM ").append(f.get("ram_gib")).append(Words.s("ready_gib_android_sdk_2", " GiB, Android SDK ")).append(f.get("android.sdk"));
         for (Status st : new Status[] {Status.FAIL, Status.WARNING}) {
             List<Check> m = of(l, st);
             if (m.isEmpty()) continue;
-            s.append("; ").append(st == Status.FAIL ? "missing (required): " : "missing (degraded): ");
+            s.append("; ").append(st == Status.FAIL ? "missing (required): " : Words.s("ready_missing_degraded", "missing (degraded): "));
             for (int i = 0; i < m.size(); i++) s.append(i == 0 ? "" : ", ").append(m.get(i).title);
         }
         return s.toString();
@@ -312,7 +312,7 @@ final class Readiness {
     static String report(String header, Map<String, String> f, List<Check> l) {
         StringBuilder s = new StringBuilder(header).append('\n');
         s.append("GPU: ").append(gpu(f)).append('\n');
-        s.append("RAM: ").append(f.get("ram_gib")).append(" GiB; Android SDK ").append(f.get("android.sdk")).append('\n');
+        s.append("RAM: ").append(f.get("ram_gib")).append(Words.s("ready_gib_android_sdk", " GiB; Android SDK ")).append(f.get("android.sdk")).append('\n');
         for (Check c : l) s.append(c).append('\n');
         s.append("-- facts --\n");
         for (Map.Entry<String, String> e : f.entrySet()) s.append(e.getKey()).append('=').append(e.getValue()).append('\n');

@@ -18,7 +18,7 @@ import java.util.List;
  *   2 Bilinear (fastest, softest)                 1
  *   3 FSR 3.1 (sharp, steady)                     4      (vka_fsr3.c; its RCAS, DM_VK_FSR3_SHARP, from the sharpness slider)
  *
- *   stored ndsr_choice2 (GameUpscaler.MODES,      the present's scaling of the window to the screen
+ *   stored ndsr_choice2 (Tx.arr(R.array.arr_upscaler_modes),      the present's scaling of the window to the screen
  *   the game's own, else the main screen's)       DM_VK_FSR   DM_VK_PRESENT_NEAREST
  *   0 Nearest neighbor                            0           1
  *   1 Bilinear                                    0           0
@@ -38,9 +38,13 @@ final class DlssTune {
     static final int[] SHARPS = {0, 5, 10, 15, 20, 25, 30};
     static final int SHARP_DEFAULT = 3;   // 15
 
-    static String clarityName(int i) { return CLARITY_NAMES[i] + CLARITY_NOTES[i]; }
+    static String clarityName(int i) {   // the words are read at each use (the language can change); CLARITY_NAMES / CLARITY_NOTES are the English the tests and logs see
+        String[] n = {Words.s("game_clarity_steadiest", "Steadiest"), Words.s("game_clarity_steady", "Steady"), Words.s("game_clarity_balanced", "Balanced"),
+                      Words.s("game_clarity_clear", "Clear"), Words.s("game_clarity_clearest", "Clearest")};
+        return n[i] + (i == 4 ? Words.s("game_clarity_may_flicker", " (may flicker in combat)") : "");
+    }
     static String[] clarityNames() { String[] n = new String[CLARITY_NAMES.length]; for (int i = 0; i < n.length; i++) n[i] = clarityName(i); return n; }
-    static String sharpName(int i) { return SHARPS[i] == 0 ? "Off" : String.valueOf(SHARPS[i]); }
+    static String sharpName(int i) { return SHARPS[i] == 0 ? Words.s("game_off", "Off") : String.valueOf(SHARPS[i]); }
     static String[] sharpNames() { String[] n = new String[SHARPS.length]; for (int i = 0; i < n.length; i++) n[i] = sharpName(i); return n; }
     static int clamp(int v, int n, int dflt) { return v >= 0 && v < n ? v : dflt; }
 
@@ -51,11 +55,11 @@ final class DlssTune {
     /** Which sliders the mode shows: GSR 2 both, FSR 1 and FSR 3.1 the sharpness alone (their RCAS), bilinear none */
     static boolean showsClarity(int mode) { return clamp(mode, MODE_NAMES.length, MODE_DEFAULT) == MODE_GSR2; }
     static boolean showsSharp(int mode) { int m = clamp(mode, MODE_NAMES.length, MODE_DEFAULT); return m == MODE_GSR2 || m == MODE_FSR1 || m == MODE_FSR3; }
-    static String sharpTitle(int mode) { int m = clamp(mode, MODE_NAMES.length, MODE_DEFAULT); return m == MODE_FSR1 ? "FSR sharpness" : m == MODE_FSR3 ? "Sharpness" : "Temporal sharpness"; }
+    static String sharpTitle(int mode) { int m = clamp(mode, MODE_NAMES.length, MODE_DEFAULT); return m == MODE_FSR1 ? Words.s("common_fsr_sharpness", "FSR sharpness") : m == MODE_FSR3 ? Words.s("game_sharpness", "Sharpness") : Words.s("game_temporal_sharpness", "Temporal sharpness"); }
 
     /** The present's scaling for a stored ndsr_choice2 (the table above): FSR 1, bilinear or nearest */
     static final int PRESENT_FSR = 0, PRESENT_BILINEAR = 1, PRESENT_NEAREST = 2;
-    /** GameUpscaler.MODES' indices this rule reads: 0 Nearest neighbor, 1 Bilinear, 2 FSR 1, 3 Native, 4 SGSR 1 (GameUpscaler.MODE_DEFAULT) */
+    /** Tx.arr(R.array.arr_upscaler_modes)' indices this rule reads: 0 Nearest neighbor, 1 Bilinear, 2 FSR 1, 3 Native, 4 SGSR 1 (GameUpscaler.MODE_DEFAULT) */
     static final int UPSCALER_COUNT = 5, UPSCALER_DEFAULT = 4;
     static int presentOf(int ndsrChoice) {
         switch (clamp(ndsrChoice, UPSCALER_COUNT, UPSCALER_DEFAULT)) {

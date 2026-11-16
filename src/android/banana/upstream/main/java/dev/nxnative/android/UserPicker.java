@@ -71,8 +71,8 @@ final class UserPicker {
             if (r.offered[i] == 0) continue;
             idx.add(i); labels.add(r.names[i] + (i == r.def ? "  ·  current" : ""));
         }
-        AlertDialog d = new PadFocus.Builder(a).setTitle("Select a user").setItems(labels.toArray(new String[0]), (x, w) -> finish(r, idx.get(w)))
-                .setNegativeButton("Cancel", (x, w) -> finish(r, -1)).setCancelable(true).create();
+        AlertDialog d = new PadFocus.Builder(a).setTitle(Tx.s(R.string.settings_select_a_user)).setItems(labels.toArray(new String[0]), (x, w) -> finish(r, idx.get(w)))
+                .setNegativeButton(Tx.s(R.string.common_cancel), (x, w) -> finish(r, -1)).setCancelable(true).create();
         d.setCanceledOnTouchOutside(false);
         d.setOnCancelListener(x -> finish(r, -1));   // Back
         r.dialog = d;

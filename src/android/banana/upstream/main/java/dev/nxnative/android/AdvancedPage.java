@@ -221,7 +221,7 @@ final class AdvancedPage {
         String shown = own != null ? r.optionLabel(own) : glob != null ? r.optionLabel(glob) + " (from Settings)" : "Auto" + (r.deflt.isEmpty() ? "" : ": " + r.deflt);
         if (r.owned()) {
             s.value("Set in " + r.owner + ".");
-            s.view.setOnClickListener(v -> new PadFocus.Builder(a).setTitle(r.title()).setMessage("This one has its own control: " + r.owner + ".").setPositiveButton("OK", null).show());
+            s.view.setOnClickListener(v -> new PadFocus.Builder(a).setTitle(r.title()).setMessage("This one has its own control: " + r.owner + ".").setPositiveButton(android.R.string.ok, null).show());
         } else {
             s.value(shown).chevron(a);
             s.view.setOnClickListener(v -> edit(a, r, titleId, s));

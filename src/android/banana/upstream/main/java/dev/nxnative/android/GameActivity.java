@@ -141,7 +141,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         });
         root.addView(panel, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         controls.openSettings = panel::open;
-        combo = new PadPanel.Combo(Prefs.panelPad(this));   // Settings › Controller: in-game panel
+        combo = new PadPanel.Combo(Prefs.panelPad(this, id));   // Settings › Controller: in-game panel
         panel.padButtons(PadPanel.confirmBack(Prefs.padMap(this, id), Prefs.xboxButtons(this, id) == 2 ? 2 : 0));   // the game's own A and B, as the host maps them from this start
         panel.onOpen = this::releaseGameInput;
         // The layout editor needs the whole screen: the panel closes, and Paused (over the controls: its first tap would continue the game) hides while it is open;
@@ -161,17 +161,17 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             else if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) downX[0] = -1;
             return true;
         });
-        handle.setContentDescription("Open the in-game panel");
+        handle.setContentDescription(Tx.s(R.string.game_open_the_in_game_panel));
         handle.setOnClickListener(v -> panel.open());   // TalkBack's double tap
         if (!HokkaidoInGame.on()) root.addView(handle, root.indexOfChild(panel), new FrameLayout.LayoutParams(Math.round(20 * dp), Math.round(140 * dp), Gravity.END | Gravity.TOP));   // Hokkaido's menu opens with Back
         // Auto with a gamepad connected, or Off: the handle goes with the controls (Back or a gamepad's Home button opens the panel)
         controls.onSwitch = v -> handle.setVisibility(v ? View.VISIBLE : View.GONE);
-        controls.setMode(TouchControls.mode(this));
+        controls.setMode(TouchControls.mode(this, id));
         root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> handle.setTranslationY((b - t) * 0.3f - 70 * dp));
         // Paused (pause(): the in-game panel's Pause, or the screen coming back with pause-on-return on): the game is suspended until a tap, or A / Start on a gamepad.
         // Under the panel and its handle, so Stop stays reachable
         pausedView = new TextView(this);
-        pausedView.setText("Paused\n\nTap to continue  (A or Start on a gamepad)");
+        pausedView.setText(Tx.s(R.string.game_paused_n_ntap_to_continue));
         pausedView.setTextColor(Color.WHITE);
         pausedView.setTextSize(22);
         pausedView.setGravity(Gravity.CENTER);
@@ -194,7 +194,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         else if (saved == null) start();
         else {
             String why = ExitWatch.restoredCause(this);   // what Android said about the end, told here once (the launcher does not tell it again)
-            fail("The game was stopped while it was in the background (Android ended its process)." + (why != null ? " " + why : "") + " Unsaved progress is lost; start it again from the launcher.");
+            fail(Tx.s(R.string.err_stopped_in_background) + (why != null ? " " + why : "") + " " + Tx.s(R.string.err_unsaved_progress_lost));
         }
     }
 
@@ -267,10 +267,12 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
 
     /**
      * The skipped-work notice (SkipNotice): every 5 s from 30 s after the start, ask the host whether the replay skipped a large share of the game's draws for causes of the
-     * GPU driver (Native.skipStatus, DM_VK_SKIP_WARN); the host says so once, after the first loading seconds, and the notice shows once per run: small, at the bottom,
+     * GPU driver or for shaders missing from the pack (Native.skipStatus, DM_VK_SKIP_WARN); the host says so once, after the first loading seconds, and the notice shows once per run: small, at the bottom,
      * a tap dismisses it, it fades after 20 s. Stops after showing, or when this host cannot say (no such entry point: an empty answer every time is still polled, cheaply)
      */
     private static boolean skipShown;
+    /** The last DM_VK_DRIVER= line of the run's environment (null: none, the system driver): which driver runs, for the notice's log line */
+    private static String runDriverLine;
     private FrameLayout rootView;
     private final Runnable skipRun = this::skipTick;
     private void skipTick() {
@@ -285,12 +287,58 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         ui.removeCallbacks(skipRun);
         if (!skipShown) ui.postDelayed(skipRun, 30000);
     }
+    /**
+     * The shader layer (LayerWatch): shaders the game asked for and its prepared library lacks are built while it runs; "Building shaders (N)" is shown small and see-through at the very top middle
+     * while requests are pending (Prefs.layerLabel: Off, the count alone, or the full words). One watcher; a recreated screen starts it again
+     */
+    private LayerWatch layer;
+    private TextView layerView;
+    // The run's own values, static like runCtl (a screen that attaches to the running game has them): the layer's folder (LayerDir: the pack's shaders/layer, told to the host as DM_VK_LAYER_DIR;
+    // else DM_TEMP/shader_layer), whether the host started with the layer (Prefs.layerBuild at the start: the host reads DM_VK_LAYER once, so a later change of the switch is for the next start),
+    // and whether the game started with a shader library
+    private static java.io.File layerRoot;
+    private static boolean runLayer, runLibrary;
+    /** The library the game plays when a sample kept it (ShaderLibs.kept): the layer verifies what is played against it (LayerWatch.keep), null otherwise */
+    private static java.io.File runKept;
+    /** The game file and version a first start with no shader library seeds the layer from (the starter set, shader_first.tsv): null when nothing is to be seeded */
+    private static String seedDump, seedVersion;
+    private void layerStart() {
+        if (layer != null) { layer.stop(); layer = null; }
+        if (!runLayer) return;   // Shaders while playing was off at the start (Game settings): the host has DM_VK_LAYER=0, nothing is requested; the in-game panel's switch is for the next start
+        java.io.File root = layerRoot != null ? layerRoot : new java.io.File(getExternalFilesDir(null), "temp/" + titleId() + "/" + LayerDir.TEMP_NAME);   // (DM_TEMP: the app's external files, as the host gets it)
+        layer = new LayerWatch(this, titleId(), root, this::layerShow);
+        layer.keep(runKept, titleId());
+        layer.start();
+        if (seedDump != null) layer.seed(seedDump, seedVersion);   // a first start with no library: the starter set is built while the title loads
+    }
+    private void layerShow(String text) {
+        if (rootView == null) return;
+        if (text == null) { if (layerView != null) { rootView.removeView(layerView); layerView = null; } return; }
+        if (layerView == null) {
+            TextView h = new TextView(this);
+            h.setTextColor(0xB3FFFFFF);   // small and see-through: it says the game is still filling its shaders, and stays out of the picture
+            h.setTextSize(10);
+            float dp = getResources().getDisplayMetrics().density;
+            int p = Math.round(5 * dp);
+            h.setPadding(p, 0, p, 0);
+            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+            bg.setColor(0x33000000);
+            bg.setCornerRadii(new float[] {0, 0, 0, 0, 6 * dp, 6 * dp, 6 * dp, 6 * dp});   // hangs from the top edge
+            h.setBackground(bg);
+            h.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_NONE);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            lp.topMargin = 0;   // the very top; it takes no touch (a TextView), the hide-the-controls button under it still works
+            rootView.addView(h, panel != null ? rootView.indexOfChild(panel) : rootView.getChildCount(), lp);
+            layerView = h;
+        }
+        layerView.setText(text);
+    }
     private void skipShow(int pct) {
-        GpuDriver.Info drv = GpuDriver.selected(this, titleId());
+        String drv = SkipNotice.driverName(runDriverLine, dir -> { for (GpuDriver.Info i : GpuDriver.installed(this)) if (i.dir.getPath().equals(dir)) return i.label(); return null; });   // the run's driver, not the settings' pick
         String st = Native.skipStatus();
-        Native.note("skipped work: notice shown (" + pct + " % of draws; driver: " + (drv == null ? "system" : drv.label()) + ")");
+        Native.note("skipped work: notice shown (" + pct + " % of draws; causes: " + SkipNotice.causes(st) + "; driver: " + drv + ")");
         TextView h = new TextView(this);
-        h.setText(SkipNotice.noMesh(st) ? SkipNotice.textNoMesh(pct) : SkipNotice.text(pct, drv == null ? null : drv.label()));
+        h.setText(SkipNotice.noMesh(st) ? SkipNotice.textNoMesh(pct) : SkipNotice.missingShaders(st) ? SkipNotice.textMissingShaders(pct) : SkipNotice.text(pct));
         h.setTextColor(Color.WHITE);
         h.setTextSize(13);
         float dp = getResources().getDisplayMetrics().density;
@@ -387,11 +435,11 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             case COPIED:
                 Prefs.migratedFrom(this, id, old.getPath());
                 saveNote = "copied once from " + old + " (" + r.copied.files + " files, " + SaveStore.size(r.copied.bytes) + ", checked); that folder is kept as it was";
-                Toast.makeText(this, "Your save was copied into the app's storage (" + app + "). The old folder " + old + " is kept as it was.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, Tx.s(R.string.game_save_copied_to_app, app, old), Toast.LENGTH_LONG).show();
                 return app;
             case FAILED:
                 saveNote = "not copied into the app's storage (" + r.message + "): this start plays the save in " + old + "; the next start tries again";
-                Toast.makeText(this, "Your save could not be copied into the app's storage (" + r.message + "). This start plays it where it is, " + old + ".", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, Tx.s(R.string.game_save_copy_failed, r.message, old), Toast.LENGTH_LONG).show();
                 return old;
             default:   // the app has a save already, or there is none to copy
                 return app;
@@ -468,6 +516,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         } else if (Prefs.limited(id)) {   // a profile's default frame limit (fps_limit), which the host applies itself: only the player's own choice is passed (60 fps = none: the game's own interval)
             if (Prefs.chosenFpsCap(this, id)) { int pace = Prefs.paceCap(this, id); env.add("DM_FPS_LIMIT=" + Math.max(pace, 0)); }   // the player's or the recommended cap
         } else if (cap >= 0) env.add("DM_FPS_TARGET=" + cap);
+        if (Prefs.frameSkip(id) && !Prefs.decouple(this, id)) env.add("DM_FPS_DECOUPLE=0");   // Full game speed at low frame rates off for a frame-skip game (the in-game panel changes it live); its presentation stays the game's interval
         if (Prefs.steps(id) && Prefs.hold60(this, id)) env.add("DM_FPS_HOLD60=1");   // Hold 60 fps: one step a frame at the cap of 60 (the in-game panel changes it live)
         String gpuNote = GpuDriver.env(this, id, env);   // the game's GPU driver, else the main screen's (DM_VK_DRIVER)
         String ts = Prefs.gpuTs(this, id);   // Game settings › GPU timing; unset: the profile's gpu_timestamps (a DM_NVN_GPU_TS line of env.txt or the game's own lines comes later and wins)
@@ -477,6 +526,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         if (xb == 2) env.add("DM_PAD_LABELLED=2");
         if (Prefs.instancedDraws(this, id)) env.add("DM_VK_INSTANCE=1");   // Game settings › Instanced draws
         if (Prefs.classicPasses(this, id)) env.add("DM_VK_CLASSIC_RP=1");   // Game settings › Classic render passes
+        if (!Prefs.layerBuild(this, id)) env.add("DM_VK_LAYER=0");   // Game settings › Shaders while playing off: no run-time shader layer (the game then needs a library, as before)
         if (Prefs.skipLayersGame(id) && Prefs.skipLayers(this, id)) env.add("DM_VK_SKIP_FS=" + Prefs.skipLayersKeys(id));   // Game settings › Speedhack: Turn off hidden layers
         env.add("DM_VK_PSO_ASYNC=" + (Prefs.psoAsync(this, id) ? 2 : 0));   // Game settings › Background pipelines (an env.txt line of the player's comes later and wins)
         if (Prefs.ramSaver(this, id)) { env.add("DM_MEM_FILEBACK=1"); env.add("DM_MEM_FILEBACK_KINDS=shader,texture"); }   // Game settings › RAM saver: texture pools in a file in TMPDIR, the cache folder (vka_mem.c "File-backed pools"); lines of env.txt or the game's own come later and win
@@ -485,7 +535,12 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         env.add("DM_MOTION_SENS=" + Prefs.motionFactor(this, id));   // Game settings › Controls › Motion sensitivity (the phone's gyro, 50 % unless the player chose; env.txt lines come later and win)
         if (Prefs.stretch(this, id)) env.add("DM_VK_STRETCH=1");   // Game settings › Display › Stretch to screen (or the in-game panel's Picture rows)
         String aspect = Prefs.aspect(this, id), variant = aspect == null || Profile.of(id) == null ? null : Profile.of(id).aspectVariant(aspect);
-        if (variant != null) {   // Game settings › Aspect ratio: the pack's native-aspect modules (<pack>/<variant>/, loader.c) and the picture shown at that aspect
+        if (variant != null && ScreenShape.CHOICE.equals(aspect)) {   // Screen shape on a native-aspect variant that follows the shape (game.tsv variant label "screen", loader.c shape_apply): the window's shape, 1:1 to 16:9
+            android.graphics.Rect b = getWindowManager().getCurrentWindowMetrics().getBounds();
+            String shape = ScreenShape.tall(ScreenShape.ratio(b.width(), b.height(), orientationFixed()));
+            if (shape != null) { env.add("DM_PATCH_VARIANT=" + variant); env.add("DM_VK_PICTURE_ASPECT=" + shape); }
+            shapeNote = ("[nxlaunch] aspect ratio: screen shape (native variant " + variant + "), window " + b.width() + "x" + b.height() + (orientationFixed() ? " (landscape)" : "") + (shape == null ? ": 16:9 or wider, as shipped" : " -> " + shape));
+        } else if (variant != null) {   // Game settings › Aspect ratio: the pack's native-aspect modules (<pack>/<variant>/, loader.c) and the picture shown at that aspect
             env.add("DM_PATCH_VARIANT=" + variant);
             env.add("DM_VK_PICTURE_ASPECT=" + aspect);
         } else if (aspect != null && Profile.of(id) != null && Arrays.asList(Profile.of(id).cameraAspects.split(",")).contains(aspect)) {   // a shape the host's camera patch follows (game.tsv aspect rows): the picture at that shape, no variant
@@ -522,7 +577,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         String[] denv = Readiness.gameEnv(genv, PROTECTED);
         readinessEnv = denv.length;
         probedChoice = probedChoice(denv, id);
-        overlay.setText(getIntent().getStringExtra("name") + ": checking this phone's GPU…");
+        overlay.setText(Tx.s(R.string.game_name_checking_gpu, getIntent().getStringExtra("name")));
         final boolean[] answered = {false};
         Runnable decide = () -> {   // on the UI thread, once: with the facts, or without them after READINESS_WAIT_MS
             if (answered[0] || isFinishing()) return;
@@ -569,7 +624,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         String gpu = "GPU: " + Readiness.gpu(f) + "\nMemory: " + f.get("ram_gib") + " GiB as Android reports it.";
         // The notice is short (what is missing, by name); Details has each item's sentence, the GPU and Copy report
         if (!fails.isEmpty()) {
-            StringBuilder m = new StringBuilder("Missing: ");
+            StringBuilder m = new StringBuilder(Tx.s(R.string.game_missing));
             for (Readiness.Check c : fails) m.append(c.title).append(", ");
             m.setLength(m.length() - 2);
             // Without placed memory maps the GPU sees none of the game's memory: draws are off (vka_draw.c), so the result is certain, not "may"
@@ -577,13 +632,10 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             for (Readiness.Check c : fails) placed |= "ext.VK_KHR_map_memory2".equals(c.fact) || "ext.VK_EXT_map_memory_placed".equals(c.fact) || "feature.memoryMapPlaced".equals(c.fact);
             GpuDriver.Info drv = GpuDriver.selected(this, id);
             boolean custom = Readiness.customDriversFit(f);   // the custom drivers are Adreno drivers: no help on another GPU (its reported vendor ID)
-            if (placed && drv == null && !custom) m.append(".\n\nThis GPU's own driver has no placed memory maps, so nothing is drawn: the screen stays black while the game runs. "
-                    + "The custom drivers the app can install are for Adreno GPUs only, so this phone cannot draw the game yet.");
-            else if (placed) m.append(".\n\nWith this GPU driver (").append(drv == null ? "System" : drv.label()).append(") nothing is drawn: the screen stays black while the game runs. ")
-                    .append(drv == null ? "Pick a custom driver that has placed memory maps" : "Pick System (the phone's own driver)")
-                    .append(" in Settings › GPU driver, or in this game's Game settings.");
-            else m.append(custom ? ".\n\nThe game may stop or draw wrongly. A custom GPU driver (Settings › GPU driver) may help." : ".\n\nThe game may stop or draw wrongly.");
-            readinessDialog("Not ready for this game", m.toString(), details(fails, warns, gpu), report, placed ? "Start anyway (black screen)" : "Try anyway", true);
+            if (placed && drv == null && !custom) m.append(".\n\n").append(Tx.s(R.string.err_gpu_no_placed_maps));
+            else if (placed) m.append(".\n\n").append(Tx.s(drv == null ? R.string.err_gpu_driver_black_pick_custom : R.string.err_gpu_driver_black_pick_system, drv == null ? Tx.s(R.string.common_system) : drv.label()));
+            else m.append(".\n\n").append(Tx.s(custom ? R.string.err_may_stop_custom_driver : R.string.err_may_stop));
+            readinessDialog(Tx.s(R.string.game_not_ready_for_this_game), m.toString(), details(fails, warns, gpu), report, placed ? Tx.s(R.string.game_start_anyway_black_screen) : Tx.s(R.string.prepare_try_anyway_3), true);
         } else {   // warnings only ("Ready, with limits"): no notice at the start, it stopped every start; the log has the line (readinessLine) and Settings › Readiness check the details
             start();
         }
@@ -611,7 +663,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     private void readinessDialog(String title, String msg, String details, String report, String go, boolean required) {
         String id = titleId();
         android.widget.CheckBox again = required ? null : new android.widget.CheckBox(this);
-        AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(title).setCancelable(false).setNeutralButton("Details", null);
+        AlertDialog.Builder b = new AlertDialog.Builder(this).setTitle(title).setCancelable(false).setNeutralButton(Tx.s(R.string.game_details), null);
         if (again == null) b.setMessage(msg);
         else {
             int p = Math.round(20 * getResources().getDisplayMetrics().density);
@@ -619,10 +671,10 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             box.setOrientation(android.widget.LinearLayout.VERTICAL);
             box.setPadding(p, p / 2, p, 0);
             TextView t = new TextView(this);
-            t.setText(msg + "\n\nDetails are also in Settings › Readiness check.");
+            t.setText(msg + "\n\n" + Tx.s(R.string.game_details_also_in_readiness));
             t.setTextSize(15);
             box.addView(t);
-            again.setText("Don't show this again");
+            again.setText(Tx.s(R.string.game_don_t_show_this_again));
             box.addView(again);
             android.widget.ScrollView sv = new android.widget.ScrollView(this);   // a short screen with several warnings still reaches the box
             sv.addView(box);
@@ -634,11 +686,11 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             triedAnyway = required;
             start();
         });
-        b.setNegativeButton("Back", (d, w) -> end());
+        b.setNegativeButton(Tx.s(R.string.common_back), (d, w) -> end());
         AlertDialog d = b.create();
         // Details opens over the notice and keeps it open; Copy report there keeps Details open
         d.setOnShowListener(x -> d.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
-            AlertDialog dd = new AlertDialog.Builder(this).setTitle("Readiness check").setMessage(details).setPositiveButton("Close", null).setNeutralButton("Copy report", null).create();
+            AlertDialog dd = new AlertDialog.Builder(this).setTitle(Tx.s(R.string.common_readiness_check)).setMessage(details).setPositiveButton(Tx.s(R.string.common_close), null).setNeutralButton(Tx.s(R.string.common_copy_report), null).create();
             dd.setOnShowListener(y -> dd.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(u -> ReadinessActivity.copy(this, report)));
             dd.show();
         }));
@@ -699,7 +751,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             user.addAll(extra);   // the game's own lines (its Game settings): after env.txt, so they win for this game
             List<String[]> fromFiles = new ArrayList<>();   // for the log's [adv] lines
             for (String l : envTxt) fromFiles.add(new String[] {l, "env.txt"});
-            for (String l : extra) fromFiles.add(new String[] {l, "Extra environment"});
+            for (String l : extra) fromFiles.add(new String[] {l, Tx.s(R.string.game_extra_environment)});
             advNotes = AdvancedSettings.notes(this, id, PROTECTED, fromFiles);
             user.addAll(guard(userEnv(new File(files, "env-" + id + ".txt")), "env-" + id + ".txt", testApp()));   // and env-<title ID>.txt (adb), the same for one game
             // the save is the application's: a program pack (a Switch 2 Edition's program 1, its pack.tsv's application row) keeps the game's save, as on the console;
@@ -717,6 +769,21 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
                     "DM_ROMFS=" + romfs, "DM_SAVE=" + save, "DM_TEMP=" + temp, "DM_ROOT=" + root, "DM_AOC_DIR=" + aoc,
                     "HOME=" + files, "TMPDIR=" + getCacheDir(), "DM_BUILD_COMMIT=" + BuildConfig.NX_COMMIT,
                     "DM_CTL=" + new File(files, "ctl.txt"), "NX_EXIT_RECORD=" + ExitWatch.record(this)));   // live control lines (android/TESTING.md "Live control", android/tools/nxctl.sh); DM_CTL= in env.txt turns it off
+            // The shader layer lives in the pack (shaders/layer, kept between runs: LayerDir); a pack folder that cannot take it leaves the host's own place, DM_TEMP/shader_layer
+            layerRoot = LayerDir.resolve(packDir, temp);
+            runLayer = ShaderLibs.layerCovers(id, Prefs.layerEnv(this, id));   // the switch as the host gets it (DM_VK_LAYER=0 while Shaders while playing is off or in the player's lines; a Switch 2 title only)
+            if (LayerDir.inPack(layerRoot, temp)) env.add("DM_VK_LAYER_DIR=" + layerRoot);
+            LayerPending.selfPackage = getPackageName();   // a build marker of this app whose process is gone (force-stop) is no build: removed, so the first run starts at once and the tidy below sees a stopped build
+            if (LayerPending.clearStale(layerRoot, System.currentTimeMillis())) unknownNotes.add("[nxlaunch] shader layer: the marker of a stopped build is removed");
+            String layerTidy = LayerDir.tidy(layerRoot, BuildConfig.NX_DMSH_VK_CHAIN);
+            if (!layerTidy.isEmpty()) unknownNotes.add("[nxlaunch] shader layer: " + layerTidy);
+            // Requests the library the host plays already has (one built on a computer moved into the pack, or Prepare finished since) are not built for nothing
+            File hostLib = ShaderLibs.hostLibrary(packDir, id, BuildConfig.NX_DMSH_VK_CHAIN, BuildConfig.NX_DMSH_VK_ABI, BuildConfig.NX_DMSH_VK_ABI_COMPAT);
+            runLibrary = hostLib != null;
+            runKept = hostLib != null && ShaderLibs.kept(hostLib) ? hostLib : null;
+            seedDump = runLayer && !runLibrary ? game.getPath() : null; seedVersion = pack.version;
+            int dropped = runLayer ? LayerGuard.dropCovered(layerRoot, hostLib, id) : 0;   // (layer off: no watcher and no build, the old requests are left as they are and no line claims them dropped)
+            if (dropped > 0) unknownNotes.add("[nxlaunch] shader layer: " + dropped + " requests the shader library already has are dropped");
             env.add(0, "NX_BUILD_TAG=" + Prefs.buildTag(this) + " \u00b7 signer " + Prefs.signerId(this));   // nxlaunch.c writes it as the log's first line; the signer says which key signed the APK (Signer)
             // a program pack (a Switch 2 Edition's program 1): each program index's RomFS for the indexed MountRom (hle_fs.c DM_ROMFS_PROGRAM_<i>; 0 is the game's, "conorig")
             for (Map.Entry<Integer, String> e : pack.romfsProgramPaths(game).entrySet())
@@ -756,6 +823,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
                     + ": window " + Prefs.startWindow(this, id) + ", scene " + (sceneName.isEmpty() ? "the game's own palette" : sceneName);
             pinStart();   // Use fast cores (Game settings, Settings)
             skipStart();
+            layerStart();
             // DM_TEST_CRASH (a test crash, ExitWatch): the test app only
             if (!testApp() && user.removeIf(kv -> kv.startsWith("DM_TEST_CRASH="))) unknownNotes.add("[nxlaunch] DM_TEST_CRASH not taken: the test app only");
             env.addAll(user);
@@ -765,7 +833,9 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             int picSize = PictureFit.SIZE_MAX;
             float picAspect = 16f / 9f;
             String ctl = null;
+            runDriverLine = null;
             for (String kv : env) {   // the last line wins, as for the host
+                if (kv.startsWith("DM_VK_DRIVER=")) runDriverLine = kv;
                 if (kv.startsWith("DM_OVERLAY=")) overlayEnv = !kv.substring(11).trim().equals("0");
                 if (kv.startsWith("DM_VK_STRETCH=")) stretch = envOn(kv.substring(14));
                 if (kv.startsWith("DM_VK_PICTURE_SIZE=")) picSize = PictureFit.size((int) envNum(kv.substring(19)));
@@ -805,10 +875,10 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             for (String n : unknownNotes) Native.note(n);
             if (!unknownNotes.isEmpty()) android.widget.Toast.makeText(this, unknownNotes.get(0).replace("[RED] ", ""), android.widget.Toast.LENGTH_LONG).show();
             if (!refused.isEmpty()) {
-                String msg = "not taken: " + String.join(", ", refused) + ": the launcher sets the game's paths (DM_SAVE, DM_ROMFS, DM_TEMP, DM_ROOT, DM_AOC_DIR, HOME)"
+                String msg = "not taken: " + String.join(", ", refused) + ": the launcher sets the game's paths (DM_SAVE, DM_ROMFS, DM_TEMP, DM_ROOT, DM_AOC_DIR, DM_VK_LAYER_DIR, HOME)"
                         + (testApp() ? "; DM_SAVE is taken from env-<title ID>.txt only" : "");
                 Native.note("[RED] env: " + msg);
-                android.widget.Toast.makeText(this, "Environment lines " + msg, android.widget.Toast.LENGTH_LONG).show();
+                android.widget.Toast.makeText(this, Tx.s(R.string.game_environment_lines, msg), android.widget.Toast.LENGTH_LONG).show();
             }
             if (testSave != null) Native.note("[nxlaunch] test app: DM_SAVE from env-" + id + ".txt: " + testSave);
             Native.note("frame generation: " + (Lsfg.on(this) ? "on" : "off") + "; " + Lsfg.note);
@@ -821,7 +891,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             input = Native.hasInput();
             started = true;
             hostSetup();
-            overlay.setText(name + ": starting. Log: " + log);
+            overlay.setText(Tx.s(R.string.game_name_starting_log, name, log));
             ui.postDelayed(this::tail, 500);
             ui.postDelayed(this::fpsTick, 500);
         } catch (IOException | RuntimeException e) {
@@ -839,6 +909,16 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     /** A numeric switch's value as the host reads it: a number other than 0 is on */
     static boolean envOn(String v) { return envNum(v) != 0; }
     static double envNum(String v) { try { return Double.parseDouble(v.trim()); } catch (NumberFormatException e) { return 0; } }
+
+    /**
+     * The in-game panel's Shaders section (SidePanel › General), only for a game the layer covers (a Switch 2 title): the switch's value and the status line, which is the label's own state
+     * (LayerWatch) in words (LayerStatus.panelLine). The switch is Prefs.layerBuild, which the host reads at its start only
+     */
+    boolean layerShown() { return ShaderLibs.layerCovers(titleId(), null); }
+    String layerLine() {
+        if (layer == null || !runLayer) return LayerStatus.panelLine(false, runLibrary, 0, 0, null, false);
+        return LayerStatus.panelLine(true, runLibrary, layer.built(), layer.pending(), layer.pausedReason(), layer.gaveUp());
+    }
 
     /** Whether the running game takes live switches (DM_CTL): the in-game panel says "applies at the next start" otherwise */
     boolean live() { return hostRunning && runCtl != null; }
@@ -917,6 +997,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         ui.postDelayed(this::fpsTick, 500);
         pinStart();
         skipStart();
+        layerStart();
     }
 
     /** The game's screen was stopped (the game in the background) and not started again; a stop for a configuration change is no trip to the background */
@@ -927,8 +1008,8 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
      * this game's host (the next Play of another game would land in it, Native.load) and the save's lock
      */
     private void fail(String why) {
-        new AlertDialog.Builder(this).setTitle("Cannot start " + getIntent().getStringExtra("name")).setMessage(why)
-                .setPositiveButton("OK", (d, w) -> end()).setCancelable(false).show();
+        new AlertDialog.Builder(this).setTitle(Tx.s(R.string.err_cannot_start_name, getIntent().getStringExtra("name"))).setMessage(why)
+                .setPositiveButton(android.R.string.ok, (d, w) -> end()).setCancelable(false).show();
     }
 
     private void end() {
@@ -948,6 +1029,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
      * The game itself is left as it is: onStop has suspended it
      */
     @Override protected void onDestroy() {
+        if (layer != null) { layer.stop(); layer = null; }
         TextInput.gone(this);
         UserPicker.gone(this);
         CtrlScreen.gone(this);
@@ -967,9 +1049,9 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         super.onNewIntent(i);
         String want = i.getStringExtra("title_id"), have = getIntent().getStringExtra("title_id");
         if (want == null || want.equals(have)) return;
-        new AlertDialog.Builder(this).setTitle(getIntent().getStringExtra("name") + " is running")
-                .setMessage("Stop it first (the in-game panel › Stop the game), then start " + i.getStringExtra("name") + ". One game runs at a time.")
-                .setPositiveButton("OK", null).show();
+        new AlertDialog.Builder(this).setTitle(Tx.s(R.string.err_name_is_running, getIntent().getStringExtra("name")))
+                .setMessage(Tx.s(R.string.err_stop_it_first_then_start, i.getStringExtra("name")))
+                .setPositiveButton(android.R.string.ok, null).show();
     }
 
     // ---- The save's lock (SaveStore.Lock on <save>.lock): taken before the save is recovered and kept while this process lives, so a backup or restore of this save
@@ -987,7 +1069,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     }
 
     /** Environment keys only the launcher sets: a line of env.txt, env-<id>.txt or the game's own lines that names one is refused (DM_SAVE: see allowSave) */
-    static final java.util.Set<String> PROTECTED = new java.util.HashSet<>(java.util.Arrays.asList("DM_SAVE", "DM_ROMFS", "DM_TEMP", "DM_ROOT", "DM_AOC_DIR", "HOME"));
+    static final java.util.Set<String> PROTECTED = new java.util.HashSet<>(java.util.Arrays.asList("DM_SAVE", "DM_ROMFS", "DM_TEMP", "DM_ROOT", "DM_AOC_DIR", "DM_VK_LAYER_DIR", "HOME"));
     private final List<String> refused = new ArrayList<>();
     private String testSave;   // DM_SAVE from env-<id>.txt in the test app: a test run's own save folder (a copied seed), never the user's
 
@@ -1139,11 +1221,11 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     private void panelHint(FrameLayout root) {
         if (Prefs.panelHinted(this)) return;
         Prefs.panelHinted(this, true);
-        int how = Prefs.panelPad(this);
-        String pad = how == PadPanel.OPEN_OFF ? "" : how == PadPanel.OPEN_HOME ? "\nController: press Home" : how == PadPanel.OPEN_MINUS_PLUS ? "\nController: hold − and +"
-                : "\nController: press Home, or hold − and +";
+        int how = Prefs.panelPad(this, titleId());
+        String pad = how == PadPanel.OPEN_OFF ? "" : how == PadPanel.OPEN_HOME ? "\n" + Tx.s(R.string.game_controller_press_home) : how == PadPanel.OPEN_MINUS_PLUS ? "\n" + Tx.s(R.string.game_controller_hold_minus_plus)
+                : "\n" + Tx.s(R.string.game_controller_press_home_or_hold);
         TextView h = new TextView(this);
-        h.setText("Menu: swipe in from the right edge, or press Back" + pad);
+        h.setText(Tx.s(R.string.game_menu_hint) + pad);
         h.setTextColor(Color.WHITE);
         h.setTextSize(14);
         float dp = getResources().getDisplayMetrics().density;
@@ -1209,7 +1291,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         android.view.Display d = getDisplay();
         if (d != null && d.getDisplayId() != android.view.Display.DEFAULT_DISPLAY) return false;
         android.graphics.Rect b = getWindowManager().getMaximumWindowMetrics().getBounds();
-        return GameOrientation.fixedLandscape(b.width(), b.height(), getResources().getDisplayMetrics().density, Prefs.rotationAuto(this));
+        return GameOrientation.fixedLandscape(b.width(), b.height(), getResources().getDisplayMetrics().density, Prefs.rotationAuto(this, titleId()));
     }
 
     /** Full screen: the status and navigation bars (and the swipe handle) are hidden, a swipe from the edge shows them for a moment; the picture also runs under a display cutout */

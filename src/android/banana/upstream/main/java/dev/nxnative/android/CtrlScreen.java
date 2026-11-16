@@ -71,16 +71,16 @@ final class CtrlScreen {
         box.setFocusable(false);
         int pad = Math.round(24 * dp);
         box.setPadding(pad, pad, pad, pad);
-        TextView title = text(a, "Controllers", 24, Color.WHITE); title.setTypeface(Typeface.DEFAULT_BOLD);
+        TextView title = text(a, Tx.s(R.string.game_controllers), 24, Color.WHITE); title.setTypeface(Typeface.DEFAULT_BOLD);
         box.addView(title);
         hint = text(a, "", 15, 0xFFB8C4CC);
         box.addView(hint, lp(LinearLayout.LayoutParams.WRAP_CONTENT, 8));
         cards = new LinearLayout(a); cards.setOrientation(LinearLayout.HORIZONTAL); cards.setGravity(Gravity.CENTER);
         box.addView(cards, lp(LinearLayout.LayoutParams.MATCH_PARENT, 20));
         LinearLayout buttons = new LinearLayout(a); buttons.setGravity(Gravity.CENTER);
-        Button cancel = button(a, "Cancel (B)", v -> Native.ctrlButton(0));
-        touchJoin = button(a, "Join with on-screen controls", v -> Native.ctrlButton(2));
-        ok = button(a, "OK (A)", v -> Native.ctrlButton(1));
+        Button cancel = button(a, Tx.s(R.string.game_cancel_b), v -> Native.ctrlButton(0));
+        touchJoin = button(a, Tx.s(R.string.game_join_with_on_screen_controls), v -> Native.ctrlButton(2));
+        ok = button(a, Tx.s(R.string.game_ok_a), v -> Native.ctrlButton(1));
         buttons.addView(cancel); buttons.addView(touchJoin); buttons.addView(ok);
         box.addView(buttons, lp(LinearLayout.LayoutParams.WRAP_CONTENT, 20));
         FrameLayout root = a.rootView();
@@ -97,8 +97,7 @@ final class CtrlScreen {
             if (lines.length == 0 || !lines[0].startsWith("open")) { UI.postDelayed(this, 100); return; }   // the host's close follows
             String[] h = lines[0].split("\t", -1);
             int min = num(h, 1), max = num(h, 2); boolean canEnd = num(h, 4) != 0, touch = num(h, 5) != 0;
-            hint.setText((max == 1 ? "1 player" : (min > 1 && min != max ? min + "–" + max : String.valueOf(max)) + " players")
-                    + ". Press L + R on each controller in turn: the first is player 1. A on a joined controller when everyone is in; B on player 1 cancels.");
+            hint.setText(Tx.s(R.string.game_press_lr_hint, max == 1 ? Tx.s(R.string.game_1_player) : Tx.s(R.string.game_n_players, min > 1 && min != max ? min + "–" + max : String.valueOf(max))));
             ok.setEnabled(canEnd); ok.setAlpha(canEnd ? 1f : 0.4f);
             touchJoin.setVisibility(touch && screen != null && !screen.gamepadConnected() ? View.VISIBLE : View.GONE);
             GameActivity a = screen;
@@ -130,8 +129,8 @@ final class CtrlScreen {
         GradientDrawable bg = new GradientDrawable(); bg.setCornerRadius(10 * dp);
         bg.setColor(joined ? col : 0x00000000); bg.setStroke(Math.round(2 * dp), joined ? col : 0xFF55626C);
         c.setBackground(bg);
-        ((TextView) c.getChildAt(0)).setText("Player " + f[0]);
-        ((TextView) c.getChildAt(1)).setText(joined ? f[2] : "Press L + R");
+        ((TextView) c.getChildAt(0)).setText(Tx.s(R.string.game_player_n, f[0]));
+        ((TextView) c.getChildAt(1)).setText(joined ? f[2] : Tx.s(R.string.game_press_l_r));
         ((TextView) c.getChildAt(1)).setAlpha(joined ? 1f : 0.6f);
         ((TextView) c.getChildAt(2)).setText(f[4]);
     }

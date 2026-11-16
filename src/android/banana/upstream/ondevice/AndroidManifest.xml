@@ -15,5 +15,12 @@
             android:exported="false"
             android:process=":pack"
             android:foregroundServiceType="dataSync" />
+        <!-- Builds the shaders a running game asked for and its library lacks (LayerService): the same process as the Prepare job, so the packer's Python is loaded once.
+             dataSync: the sampled-keep check runs in the foreground (with no game in front, a plain started service is stopped and its process frozen mid-check) -->
+        <service
+            android:name=".LayerService"
+            android:exported="false"
+            android:process=":pack"
+            android:foregroundServiceType="dataSync" />
     </application>
 </manifest>

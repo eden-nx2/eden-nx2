@@ -317,6 +317,10 @@ final class LogDigest {
      * one; background: its importance was below visible)
      */
     Verdict verdict(Map<String, String> rec, int reason, int status, String desc, boolean background) {
+        return Words.english(() -> verdict0(rec, reason, status, desc, background));   // the digest is for bug reports: English, whatever the app's language
+    }
+
+    private Verdict verdict0(Map<String, String> rec, int reason, int status, String desc, boolean background) {
         String st = rec.get("state");
         String d = lower(desc);
         int gpu = firstRule("driver"), oom = firstRule("oom"), fatal = firstRule("fatal"), hang = firstRule("hang");
@@ -325,28 +329,28 @@ final class LogDigest {
         Verdict v = new Verdict();
         int rule = -1;
         if ("stopped".equals(st) || reason == 10 || reason == 11 || reason == 15 || reason == 16) set(v, "stopped", "stopped by the player", null);
-        else if (gpu >= 0) { set(v, "driver_lost", "driver lost", ExitNotice.GPU); rule = gpu; }
-        else if ("java".equals(st) || reason == R_CRASH || java != null) { set(v, "java_crash", "crashed (the app)", ExitNotice.JAVA); rule = firstRule("crash"); }
+        else if (gpu >= 0) { set(v, "driver_lost", "driver lost", ExitNotice.GPU()); rule = gpu; }
+        else if ("java".equals(st) || reason == R_CRASH || java != null) { set(v, "java_crash", "crashed (the app)", ExitNotice.JAVA()); rule = firstRule("crash"); }
         else if (crashed && hang >= 0 && crash != null && crash.sig != null && crash.sig == 14) { set(v, "hang", "hang (watchdog)", rules.get(hang).cause); rule = hang; }
         else if (crashed) {
-            if (oom >= 0) { set(v, "out_of_memory", "out of memory", ExitNotice.MEMORY); rule = oom; }
-            else if (fatal >= 0) { set(v, "host_fatal", "host FATAL", ExitNotice.FATAL); rule = fatal; }
-            else { set(v, "crashed", "crashed", ExitNotice.NATIVE); rule = firstRule("crash"); }
+            if (oom >= 0) { set(v, "out_of_memory", "out of memory", ExitNotice.MEMORY()); rule = oom; }
+            else if (fatal >= 0) { set(v, "host_fatal", "host FATAL", ExitNotice.FATAL()); rule = fatal; }
+            else { set(v, "crashed", "crashed", ExitNotice.NATIVE()); rule = firstRule("crash"); }
         }
         else if (hang >= 0 && rules.get(hang).id.equals("watchdog")) { set(v, "hang", "hang (watchdog)", rules.get(hang).cause); rule = hang; }
         else if ("host_exit".equals(st)) {
             if ("0".equals(rec.getOrDefault("rc", "0"))) set(v, "normal_exit", "ran and exited normally", null);
-            else { set(v, "host_error", "host error", ExitNotice.HOST_ERROR); rule = fatal; }
+            else { set(v, "host_error", "host error", ExitNotice.HOST_ERROR()); rule = fatal; }
         }
-        else if (lmk) { set(v, "out_of_memory", "out of memory", background ? ExitNotice.MEMORY_BG : ExitNotice.MEMORY); rule = oom; }
-        else if (reason == R_ANR) set(v, "anr", "not responding", ExitNotice.ANR_TEXT);
-        else if (reason == R_RESOURCES) set(v, "killed", "killed by Android", ExitNotice.RESOURCES);
+        else if (lmk) { set(v, "out_of_memory", "out of memory", background ? ExitNotice.MEMORY_BG() : ExitNotice.MEMORY()); rule = oom; }
+        else if (reason == R_ANR) set(v, "anr", "not responding", ExitNotice.ANR_TEXT());
+        else if (reason == R_RESOURCES) set(v, "killed", "killed by Android", ExitNotice.RESOURCES());
         else if (reason == R_SIGNALED)
-            set(v, "killed", "killed by Android", background && status == 9 ? ExitNotice.MEMORY_BG : status == 9 ? ExitNotice.KILLED : ExitNotice.NATIVE);
-        else if (fatal >= 0) { set(v, "host_fatal", "host FATAL", ExitNotice.FATAL); rule = fatal; }
+            set(v, "killed", "killed by Android", background && status == 9 ? ExitNotice.MEMORY_BG() : status == 9 ? ExitNotice.KILLED() : ExitNotice.NATIVE());
+        else if (fatal >= 0) { set(v, "host_fatal", "host FATAL", ExitNotice.FATAL()); rule = fatal; }
         else if (graceful > 0) set(v, "normal_exit", "ran and exited normally", null);
-        else if (reason == R_EXIT_SELF && status != 0) set(v, "host_error", "host error", ExitNotice.HOST_ERROR);
-        else set(v, "cut_short", "log cut short", ExitNotice.UNKNOWN_TEXT + " The log ends without an exit line (stopped from outside, or the log was cut).");
+        else if (reason == R_EXIT_SELF && status != 0) set(v, "host_error", "host error", ExitNotice.HOST_ERROR());
+        else set(v, "cut_short", "log cut short", ExitNotice.UNKNOWN_TEXT() + " The log ends without an exit line (stopped from outside, or the log was cut).");
         if (rule >= 0) {
             Row r = rules.get(rule);
             v.rule = r.id; v.cause = r.cause; v.meaning = r.meaning; v.doc = r.doc; v.line = hits.get(rule).first;

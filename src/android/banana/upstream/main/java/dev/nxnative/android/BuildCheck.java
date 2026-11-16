@@ -35,7 +35,7 @@ final class BuildCheck {
                 case OTHER_BUILD: return "Pack is for another build";
                 case MISSING: return "Pack is for another update";
                 case UNREADABLE: return "Game file cannot be read";
-                case UNSUPPORTED: return "Untested game version";
+                case UNSUPPORTED: return "Unsupported game version";
                 case ROMFS: return "Game data of another version";
                 default: return null;
             }
@@ -111,7 +111,7 @@ final class BuildCheck {
             return new Mod(f, null, null, rel(game, f), null);
         }
         if (version.startsWith("program/"))   // a program pack: a .nup holds program 0 only
-            return new Mod(null, null, null, version + "/exefs/" + m, "a .nup holds program 0 only; this pack's " + version + " is read from a dump folder");
+            return new Mod(null, null, null, version + "/exefs/" + m, Words.s("err_a_nup_holds_program_0", "a .nup holds program 0 only; this pack's ") + version + Words.s("err_is_read_from_a_dump", " is read from a dump folder"));
         long v;
         try { v = Long.parseLong(version); } catch (NumberFormatException e) { v = -1; }
         String sel = v < 0 ? "update/" + version : DumpLayout.selector(game, v, false), label = sel + "/exefs/" + m;
@@ -164,13 +164,13 @@ final class BuildCheck {
             Mod nso = mod(game, gv, e.getKey());
             if (nso.error != null) return new Result(Kind.UNREADABLE, nso.error, nso.label + ": " + nso.error);
             if (!nso.exists())
-                return new Result(Kind.MISSING, "The pack is for " + name + " " + Profile.versionName(parse(p.version)) + ", but the game " + (nso.nup != null ? ".nup" : "folder")
-                        + " has no " + nso.label + ". Pick the dump that has that update, or Prepare again from this one.", "no " + nso.label + " (pack version " + p.version + ")");
+                return new Result(Kind.MISSING, Words.s("err_the_pack_is_for", "The pack is for ") + name + " " + Profile.versionName(parse(p.version)) + Words.s("err_but_the_game", ", but the game ") + (nso.nup != null ? ".nup" : "folder")
+                        + " has no " + nso.label + Words.s("err_pick_the_dump_that_has", ". Pick the dump that has that update, or Prepare again from this one."), "no " + nso.label + " (pack version " + p.version + ")");
             String id;
             try {
                 id = nsoBuildId(nso.head(0x60), nso.label);
             } catch (IOException ex) {
-                return new Result(Kind.UNREADABLE, nso.label + " cannot be read: " + ex.getMessage(), nso.label + ": " + ex.getMessage());
+                return new Result(Kind.UNREADABLE, nso.label + Words.s("err_cannot_be_read_2", " cannot be read: ") + ex.getMessage(), nso.label + ": " + ex.getMessage());
             }
             if (!id.startsWith(e.getValue())) {
                 diff.append(diff.length() == 0 ? "" : "; ").append(e.getKey()).append(": pack ").append(shortId(e.getValue())).append(", game ").append(shortId(id))
@@ -179,9 +179,9 @@ final class BuildCheck {
             }
         }
         if (firstMod != null)
-            return new Result(Kind.OTHER_BUILD, "The pack was made from another build of " + name + " (" + firstMod + " " + shortId(firstWant) + "…) than the one in the game "
+            return new Result(Kind.OTHER_BUILD, Words.s("err_the_pack_was_made_from", "The pack was made from another build of ") + name + " (" + firstMod + " " + shortId(firstWant) + Words.s("err_than_the_one_in_the", "…) than the one in the game ")
                     + (Nup.isNup(game) ? ".nup" : "folder") + " (" + shortId(firstHave) + "…, " + Profile.versionName(parse(p.version))
-                    + "). Its code would crash with this game: Prepare again rewrites the game's code from this dump (a few minutes; shaders are kept).\n\nBuild IDs that differ: " + diff, diff.toString());
+                    + Words.s("err_its_code_would_crash_with", "). Its code would crash with this game: Prepare again rewrites the game's code from this dump (a few minutes; shaders are kept).\n\nBuild IDs that differ: ") + diff, diff.toString());
         Profile prof = Profile.of(p.titleId);
         Map<Long, Map<String, String>> sup = prof == null ? Map.of() : prof.buildMap();
         if (!sup.isEmpty()) {
@@ -199,7 +199,7 @@ final class BuildCheck {
                 StringBuilder s = new StringBuilder();
                 for (Long v : sup.keySet()) s.append(s.length() == 0 ? "" : ", ").append(v);
                 // a pack made with Try anyway (or elsewhere) for a build the profile does not list: Play anyway can start it, after a warning (MainActivity.launch)
-                return new Result(Kind.UNSUPPORTED, "The pack is for " + name + " (" + Profile.versionName(parse(p.version)) + "), a version this app has not been tested with (it supports "
+                return new Result(Kind.UNSUPPORTED, Words.s("err_the_pack_is_for", "The pack is for ") + name + " (" + Profile.versionName(parse(p.version)) + Words.s("err_a_version_this_app_does", "), a version this app does not support (it supports ")
                         + prof.supportedShort() + ").", (row == null ? "pack version " + p.version + ", app supports " + s : bad.toString()) + "\n" + prof.supported());
             }
         }

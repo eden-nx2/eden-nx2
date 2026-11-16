@@ -19,9 +19,10 @@ import java.util.Set;
  * game runs; Play waits while one works (busy).
  */
 final class PackUi {
-    static final int PICK_EXPORT = 40, PICK_IMPORT_ZIP = 41, PICK_IMPORT_DIR = 42;
+    static final int PICK_EXPORT = 40, PICK_IMPORT_ZIP = 41, PICK_IMPORT_DIR = 42, PICK_IMPORT_LIB = 43;
     private static final Set<String> busy = new HashSet<>();
     private static Game pending;
+    private static Runnable pendingAgain;   // Import a library: the game's page, built again once the library is in
 
     private PackUi() {}
 
@@ -34,8 +35,8 @@ final class PackUi {
 
     private static boolean ready(MainActivity a, Game g) {
         if (a.needAccess()) return false;
-        if (busy(g.titleId)) { a.error("An export or import of " + g.name + "'s pack is still working."); return false; }
-        if (SaveUi.gameRunning(a, g)) { a.error(g.name + " is running: stop it first (its in-game panel › Stop the game)."); return false; }
+        if (busy(g.titleId)) { a.error(Tx.s(R.string.err_pack_still_working, g.name)); return false; }
+        if (SaveUi.gameRunning(a, g)) { a.error(Tx.s(R.string.err_game_running_stop_first, g.name)); return false; }
         return true;
     }
 
@@ -44,25 +45,25 @@ final class PackUi {
         try {
             Pack.read(new File(g.packDir));
         } catch (IOException e) {
-            a.error("There is no pack to export: " + e.getMessage());
+            a.error(Tx.s(R.string.err_no_pack_to_export, e.getMessage()));
             return;
         }
         pending = g;
-        a.pickFolder(PICK_EXPORT, "Pick the folder for the pack's .zip");
+        a.pickFolder(PICK_EXPORT, Tx.s(R.string.prepare_pick_the_folder_for_the));
     }
 
     static void importPick(MainActivity a, Game g) {
         if (!ready(a, g)) return;
-        new PadFocus.Builder(a).setTitle("Import " + g.name + "'s pack from…")
-                .setItems(new String[] {"A .zip file (made by Export pack…)", "A pack folder (with pack.tsv and shaders/)"}, (d, w) -> {
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.prepare_import_pack_from, g.name))
+                .setItems(new String[] {Tx.s(R.string.prepare_a_zip_file_made_by), Tx.s(R.string.prepare_a_pack_folder_with_pack)}, (d, w) -> {
                     pending = g;
-                    if (w == 1) { a.pickFolder(PICK_IMPORT_DIR, "Pick the pack folder (the one with pack.tsv and shaders/)"); return; }
-                    Toast.makeText(a, "Pick the pack's .zip file", Toast.LENGTH_LONG).show();
+                    if (w == 1) { a.pickFolder(PICK_IMPORT_DIR, Tx.s(R.string.common_pick_the_pack_folder_the)); return; }
+                    Toast.makeText(a, Tx.s(R.string.prepare_pick_the_pack_s_zip), Toast.LENGTH_LONG).show();
                     Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
                     i.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse("content://com.android.externalstorage.documents/document/primary%3A"));
                     a.startActivityForResult(i, PICK_IMPORT_ZIP);
                 })
-                .setNegativeButton("Cancel", null).show();
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     /**
@@ -79,17 +80,93 @@ final class PackUi {
             else importRun(a, g, new File(im));
             return;
         }
-        a.error("No game of " + id + " in the list.");
+        a.error(Tx.s(R.string.err_no_game_of_id, id));
     }
 
-    /** MainActivity.onActivityResult, before a folder's path is read: the .zip picked for Import pack… */
+    /**
+     * Import a library (the game page's shader rows): the file picker for one dmsh_vk.lib built on a computer (scripts/pack_android.py), read through its document (no
+     * path needed), checked (ShaderLibs.importProblem: this game, this APK's ABI or one the host also plays, a version, its size) and moved into the pack's
+     * shaders/v-&lt;its version&gt;/ by rename; again: the page, built again after
+     */
+    static void importLibraryPick(MainActivity a, Game g, Runnable again) {
+        if (!ready(a, g)) return;
+        pending = g;
+        pendingAgain = again;
+        Toast.makeText(a, Tx.s(R.string.prepare_pick_the_game_s_dmsh), Toast.LENGTH_LONG).show();
+        a.startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), PICK_IMPORT_LIB);
+    }
+
+    /** The picked library into the pack, off the main thread (a library is hundreds of MB): copied under a temporary name in the pack's shaders/, checked, renamed in */
+    private static void importLibraryRun(MainActivity a, Game g, Uri doc, Runnable again) {
+        if (!ready(a, g)) return;
+        File pack = new File(g.packDir), shaders = new File(pack, "shaders"), tmp = new File(shaders, ".import-dmsh_vk.lib.tmp");
+        Profile prof = Profile.of(g.titleId);
+        run(a, g, Tx.s(R.string.prepare_importing_the_shader_library), () -> {
+            if (!pack.isDirectory()) throw new IOException("the game has no pack folder yet (" + pack + "): prepare it, or import a whole pack, first");
+            if (!shaders.isDirectory() && !shaders.mkdirs()) throw new IOException("the pack's shaders folder cannot be made (" + shaders + ")");
+            long size = -1;
+            try (android.database.Cursor c = a.getContentResolver().query(doc, new String[] {android.provider.OpenableColumns.SIZE}, null, null, null)) {
+                if (c != null && c.moveToFirst() && !c.isNull(0)) size = c.getLong(0);
+            } catch (RuntimeException e) { /* not told: checked after the copy */ }
+            if (size >= 0 && shaders.getUsableSpace() < size + (64L << 20))
+                throw new IOException("the library needs " + SaveStore.size(size) + ", and the pack's storage has " + SaveStore.size(shaders.getUsableSpace()) + " free");
+            tmp.delete();   // one an earlier import left
+            try (java.io.InputStream in = a.getContentResolver().openInputStream(doc); java.io.FileOutputStream out = new java.io.FileOutputStream(tmp)) {
+                if (in == null) throw new IOException("the file cannot be opened");
+                byte[] buf = new byte[1 << 20];
+                for (int n; (n = in.read(buf)) > 0; ) out.write(buf, 0, n);
+                out.getFD().sync();
+            }
+            try {
+                ShaderLibs.Header h = ShaderLibs.header(tmp);
+                String bad = ShaderLibs.importProblem(h, tmp.length(), g.titleId, BuildConfig.NX_DMSH_VK_CHAIN, BuildConfig.NX_DMSH_VK_ABI, BuildConfig.NX_DMSH_VK_ABI_COMPAT,
+                        prof == null ? null : prof.shaderInputs);
+                if (bad != null) throw new IOException(bad);
+                File dir = new File(shaders, "v-" + h.vkChain), lib = new File(dir, "dmsh_vk.lib");
+                if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("the folder " + dir + " cannot be made");
+                if (SaveUi.gameRunning(a, g)) throw new IOException(g.name + " was started meanwhile");
+                // its stamp first (dmsh_chain.py write_stamp's form): a stamp of the library this one replaces would name other inputs (Pack.libraryProblem reads it)
+                File st = new File(dir, "inputs.tsv"), stTmp = new File(dir, "inputs.tsv.tmp");
+                java.nio.file.Files.write(stTmp.toPath(), ("# the game and the profile inputs this library was built from (dm/gfx/tools/dmsh_chain.py inputs)\ngame\t" + h.game + "\ninputs\t" + h.inputs + "\n")
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                if (!stTmp.renameTo(st)) throw new IOException("the library's stamp cannot be written in " + dir);
+                if (!tmp.renameTo(lib)) throw new IOException("the library cannot be moved into " + dir);
+                return h.vkChain;
+            } finally {
+                tmp.delete();
+            }
+        }, (r, err) -> {
+            if (err != null) {
+                Ui.explain(a, Tx.s(R.string.prepare_shader_library_not_imported), Tx.s(R.string.prepare_sentence_nothing_in_pack_changed, PrepareText.capital(err) + (err.endsWith(".") ? "" : ".")), "Pack folder: " + pack)
+                        .setPositiveButton(android.R.string.ok, null).show();
+                return;
+            }
+            String v = (String) r;
+            String what = Pack.libraryProblem(pack, g.titleId) == null ? Tx.s(R.string.prepare_it_is_this_app_version)
+                    : Tx.s(R.string.prepare_library_of_version, v);
+            Ui.explain(a, Tx.s(R.string.prepare_shader_library_imported), Tx.s(R.string.prepare_library_imported_note, what), "Into: " + new File(shaders, "v-" + v + "/dmsh_vk.lib"))
+                    .setPositiveButton(android.R.string.ok, null).show();
+            if (again != null) again.run();
+            a.refresh();
+        });
+    }
+
+    /** MainActivity.onActivityResult, before a folder's path is read: the .zip picked for Import pack…, the library picked for Import a library */
     static boolean documentResult(MainActivity a, int request, Uri doc) {
+        if (request == PICK_IMPORT_LIB) {
+            Game g = pending;
+            Runnable again = pendingAgain;
+            pending = null;
+            pendingAgain = null;
+            if (g != null) importLibraryRun(a, g, doc, again);
+            return true;
+        }
         if (request != PICK_IMPORT_ZIP) return false;
         Game g = pending;
         pending = null;
         if (g == null) return true;
         String p = PathUtil.documentToPath(doc);
-        if (p == null) { a.error("That file is not on this phone's storage by a path the app can read (" + doc + "). Pick it from the phone's storage (☰ › the phone's name), not from Recent or Downloads."); return true; }
+        if (p == null) { a.error(Tx.s(R.string.err_file_not_on_storage_path, doc)); return true; }
         importRun(a, g, new File(p));
         return true;
     }
@@ -122,10 +199,9 @@ final class PackUi {
                 throw new IOException("the zip needs " + SaveStore.size(need) + ", and " + dir + " has " + SaveStore.size(dir.getUsableSpace()) + " free");
             return PackZip.export(pack, dir);
         }, (r, err) -> {
-            if (err != null) { a.error("No pack was exported: " + err + "\n\nThe pack in " + pack + " was only read."); return; }
+            if (err != null) { a.error(Tx.s(R.string.err_no_pack_exported, err, pack)); return; }
             File z = (File) r;
-            new PadFocus.Builder(a).setTitle("Pack exported").setMessage(z + "\n\n" + SaveStore.size(z.length()) + ", checked against the pack file by file. Import pack… on another "
-                    + "phone (or after a new install) puts it back.").setPositiveButton("OK", null).show();
+            new PadFocus.Builder(a).setTitle(Tx.s(R.string.prepare_pack_exported)).setMessage(Tx.s(R.string.prepare_pack_exported_message, z.toString(), SaveStore.size(z.length()))).setPositiveButton(android.R.string.ok, null).show();
         });
     }
 
@@ -140,7 +216,7 @@ final class PackUi {
             if (remembered != null && remembered.isFile()) {
                 Job j = Job.read(remembered);
                 if (SaveStore.same(j.pack(), target) && !"done".equals(j.state()))
-                    throw new IOException("a Prepare job of this game writes to " + target + " (" + j.statusText(false) + "): let it finish, or forget it in its ⋯ Manage, first");
+                    throw new IOException("a Prepare job of this game writes to " + target + " (" + j.statusText(false) + Tx.s(R.string.prepare_let_it_finish_or_forget));
             }
             Pack p = PackZip.stage(source, packs, g.titleId);
             try {
@@ -155,8 +231,8 @@ final class PackUi {
         }, (r, err) -> {
             if (err != null) {
                 int cut = err.indexOf("\n\n");   // a build check's sentence, then the build IDs
-                Ui.explain(a, "Pack not imported", PrepareText.capital(cut > 0 ? err.substring(0, cut) : err) + (err.endsWith(".") ? "" : ".") + " Nothing was changed.",
-                        (cut > 0 ? err.substring(cut + 2) + "\n" : "") + "Pack folder: " + target).setPositiveButton("OK", null).show();
+                Ui.explain(a, Tx.s(R.string.prepare_pack_not_imported), Tx.s(R.string.prepare_sentence_nothing_changed, PrepareText.capital(cut > 0 ? err.substring(0, cut) : err) + (err.endsWith(".") ? "" : ".")),
+                        (cut > 0 ? err.substring(cut + 2) + "\n" : "") + "Pack folder: " + target).setPositiveButton(android.R.string.ok, null).show();
                 return;
             }
             String old = Folders.pickedPack(a, g.titleId);
@@ -164,11 +240,13 @@ final class PackUi {
             if (old != null && old.equals(Prefs.folder(a, "pack"))) Prefs.folder(a, "pack", null);
             Folders.setPack(a, g.titleId, target);
             String lp = Pack.libraryProblem(target, g.titleId);
-            String shaders = lp == null ? "It has this app's shader library (" + BuildConfig.NX_DMSH_VK_CHAIN + "): ready to play."
+            String shaders = lp == null ? Tx.s(R.string.prepare_has_this_apps_library, BuildConfig.NX_DMSH_VK_CHAIN)
                     : Pack.playableLibrary(target, g.titleId) != null || Pack.legacyLibrary(target, g.titleId) != null
-                    ? "Its shaders are of an older version: the game plays with them while the app updates them, as after an app update." : lp + " The game's card offers what fixes it.";
-            Ui.explain(a, "Pack imported", shaders, "Pack folder: " + target + (old != null ? "\nThe pack folder picked before (" + old + ") is kept as it was; the game now uses this one." : ""))
-                    .setPositiveButton("OK", null).show();
+                    ? Tx.s(R.string.prepare_its_shaders_are_of_an)
+                    : Pack.shadersOnDemand(target, g.titleId, Prefs.layerEnv(a, g.titleId)) ? ShaderState.onDemandNote(Pack.isDump(new File(g.gameDir)))
+                    : lp + " " + Tx.s(R.string.prepare_card_offers_fix);
+            Ui.explain(a, Tx.s(R.string.prepare_pack_imported), shaders, "Pack folder: " + target + (old != null ? "\n" + Tx.s(R.string.prepare_old_pack_folder_kept, old.toString()) : ""))
+                    .setPositiveButton(android.R.string.ok, null).show();
         });
     }
 

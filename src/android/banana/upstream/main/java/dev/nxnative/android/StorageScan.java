@@ -34,15 +34,16 @@ final class StorageScan {
     private StorageScan() {}
 
     enum Kind {
-        OLD_SHADERS("Old shader library versions", true, "Libraries of earlier app versions in packs that already have this version's library."),
-        UNFINISHED("Unfinished copies and imports", true, "Left by a copy, pack import, driver install or restamp that was stopped part way."),
-        DOWNLOADS("Downloads", true, "Update and driver downloads left in the cache."),
-        FILEBACK("RAM saver files", true, "Memory files a game left behind when it was stopped."),
-        OLD_LOGS("Old logs", true, "Run logs, except the newest of each game."),
-        GAME_TEMP("Game temporary files", false, "Each game's temporary folder and pipeline cache. They come back as you play; the first minutes may stutter again."),
-        UNUSED_PACKS("Packs of games not in your list", false, "Adding such a game again would need Prepare again."),
-        UNUSED_COPIES("Game copies not in your list", false, "Copies made with Copy into the app that no game in the list uses."),
-        GAME_DATA("Game data", false, "The game's pack with its shaders, temporary files, logs and DLC links. Play then needs Prepare again; saves stay.");
+        OLD_SHADERS(Words.s("game_old_shader_library_versions", "Old shader library versions"), true, Words.s("game_libraries_of_earlier_app_versions", "Libraries of earlier app versions in packs that already have this version's library.")),
+        UNFINISHED(Words.s("game_unfinished_copies_and_imports", "Unfinished copies and imports"), true, Words.s("game_left_by_a_copy_pack", "Left by a copy, pack import, driver install or restamp that was stopped part way.")),
+        DOWNLOADS(Words.s("game_downloads", "Downloads"), true, Words.s("game_update_and_driver_downloads_left", "Update and driver downloads left in the cache.")),
+        FILEBACK(Words.s("game_ram_saver_files", "RAM saver files"), true, Words.s("game_memory_files_a_game_left", "Memory files a game left behind when it was stopped.")),
+        OLD_LOGS(Words.s("game_old_logs", "Old logs"), true, Words.s("game_run_logs_except_the_newest", "Run logs, except the newest of each game.")),
+        LAYER(Words.s("game_shader_cache_built_while_playing", "Shader cache built while playing"), false, Words.s("game_shaders_a_game_asked_for", "Shaders a game asked for that its library lacked, built while you played (each pack's shaders/layer). Rebuilt as you play: the first minutes after may stutter or look incomplete again.")),
+        GAME_TEMP(Words.s("game_game_temporary_files", "Game temporary files"), false, Words.s("game_each_game_s_temporary_folder", "Each game's temporary folder and pipeline cache. They come back as you play; the first minutes may stutter again.")),
+        UNUSED_PACKS(Words.s("game_packs_of_games_not_in", "Packs of games not in your list"), false, Words.s("game_adding_such_a_game_again", "Adding such a game again would need Prepare again.")),
+        UNUSED_COPIES(Words.s("game_game_copies_not_in_your", "Game copies not in your list"), false, Words.s("game_copies_made_with_copy_into", "Copies made with Copy into the app that no game in the list uses.")),
+        GAME_DATA(Words.s("game_game_data", "Game data"), false, Words.s("game_the_game_s_pack_with", "The game's pack with its shaders, temporary files, logs and DLC links. Play then needs Prepare again; saves stay."));
 
         final String title, about;
         final boolean preselected;
@@ -97,7 +98,7 @@ final class StorageScan {
      * after it). Compared by canonical paths; a path that cannot be resolved is refused.
      */
     static String refuse(Roots r, File f) {
-        if (f == null) return "no path";
+        if (f == null) return Words.s("game_no_path", "no path");
         String c;
         try { c = canon(f); } catch (IOException e) { return "cannot resolve " + f; }
         boolean in = false;
@@ -108,11 +109,11 @@ final class StorageScan {
                 if (inside(c, rc)) in = true;
             } catch (IOException ignored) { /* a root that cannot be resolved holds nothing */ }
         }
-        if (!in) return "outside the app's folders: " + f;
+        if (!in) return Words.s("game_outside_the_app_s_folders", "outside the app's folders: ") + f;
         String name = new File(c).getName(), parent = new File(c).getParent();
         for (File s : r.saves) {
             String sc;
-            try { sc = canon(s); } catch (IOException e) { return "a save folder cannot be resolved: " + s; }
+            try { sc = canon(s); } catch (IOException e) { return Words.s("game_a_save_folder_cannot_be", "a save folder cannot be resolved: ") + s; }
             if (c.equals(sc) || inside(c, sc)) return "a save: " + f;
             if (inside(sc, c)) return "holds a save: " + f;
             File sf = new File(sc);
@@ -161,7 +162,7 @@ final class StorageScan {
                 deleteTree(it.file.toPath());
                 res.freed += it.bytes;
             } catch (IOException | SecurityException e) {
-                res.problems.add("not all of " + it.label + " could be removed: " + e.getMessage());
+                res.problems.add(Words.s("game_not_all_of", "not all of ") + it.label + Words.s("game_could_be_removed", " could be removed: ") + e.getMessage());
             }
         }
         return res;
@@ -226,6 +227,16 @@ final class StorageScan {
                 // only once this version's library is there: until then an older one is what the game plays, and what a delta update starts from
                 else if (haveCurrent && vn.startsWith("v-") && !vn.equals("v-" + current) && v.isDirectory()) add(r, out, Kind.OLD_SHADERS, v, r.ext);
             }
+        }
+        // The shader layer of each listed game's pack (shaders/layer: built while playing, kept between runs; its own item, never part of the temporary files), each once
+        Set<String> layers = new HashSet<>();
+        for (Listed g : listed) {
+            if (g.packDir == null) continue;
+            File l = new File(g.packDir, "shaders/layer");
+            if (!l.isDirectory()) continue;
+            String key;
+            try { key = canon(l); } catch (IOException e) { continue; }
+            if (layers.add(key)) add(r, out, Kind.LAYER, l, r.ext);
         }
         // Game copies: a cut copy (<name>.part), and copies no listed game uses
         for (File g : list(r.ext == null ? null : CopyPlan.games(r.ext))) {

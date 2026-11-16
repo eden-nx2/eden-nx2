@@ -29,9 +29,25 @@ import java.util.Locale;
 public final class HokkaidoBridge {
     private HokkaidoBridge() {}
 
-    /** NxApp.onCreate's work: Hokkaido's application runs it in every process. */
+    /**
+     * NxApp.onCreate's work: Hokkaido's application runs it in every process. Not NxApp.applyTheme: it sets the night
+     * mode of the whole app, Hokkaido's screens too.
+     */
     public static void install(Context context) {
+        android.app.Application app = (android.app.Application) context.getApplicationContext();
+        NxApp.app = app;   // Tx reads Banana Native's strings through it
+        Words.source = new Words.Source() {
+            @Override public String string(String key) {
+                int id = app.getResources().getIdentifier(key, "string", app.getPackageName());
+                return id == 0 ? null : app.getResources().getString(id);
+            }
+            @Override public String plural(String key, int count) {
+                int id = app.getResources().getIdentifier(key, "plurals", app.getPackageName());
+                return id == 0 ? null : app.getResources().getQuantityText(id, count).toString();
+            }
+        };
         PickedNup.install(context);
+        ShaderLibs.appFiles = app.getExternalFilesDir(null);
     }
 
     /**
@@ -126,7 +142,7 @@ public final class HokkaidoBridge {
         if (!r.ok()) {
             Profile p = Profile.of(id);
             String title = r.otherBuild ? "Untested version" + (p != null ? " of " + p.name : "") : "Cannot prepare this game";
-            String message = r.otherBuild ? r.error + "\n\n" + PrepareText.ANYWAY_WARNING : r.error;
+            String message = r.otherBuild ? r.error + "\n\n" + PrepareText.ANYWAY_WARNING() : r.error;
             return new Plan(Plan.PROBLEM, title, message, r.detail, r.otherBuild, dump.getPath(), null, null, null, null, false, false);
         }
         Profile prof = Profile.of(r.titleId);
@@ -156,7 +172,9 @@ public final class HokkaidoBridge {
                 String build = PackCheck.blocking(c, p, r.dump);
                 String library = PackCheck.shaders(packDir, r.titleId);
                 boolean code = build != null;
-                boolean shaders = library != null;
+                // A game the shader layer covers with no library at all: the code only; its shaders are built while it plays (Ondevice.Panel.checked)
+                boolean covered = ShaderLibs.layerCovers(r.titleId, Prefs.layerEnv(c, r.titleId));
+                boolean shaders = library != null && !(covered && code && Pack.libraryOf(packDir) == null);
                 String what = code && shaders
                         ? "Rewrites the game's code (a few minutes) and " + Ondevice.shadersText(packDir, r.titleId)
                         : code ? "Rewrites the game's code (a few minutes, in the background)." : Ondevice.shadersText(packDir, r.titleId);
@@ -167,12 +185,15 @@ public final class HokkaidoBridge {
         } catch (IOException e) {
             // no usable pack: the whole job
         }
-        String text = String.format(Locale.getDefault(),
-                "%s, %d DLC.\n\nBanana Native makes the game's pack from your dump: it rewrites the game's code (a few minutes) and translates %,d shaders (%s in the background, best on the charger). You can pause any time.\n\nNeeds about 1.5 GB of free space (%.1f GB free now).",
-                (r.version == 0 ? "Base game" : "Update " + r.version) + (r.untested ? " (untested version)" : ""), r.dlc,
-                prof != null ? prof.shaderTotal : 0, ShaderLibs.jobMinutesText(prof != null ? prof.shaderTotal : 0), r.free / 1073741824.0);
+        // A game the shader layer covers is prepared without shaders: it plays once its code is done and builds its shaders while it runs (Ondevice.Panel.checked)
+        boolean covered = ShaderLibs.layerCovers(r.titleId, Prefs.layerEnv(c, r.titleId));
+        int total = prof != null ? prof.shaderTotal : 0;
+        String head = (r.version == 0 ? "Base game" : "Update " + r.version) + (r.untested ? " (untested version)" : "") + ", " + r.dlc + " DLC.\n\n";
+        String space = String.format(Locale.getDefault(), "\n\nNeeds about 1.5 GB of free space (%.1f GB free now).", r.free / 1073741824.0);
+        String text = covered ? head + PrepareText.codeOnlyText(ShaderLibs.minutesText(total)) + space
+                : head + String.format(Locale.getDefault(), "Banana Native makes the game's pack from your dump: it rewrites the game's code (a few minutes) and translates %,d shaders (%s in the background, best on the charger). You can pause any time.", total, ShaderLibs.jobMinutesText(total)) + space;
         String where = "Game: " + r.dump + "\nWorking files: " + r.work + "\nPack: " + AppStorage.pack(c, r.titleId);
-        return new Plan(Plan.PREPARE, name, text, where, false, dump.getPath(), null, r, null, null, true, true);
+        return new Plan(Plan.PREPARE, name, text, where, false, dump.getPath(), null, r, null, null, true, !covered);
     }
 
     /**
@@ -192,7 +213,7 @@ public final class HokkaidoBridge {
                 return false;
             }
         } else if (plan.kind == Plan.PREPARE) {
-            j = Job.create(plan.result, AppStorage.pack(c, plan.result.titleId));
+            j = Job.create(plan.result, AppStorage.pack(c, plan.result.titleId), !plan.shaders);   // (code only: its shaders are built while it plays)
             j.save();
         } else {
             throw new IllegalStateException("nothing to prepare");
@@ -514,7 +535,8 @@ public final class HokkaidoBridge {
         } catch (IOException e) {
             return null;
         }
-        if (PackCheck.blocking(c, p, game) != null || Pack.libraryProblem(packDir, id) != null) return null;
+        // A missing or older shader library blocks only a game the shader layer does not cover (FrontendLaunch.ready)
+        if (PackCheck.blocking(c, p, game) != null || Pack.libraryBlock(packDir, id, Prefs.layerEnv(c, id)) != null) return null;
         if (card != null) return card;
         Game g = new Game(id, p.name.isEmpty() ? id : p.name, game.getPath(), packDir.getPath());
         return Game.put(c, g);

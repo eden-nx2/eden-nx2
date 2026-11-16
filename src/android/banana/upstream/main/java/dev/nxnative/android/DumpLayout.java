@@ -375,7 +375,7 @@ final class DumpLayout {
             f.otherBuild = true;
             f.detail = "The dump holds " + describe(dump) + ".\n" + prof.supported();
             return "This dump holds " + prof.name + " (" + Profile.versionName(have.get(have.size() - 1)) + "), not a build this app supports (it supports " + prof.supportedShort()
-                    + "). Dump that version, or Try anyway: it may not start or may crash.";
+                    + "). Dump that version, or Try anyway: parts of the picture are likely to be missing, or it may not start or crash.";
         }
         long v = f.version;
         String where = nup ? fn + ":" + selector(dump, v, false) : name(v);

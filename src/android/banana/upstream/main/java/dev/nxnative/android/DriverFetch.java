@@ -42,7 +42,7 @@ final class DriverFetch {
         {"whitebelyash/freedreno_turnip-CI", "whitebelyash Turnip CI"},
         {"Weab-chan/freedreno_turnip-CI", "Weab-chan Freedreno CI"},
         {"crueter/GameHub-8Elite-Drivers", "GameHub Adreno 8xx"},
-        {"StevenMXZ/Adreno-Tools-Drivers", "StevenMXZ Turnip and Qualcomm"},
+        {"StevenMXZ/Adreno-Tools-Drivers", "StevenMXZ Qualcomm 891.14 (recommended) and Turnip"},
     };
 
     private static final long MAX_ZIP = 512L << 20;
@@ -51,7 +51,8 @@ final class DriverFetch {
     static final class Asset {
         final String repo, tag, name, url; final long size;
         Asset(String repo, String tag, String name, String url, long size) { this.repo = repo; this.tag = tag; this.name = name; this.url = url; this.size = size; }
-        String label() { return tag + "\n  " + name + String.format(Locale.US, "  (%.1f MB)", size / 1048576.0); }
+        boolean recommended() { return repo.equals(GpuDriver.RECOMMENDED_REPO) && tag.equals(GpuDriver.RECOMMENDED_TAG); }
+        String label() { return (recommended() ? "(recommended) " : "") + tag + "\n  " + name + String.format(Locale.US, "  (%.1f MB)", size / 1048576.0); }
     }
 
     /** A message for the user, without a stack trace */
@@ -129,9 +130,9 @@ final class DriverFetch {
     static void dialog(Activity a, int request) {
         String[] labels = new String[REPOS.length];
         for (int k = 0; k < REPOS.length; k++) labels[k] = REPOS[k][1] + "\n  github.com/" + REPOS[k][0];
-        new PadFocus.Builder(a).setTitle("Download a driver (GitHub releases)")
+        new PadFocus.Builder(a).setTitle(Tx.s(R.string.game_download_a_driver_github_releases))
                 .setItems(labels, (d, w) -> releases(a, REPOS[w][0], request))
-                .setNegativeButton("Cancel", null).show();
+                .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
     }
 
     private static void releases(Activity a, String repo, int request) {
@@ -144,12 +145,13 @@ final class DriverFetch {
                 if (gone(a)) return;
                 wait.dismiss();
                 if (fail != null) { Toast.makeText(a, repo + ": " + fail, Toast.LENGTH_LONG).show(); return; }
-                if (got.isEmpty()) { Toast.makeText(a, repo + ": no .zip assets in its releases", Toast.LENGTH_LONG).show(); return; }
+                if (got.isEmpty()) { Toast.makeText(a, Tx.s(R.string.game_no_zip_assets, repo), Toast.LENGTH_LONG).show(); return; }
+                for (int k = 0; k < got.size(); k++) if (got.get(k).recommended()) { got.add(0, got.remove(k)); break; }   // the recommended build first
                 String[] labels = new String[got.size()];
                 for (int k = 0; k < got.size(); k++) labels[k] = got.get(k).label();
                 new PadFocus.Builder(a).setTitle(repo)
                         .setItems(labels, (d, w) -> download(a, got.get(w), request))
-                        .setNegativeButton("Back", (d, w) -> dialog(a, request)).show();
+                        .setNegativeButton(Tx.s(R.string.common_back), (d, w) -> dialog(a, request)).show();
             });
         }, "driver-list").start();
     }
@@ -164,8 +166,8 @@ final class DriverFetch {
             UI.post(() -> {
                 if (gone(a)) return;
                 wait.dismiss();
-                if (fail != null) { Toast.makeText(a, "Not installed: " + fail, Toast.LENGTH_LONG).show(); return; }
-                Toast.makeText(a, "Installed and picked " + got.label(), Toast.LENGTH_LONG).show();
+                if (fail != null) { Toast.makeText(a, Tx.s(R.string.game_not_installed_reason, fail), Toast.LENGTH_LONG).show(); return; }
+                Toast.makeText(a, Tx.s(R.string.game_installed_and_picked, got.label()), Toast.LENGTH_LONG).show();
                 GpuDriver.dialog(a, request);
             });
         }, "driver-download").start();

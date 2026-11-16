@@ -48,11 +48,11 @@ final class CheatsUi {
     static void rows(MainActivity a, Game g, java.util.function.Consumer<Ui.Setting> add, Runnable again) {
         String id = g.titleId;
         Ui.Setting sw = new Ui.Setting(a, "🧪", a.getString(R.string.cheats_title), null).toggle(a, Prefs.cheats(a, id), (b, on) -> Prefs.cheats(a, id, on));
-        sw.badge("Experimental").says(a.getString(R.string.cheats_on), a.getString(R.string.cheats_off));
+        sw.badge(Tx.s(R.string.game_experimental)).says(a.getString(R.string.cheats_on), a.getString(R.string.cheats_off));
         add.accept(sw);
         int n = Cheats.importedFiles(folder(a, id)).size();
         add.accept(new Ui.Setting(a, "📄", a.getString(R.string.cheats_files_title), v -> sheet(a, g, again))
-                .value(n == 0 ? "The game's own" : "The game's own and " + n + " imported").note(a.getString(R.string.cheats_files_note)).chevron(a).sub());
+                .value(n == 0 ? Tx.s(R.string.game_the_game_s_own) : Tx.n(R.plurals.game_own_and_imported, n, n)).note(a.getString(R.string.cheats_files_note)).chevron(a).sub());
     }
 
     /** The Cheat files sheet: one line per file, a tap on an imported one offers Remove; then the three actions */
@@ -73,9 +73,9 @@ final class CheatsUi {
             if (w <= imported.size()) {
                 File f = imported.get(w - 1);
                 new PadFocus.Builder(a).setTitle(a.getString(R.string.cheats_remove) + " " + f.getName() + "?")
-                        .setMessage("Its cheats leave the in-game panel from the next start. The game's own file stays.")
+                        .setMessage(Tx.s(R.string.game_its_cheats_leave_the_in))
                         .setPositiveButton(a.getString(R.string.cheats_remove), (x, y) -> { Cheats.remove(folder, f.getName()); again.run(); })
-                        .setNegativeButton("Cancel", null).show();
+                        .setNegativeButton(Tx.s(R.string.common_cancel), null).show();
                 return;
             }
             int k = w - imported.size();
@@ -84,7 +84,7 @@ final class CheatsUi {
             else if (k == 2) a.startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/zip")
                     .putExtra(Intent.EXTRA_TITLE, Cheats.zipName(g.titleId, new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date()))), CREATE_ZIP);
             else a.startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), PICK_ZIP);
-        }).setNegativeButton("Close", null).show();
+        }).setNegativeButton(Tx.s(R.string.common_close), null).show();
     }
 
     /** MainActivity.onActivityResult: the documents of Import cheat file…, Export cheats… and Import cheats… */

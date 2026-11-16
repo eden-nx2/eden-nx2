@@ -41,4 +41,1323 @@
     <string name="cheats_refused">Not imported: %1$s</string>
     <string name="cheats_zip_done">Imported %1$d cheat files and the cheat switches.</string>
     <string name="cheats_exported">Cheats exported.</string>
+    <!-- The launcher's text, moved out of the code (Tx.s(R.string.key); android/README.md, Languages). English is the source and the fallback. Keys by screen:
+         common_ (shared), home_, settings_, game_, prepare_, ready_, err_. The Advanced page, log lines and [RED] lines stay English in the code -->
+    <string name="settings_language_title">Language</string>
+    <!-- the language's own name comes first: "Español (unreviewed)" -->
+    <string name="settings_language_system">System default (%1$s)</string>
+
+    <!-- Shared -->
+    <string name="common_about">About</string>
+    <string name="common_appearance">Appearance</string>
+    <string name="common_back">Back</string>
+    <string name="common_button_mapping">Button mapping</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_check_for_updates">Check for updates</string>
+    <string name="common_close">Close</string>
+    <string name="common_controls">Controls</string>
+    <string name="common_copy_report">Copy report</string>
+    <string name="common_defaults_for_all_games">Defaults for all games</string>
+    <string name="common_display">Display</string>
+    <string name="common_done">Done</string>
+    <string name="common_dynamic_resolution">Dynamic resolution</string>
+    <string name="common_folders">Folders</string>
+    <string name="common_frame_rate_cap">Frame rate cap</string>
+    <string name="common_fsr_sharpness">FSR sharpness</string>
+    <string name="common_game_pack_and_save_folders">Game, pack and save folders</string>
+    <string name="common_gpu_driver">GPU driver</string>
+    <string name="common_help">Help</string>
+    <string name="common_hide">Hide</string>
+    <string name="common_import_pack">Import pack…</string>
+    <string name="common_not_in_this_app_version">Not in this app version</string>
+    <string name="common_on_screen_controls">On-screen controls</string>
+    <string name="common_open_settings">Open settings</string>
+    <string name="common_open_the_in_game_panel">Open the in-game panel with a controller</string>
+    <string name="common_play">Play</string>
+    <string name="common_prepare">Prepare</string>
+    <string name="common_prepare_again">Prepare again</string>
+    <string name="common_prepare_shaders">Prepare shaders</string>
+    <string name="common_preparing">Preparing</string>
+    <string name="common_readiness_check">Readiness check</string>
+    <string name="common_resolution">Resolution</string>
+    <string name="common_rumble">Rumble</string>
+    <string name="common_screen_rotation">Screen rotation</string>
+    <string name="common_share_log">Share log</string>
+    <string name="common_stop">Stop</string>
+    <string name="common_system">System</string>
+    <string name="common_time_of_day">Time of day</string>
+    <string name="common_upscaler">Upscaler</string>
+    <string name="common_use_fast_cores">Use fast cores</string>
+    <string name="common_users">Users</string>
+
+    <!-- Home, the dock, adding and removing a game -->
+    <string name="home_1_pick_2_prepare_3">"1  Pick   \u2192   2  Prepare   \u2192   3  Play"</string>
+    <string name="home_a_command_from_another_app">A command from another app was ignored (Settings › ADB control is off)</string>
+    <string name="home_a_dump_folder_copied_into">A dump folder (copied into the app: a folder needs All files access to be read where it is)</string>
+    <string name="home_a_shortcut_that_starts_this">A shortcut that starts this game</string>
+    <string name="home_a_zip_or_a_pack">A .zip or a pack folder</string>
+    <string name="home_a_zip_or_a_save">A .zip or a save folder</string>
+    <string name="home_add_game">Add game</string>
+    <string name="home_add_game_your_dump_is">Add game: your dump is…</string>
+    <string name="home_add_to_home_screen">Add to home screen</string>
+    <string name="home_add_your_first_game">Add your first game</string>
+    <string name="home_allow">Allow</string>
+    <string name="home_allow_file_access">Allow file access</string>
+    <string name="home_back_up_saves">Back up saves</string>
+    <string name="home_banana_native">Banana Native</string>
+    <string name="home_continue_preparing">Continue preparing</string>
+    <string name="home_copy_into_the_app">Copy into the app</string>
+    <string name="home_delete">Delete</string>
+    <string name="home_delete_the_copy">Delete the copy</string>
+    <string name="home_delete_the_copy_2">Delete the copy?</string>
+    <string name="home_export_pack">Export pack…</string>
+    <string name="home_fix_the_save_folder">Fix the save folder</string>
+    <string name="home_forget_the_job_or_delete">Forget the job or delete its files</string>
+    <string name="home_from_a_backup_the_current">From a backup; the current save is backed up first</string>
+    <string name="home_game_files">Game files</string>
+    <string name="home_game_resolution">Game resolution</string>
+    <string name="home_games_added">Games added</string>
+    <string name="home_hide_defaults_for_all_games">Hide defaults for all games</string>
+    <string name="home_import_save">Import save</string>
+    <string name="home_keep_both">Keep both</string>
+    <string name="home_lossless_dll_installed">Lossless.dll installed</string>
+    <string name="home_more">More</string>
+    <string name="home_needed_to_read_a_dump">Needed to read a dump folder where it is. A .nup file works without it, and a dump folder can be copied into the app instead.</string>
+    <string name="home_no_game_added">No game added</string>
+    <string name="home_not_set">not set</string>
+    <string name="home_one_zip_into_a_folder">One .zip, into a folder you pick</string>
+    <string name="home_pack">Pack</string>
+    <string name="home_pick_a_pack_folder">Pick a pack folder</string>
+    <string name="home_pick_it_again">Pick it again</string>
+    <string name="home_pick_lossless_dll">Pick Lossless.dll</string>
+    <string name="home_pick_pack_folder">Pick pack folder</string>
+    <string name="home_pick_the_dump_folder_you">Pick the dump folder you made from your console (the one with base/), or your game\'s .nup or .nsp file.</string>
+    <string name="home_pick_the_pack_folder_android">Pick the pack folder (android-pack, with pack.tsv)</string>
+    <string name="home_pick_your_dump_folder_with">Pick your dump folder (with base/, and updates/ if any)</string>
+    <string name="home_pick_your_game_s_nup">Pick your game\'s .nup or .nsp file</string>
+    <string name="home_play_anyway">Play anyway</string>
+    <string name="home_ported_from_eden_gpl_3">Ported from Eden (GPL-3.0-or-later). Lossless.dll is yours; it is never part of the app.</string>
+    <string name="home_reading_the_game_files">Reading the game files…</string>
+    <string name="home_ready">Ready</string>
+    <string name="home_ready_game_code_update_paused">Ready · game code update paused</string>
+    <string name="home_ready_game_code_update_waits">Ready · game code update waits</string>
+    <string name="home_ready_shaders_need_one_update">Ready · shaders need one update</string>
+    <string name="home_ready_update">Ready · update</string>
+    <string name="home_ready_updating_game_code">Ready · updating game code</string>
+    <string name="home_ready_updating_shaders">Ready · updating shaders</string>
+    <string name="home_remakes_what_does_not_fit">Remakes what does not fit</string>
+    <string name="home_remove">Remove</string>
+    <string name="home_remove_from_list">Remove from list</string>
+    <string name="home_remove_only">Remove only</string>
+    <string name="home_replace">Replace</string>
+    <string name="home_restore_saves">Restore saves</string>
+    <string name="home_settings">Settings</string>
+    <string name="home_shaders_build_as_you_play">Shaders build as you play</string>
+    <string name="home_shaders_missing">Shaders missing</string>
+    <string name="home_show_defaults_for_all_games">Show defaults for all games</string>
+    <string name="home_start_anyway">Start anyway</string>
+    <string name="home_that_file_is_not_a">That file is not a picture this app can read.</string>
+    <string name="home_that_sound_could_not_be">That sound could not be read (a short audio file, 2 MB at most).</string>
+    <string name="home_the_app_needs_all_files">The app needs All files access to read your game dump. Allow it, then come back.</string>
+    <string name="home_this_game_s_newest_log">This game\'s newest log</string>
+    <string name="home_turn_on_and_play">Turn on and play</string>
+    <string name="home_without_them_the_game_draws">Without them the game draws nothing.</string>
+
+    <!-- Settings, users, updates, the release page -->
+    <string name="settings_a_tick_when_the_focus">A tick when the focus moves and a chirp on a tap</string>
+    <string name="settings_a_user_needs_a_name">A user needs a name</string>
+    <string name="settings_adb_control_debug">ADB control (debug)</string>
+    <string name="settings_add_user">Add user</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_allow_installs">Allow installs</string>
+    <string name="settings_background">Background</string>
+    <string name="settings_built_without_lsfg">" Built without LSFG."</string>
+    <string name="settings_can_this_phone_run_your">Can this phone run your games?</string>
+    <string name="settings_checking_for_updates">Checking for updates…</string>
+    <string name="settings_controller_in_game_panel">Controller: in-game panel</string>
+    <string name="settings_each_game_s_page_can">Each game\'s page can override these.</string>
+    <string name="settings_frame_generation">Frame generation</string>
+    <string name="settings_games_start_with_this_user">Games start with this user</string>
+    <string name="settings_graphics_self_test">Graphics self-test</string>
+    <string name="settings_guides_what_every_setting_does">Guides, what every setting does, a page for each game (opens the browser)</string>
+    <string name="settings_hidden_a_game_with_resolution">Hidden: a game with Resolution choices shows just those</string>
+    <string name="settings_installs_from_this_app_are">Installs from this app are not allowed: the update was not installed</string>
+    <string name="settings_keep_the_screen_on_while">Keep the screen on while preparing</string>
+    <string name="settings_keeps_the_busiest_threads_off">Keeps the busiest threads off the small cores</string>
+    <string name="settings_later">Later</string>
+    <string name="settings_lets_adb_commands_add_games">Lets adb commands add games, start Prepare and install GPU drivers. Off: only you, in the app</string>
+    <string name="settings_loading_picture">Loading picture…</string>
+    <string name="settings_my_sound">My sound</string>
+    <string name="settings_name">Name</string>
+    <string name="settings_needs_no_game">Needs no game</string>
+    <string name="settings_on_the_controller_or_the">On the controller, or the phone without one</string>
+    <string name="settings_overlay">Overlay</string>
+    <string name="settings_picture_from_the_release_notes">Picture from the release notes</string>
+    <string name="settings_player_wiki">Player wiki</string>
+    <string name="settings_remove_leftovers_and_old_files">Remove leftovers and old files; never saves</string>
+    <string name="settings_sample_games">Sample games</string>
+    <string name="settings_select_a_user">Select a user</string>
+    <string name="settings_show">Show</string>
+    <string name="settings_show_hide_button">Show / hide button</string>
+    <string name="settings_showing_the_rows_made_for">Showing the rows made for testing: Advanced resolution, Upscaler and Dynamic resolution</string>
+    <string name="settings_starting">Starting…</string>
+    <string name="settings_storage">Storage</string>
+    <string name="settings_test_builds_shows_sample_tiles">Test builds: shows sample tiles on Home to judge the look</string>
+    <string name="settings_tester_settings">Tester settings</string>
+    <string name="settings_the_launcher_did_not_accept">The launcher did not accept the shortcut.</string>
+    <string name="settings_the_newest_log">The newest log</string>
+    <string name="settings_the_small_button_at_the">The small button at the top centre that hides the on-screen controls</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_this_launcher_cannot_pin_shortcuts">This launcher cannot pin shortcuts.</string>
+    <string name="settings_this_release_has_no_notes">This release has no notes.</string>
+    <string name="settings_to_install_the_update_allow">To install the update, allow Banana Native to install apps (\"Install unknown apps\"), then come back.</string>
+    <string name="settings_ui_sounds">UI sounds</string>
+    <string name="settings_update">Update</string>
+    <string name="settings_updates">Updates</string>
+    <string name="settings_what_s_new">What\'s new</string>
+    <string name="settings_while_home_shows_a_game">While Home shows a game being prepared</string>
+    <string name="settings_xbox_button_label_swap">Xbox button label swap</string>
+
+    <!-- The game page, the in-game panel, pickers and sliders -->
+    <string name="game_1_player">1 player</string>
+    <string name="game_3d_scene">3D scene</string>
+    <string name="game_a_game_s_data">A game\'s data</string>
+    <string name="game_a_game_s_pack_and">A game\'s pack and shaders are kept while it is in your list. Remove game data… shows what it takes first.</string>
+    <string name="game_a_short_pop_in_not">A short pop-in, not a stutter</string>
+    <string name="game_advanced_for_testers_nwindow_and">Advanced (for testers)\nwindow and 3D scene set apart</string>
+    <string name="game_advanced_switches">Advanced switches</string>
+    <string name="game_android_places_the_threads">Android places the threads</string>
+    <string name="game_aspect_ratio">Aspect ratio</string>
+    <string name="game_back_from_the_background_paused">Back from the background: paused until a tap</string>
+    <string name="game_back_from_the_background_runs">Back from the background: runs at once</string>
+    <string name="game_back_to_the_game">Back to the game</string>
+    <string name="game_background_pipelines">Background pipelines</string>
+    <string name="game_busy_threads_off_the_small">Busy threads off the small cores</string>
+    <string name="game_centre">Centre</string>
+    <string name="game_classic_render_passes">Classic render passes</string>
+    <string name="game_clear">Clear</string>
+    <string name="game_close_the_panel_back_to">Close the panel, back to the game</string>
+    <string name="game_controller_panel">Controller panel</string>
+    <string name="game_could_not_save_link_play">Could not save Link Play settings.</string>
+    <string name="game_details">Details</string>
+    <string name="game_don_t_show_this_again">Don\'t show this again</string>
+    <string name="game_download_a_driver_github_releases">Download a driver (GitHub releases)</string>
+    <string name="game_draws_every_layer">Draws every layer</string>
+    <string name="game_dynamic_rendering">Dynamic rendering</string>
+    <string name="game_edit_the_controls_layout">Edit the controls layout…</string>
+    <string name="game_enter_text">Enter text</string>
+    <string name="game_extra_environment">Extra environment</string>
+    <string name="game_for_this_game_only_default">For this game only. Default follows Settings.</string>
+    <string name="game_frame_generation_lossless_scaling_yo">Frame generation (Lossless Scaling, your own Lossless.dll)</string>
+    <string name="game_frame_generation_lsfg">Frame generation (LSFG)</string>
+    <string name="game_frames_per_game_frame">Frames per game frame</string>
+    <string name="game_full">" (full)"</string>
+    <string name="game_full_game_speed">Full game speed</string>
+    <string name="game_full_game_speed_at_low">Full game speed at low frame rates</string>
+    <string name="game_full_vegetation">Full vegetation</string>
+    <string name="game_game">Game</string>
+    <string name="game_game_language">Game language</string>
+    <string name="game_gpu_driver_takes_effect_at">GPU driver (takes effect at the next game start)</string>
+    <string name="game_gpu_timing">GPU timing</string>
+    <string name="game_hidden_layers_off">Hidden layers off</string>
+    <string name="game_hide_advanced">Hide Advanced</string>
+    <string name="game_hold_60_fps">Hold 60 fps</string>
+    <string name="game_hold_60_fps_never_drop">Hold 60 fps: never drop to 30, no frame holds</string>
+    <string name="game_host_ipv4_address_optional_port">Host IPv4 address (optional :port)</string>
+    <string name="game_host_room_code_xxxx_xxxx">Host room code: XXXX-XXXX-XXXX-XXXX</string>
+    <string name="game_how_far_the_phone_s">How far the phone\'s gyro turns the aim; from the next start</string>
+    <string name="game_import_a_library">Import a library</string>
+    <string name="game_install">Install…</string>
+    <string name="game_install_a_driver_zip_with">Install a driver zip (with meta.json)</string>
+    <string name="game_instanced_draws">Instanced draws</string>
+    <string name="game_internet_tailscale">Internet / Tailscale</string>
+    <string name="game_its_cheats_leave_the_in">Its cheats leave the in-game panel from the next start. The game\'s own file stays.</string>
+    <string name="game_join_a_world_hosted_in">Join a world hosted in Recompia on a PC. Enter the host\'s IPv4 address and, for Internet / Tailscale, its room code.</string>
+    <string name="game_keep_running">Keep running</string>
+    <string name="game_less_cpu_a_pass_on">Less CPU a pass on Qualcomm\'s driver</string>
+    <string name="game_link_play">Link Play</string>
+    <string name="game_looking_at_the_app_s">Looking at the app\'s storage…</string>
+    <string name="game_made_when_first_drawn_may">Made when first drawn: may stutter</string>
+    <string name="game_mode_performance_the_only_shader">Mode: performance (the only shader set Eden\'s LSFG uses)</string>
+    <string name="game_motion_clarity">Motion clarity</string>
+    <string name="game_motion_estimation_resolution_lower_i">Motion estimation resolution (lower is faster)</string>
+    <string name="game_motion_sensitivity">Motion sensitivity</string>
+    <string name="game_needs_prepare_again">" \u00b7 needs Prepare again"</string>
+    <string name="game_none">None</string>
+    <string name="game_not_in_this_build_built">Not in this build (built with -PnxLsfg=false).</string>
+    <string name="game_not_now">Not now</string>
+    <string name="game_building_shaders_label">Building shaders label</string>
+    <string name="settings_building_shaders_label">Building shaders label</string>
+    <string name="settings_building_shaders_label_note">A game that builds the shaders it lacks while you play shows a small see-through count at the top of the screen. A build that waits for a cool phone or more battery is always said. Hiding the label does not stop the build.</string>
+    <string-array name="arr_layer_label">
+        <item>Off</item>
+        <item>Number only</item>
+        <item>Full text</item>
+    </string-array>
+    <string name="game_layer_phone_is_warm">phone is warm</string>
+    <string name="game_layer_phone_is_hot_1_worker">phone is hot: 1 worker</string>
+    <string name="game_check_title">Checking shaders</string>
+    <string name="game_check_text">The game plays as usual. The app checks that its shaders are still right for this version; if they are, nothing is rebuilt.</string>
+    <string name="game_check_skip">Skip</string>
+    <string name="game_check_skipped_title">Shader check skipped</string>
+    <string name="game_check_skipped_text">It is not asked again for 7 days, or until the app updates. The game plays on the shaders it has. Tap to check again.</string>
+    <string name="game_nothing_to_clean_up">Nothing to clean up.</string>
+    <string name="game_off">Off</string>
+    <string name="game_off_a_game_without_a">Off: a game without a shader library waits for Prepare shaders.</string>
+    <string name="game_off_a_game_without_a_2">Off: a game without a shader library waits for Prepare shaders</string>
+    <string name="game_on">On</string>
+    <string name="game_one_draw_per_mesh">One draw per mesh</string>
+    <string name="game_open_the_in_game_panel">Open the in-game panel</string>
+    <string name="game_pause_on_return">Pause on return</string>
+    <string name="game_pause_the_game">Pause the game</string>
+    <string name="game_pause_when_the_game_comes">Pause when the game comes back from the background</string>
+    <string name="game_paused_n_ntap_to_continue">"Paused\n\nTap to continue  (A or Start on a gamepad)"</string>
+    <string name="game_per_segment">Per segment</string>
+    <string name="game_pick_the_save_folder_the">Pick the save folder (the one that holds the save\'s files)</string>
+    <string name="game_pick_where_the_backup_goes">Pick where the backup goes (a .zip)</string>
+    <string name="game_play_starts_the_switch_2">Play starts the Switch 2 Edition (its own pack). Same save as the Switch game.</string>
+    <string name="game_play_starts_the_switch_game">Play starts the Switch game. Turn on for the Switch 2 Edition; the save is shared.</string>
+    <string name="game_player_1">Player 1</string>
+    <string name="game_position_this_screen">Position (this screen)</string>
+    <string name="game_press_l_r">Press L + R</string>
+    <string name="game_ram_saver">RAM saver</string>
+    <string name="game_recommended_for_this_phone">Recommended for this phone</string>
+    <string name="game_remove_picked">Remove picked…</string>
+    <string name="game_remove_ticked">Remove ticked</string>
+    <string name="game_removing">Removing…</string>
+    <string name="game_repeated_meshes_drawn_as_one">Repeated meshes drawn as one</string>
+    <string name="game_reset">Reset</string>
+    <string name="game_reset_the_controls">Reset the controls</string>
+    <string name="game_reset_to_defaults">Reset to defaults</string>
+    <string name="game_rumble_the_game_s_vibration">Rumble (the game\'s vibration)</string>
+    <string name="game_save">Save</string>
+    <string name="game_saved_for_next_time_including">Saved for next time, including when Link Play is off. Applies at the game\'s next start. In the game: PC &gt; Link Play &gt; Local connection &gt; Visit.</string>
+    <string name="game_saves">Saves</string>
+    <string name="game_selected">, selected</string>
+    <string name="game_shaders">Shaders</string>
+    <string name="game_shaders_can_be_updated">Shaders can be updated</string>
+    <string name="game_shaders_needed">Shaders needed</string>
+    <string name="game_shaders_of_an_older_version">Shaders of an older version</string>
+    <string name="game_shaders_the_game_lacks_are">Shaders the game lacks are built as it runs.</string>
+    <string name="game_shaders_the_game_lacks_are_2">Shaders the game lacks are built as it runs</string>
+    <string name="game_shaders_while_playing">Shaders while playing</string>
+    <string name="game_show_hide_button_top_centre">Show / hide button (top centre)</string>
+    <string name="game_show_the_log_over_the">Show the log over the game</string>
+    <string name="game_skips_layers_drawn_over_later">Skips layers drawn over later</string>
+    <string name="game_stop_the_game">Stop the game</string>
+    <string name="game_stop_the_game_2">Stop the game?</string>
+    <string name="game_switch_2_edition">Switch 2 Edition</string>
+    <string name="game_target_frame_rate">Target frame rate</string>
+    <string name="game_texture_data_in_a_file">Texture data in a file: needs GBs free</string>
+    <string name="game_texture_data_in_compressed_ram">Texture data in compressed RAM</string>
+    <string name="game_the_game_ends_unsaved_progress">The game ends; unsaved progress is lost. The log stays for Share log.</string>
+    <string name="game_the_game_s_own">The game\'s own</string>
+    <string name="game_the_game_will_follow_global">The game will follow global settings. Extra environment lines are kept.</string>
+    <string name="game_the_settings_you_changed_for">The settings you changed for this game that have a recommendation for this phone take it again. Your other settings stay.</string>
+    <string name="game_this_game_picks_its_own">This game picks its own frame rate</string>
+    <string name="game_this_makes_the_whole_shader">This makes the whole shader set again with this version. It takes a while: keep the phone charging. The game keeps playing on its older shaders until it is done.</string>
+    <string name="game_update_shaders">Update shaders</string>
+    <string name="game_update_shaders_2">Update shaders?</string>
+    <string name="game_use_recommended">Use recommended</string>
+    <string name="game_use_the_same_internet_setting">Use the same Internet setting as the PC host. A room code is required when this is on.</string>
+    <string name="game_vibrate_on_press">Vibrate on press</string>
+    <string name="game_what_the_game_s_gpu">What the game\'s GPU timestamps measure: per segment lets its dynamic resolution see the real GPU time</string>
+    <string name="game_window">Window</string>
+    <string name="game_with_the_device_save">, with the device save</string>
+    <string name="game_xbox_button_labels">Xbox button labels</string>
+    <string name="game_your_own_values_stay_change">Your own values stay: change any setting below.</string>
+
+    <!-- Prepare, packs, folders, the on-device preparation -->
+    <string name="prepare_build_shaders">Build shaders</string>
+    <string name="prepare_copy_and_use">Copy and use</string>
+    <string name="prepare_copy_the_save">Copy the save?</string>
+    <string name="prepare_could_not_prepare">Could not prepare</string>
+    <string name="prepare_delete_the_prepared_pack_too">Delete the prepared pack too…</string>
+    <string name="prepare_delete_working_files">Delete working files…</string>
+    <string name="prepare_deleted_your_dump_and_saves">Deleted. Your dump and saves are untouched.</string>
+    <string name="prepare_deleting">Deleting…</string>
+    <string name="prepare_folders_of_which_game">Folders of which game?</string>
+    <string name="prepare_forget_this_job">Forget this job…</string>
+    <string name="prepare_go_on_anyway">Go on anyway</string>
+    <string name="prepare_have_a_pack_made_elsewhere">Have a pack made elsewhere (on a computer, or exported from another phone)?</string>
+    <string name="prepare_it_builds_shaders_while_you">" It builds shaders while you play."</string>
+    <string name="prepare_pack_exported">Pack exported</string>
+    <string name="prepare_pack_folder_set">Pack folder set</string>
+    <string name="prepare_pause">Pause</string>
+    <string name="prepare_pause_first_to_forget_or">Pause first to forget or delete.</string>
+    <string name="prepare_paused">Paused</string>
+    <string name="prepare_pick_another_pack_folder">Pick another pack folder</string>
+    <string name="prepare_pick_the_folder">Pick the folder</string>
+    <string name="prepare_pick_the_game_s_dmsh">Pick the game\'s dmsh_vk.lib</string>
+    <string name="prepare_pick_the_pack_s_zip">Pick the pack\'s .zip file</string>
+    <string name="prepare_prepared">Prepared</string>
+    <string name="prepare_reading_the_list_of_files">Reading the list of files…</string>
+    <string name="prepare_ready_to_play">Ready to play</string>
+    <string name="prepare_ready_to_prepare">Ready to prepare</string>
+    <string name="prepare_resume">Resume</string>
+    <string name="prepare_resume_preparing">Resume preparing?</string>
+    <string name="prepare_retry">Retry</string>
+    <string name="prepare_start">Start</string>
+    <string name="prepare_these_are_kept_when_the">These are kept when the app is updated. Picking a folder never moves, copies or deletes anything without asking.</string>
+    <string name="prepare_tried_anyway">" · tried anyway"</string>
+    <string name="prepare_try_anyway">Try anyway…</string>
+    <string name="prepare_try_anyway_2">Try anyway?</string>
+    <string name="prepare_try_anyway_3">Try anyway</string>
+    <string name="prepare_use_a_pack">Use a pack…</string>
+    <string name="prepare_use_an_existing_pack">Use an existing pack…</string>
+    <string name="prepare_use_it_empty">Use it empty</string>
+    <string name="prepare_use_the_app_s_save">Use the app\'s save</string>
+
+    <!-- Readiness check and graphics self-test -->
+    <string name="ready_checking">Checking…</string>
+    <string name="ready_fail_this_host_has_no">FAIL: this host has no nxhost_vk_selftest</string>
+    <string name="ready_graphics_self_test_waiting_for">Graphics self-test: waiting for the surface</string>
+    <string name="ready_readiness_report_copied">Readiness report copied</string>
+    <string name="ready_run_again">Run again</string>
+    <string name="ready_share">Share</string>
+
+    <!-- Errors and the notices after a game ends -->
+    <string name="err_cannot_start_the_game">Cannot start the game</string>
+    <string name="err_more_details">More details</string>
+    <string name="err_undo">Undo</string>
+    <string name="err_what_it_means">What it means</string>
+
+    <!-- more of the same, found by a second pass over array and list items -->
+    <string name="game_performance">Performance</string>
+    <string name="game_storage">Storage</string>
+    <string name="game_recommended">Recommended</string>
+    <string name="game_custom">Custom</string>
+    <string name="game_per_submission">Per submission</string>
+    <string name="game_join_pc_host">Join PC host</string>
+    <string name="game_fixed">Fixed</string>
+    <string name="home_updates">Updates</string>
+    <string name="settings_pick_another_sound">Pick another sound</string>
+    <string name="settings_use_the_built_in_sounds">Use the built-in sounds</string>
+    <string name="home_a_folder_with_base_and">A folder (with base/, and updates/ if any)</string>
+    <string name="home_a_nup_file_or_an">A .nup file, or an NSP Box .nsp file</string>
+    <string name="home_a_nup_or_nsp_file">A .nup or .nsp file (used where it is)</string>
+    <string name="home_allow_all_files_access">Allow All files access</string>
+    <string name="prepare_a_zip_file_made_by">A .zip file (made by Export pack…)</string>
+    <string name="prepare_a_pack_folder_with_pack">A pack folder (with pack.tsv and shaders/)</string>
+    <string name="game_a_zip_from_back_up">A .zip (from Back up saves, or a zipped save folder)</string>
+    <string name="game_a_save_folder">A save folder</string>
+    <string name="game_fit">Fit</string>
+    <string name="game_stretch">Stretch</string>
+    <string name="game_size">Size</string>
+    <string name="game_text_size">Text size</string>
+    <string name="game_pick_a_date_and_time">Pick a date and time…</string>
+    <string name="game_the_phone_s_clock">The phone\'s clock</string>
+    <string name="game_top">Top</string>
+    <string name="game_bottom">Bottom</string>
+    <string name="settings_rename">Rename</string>
+    <string name="settings_remove">Remove</string>
+
+    <!-- dialogs, sheets, headers and error lines -->
+    <string name="prepare_save_folder_gone">Save folder gone</string>
+    <string name="prepare_no_games_yet_add_game">No games yet: + Add game first. Each game has its own folders (tap its tile, then Storage › Folders…).</string>
+    <string name="common_pick_the_pack_folder_the">Pick the pack folder (the one with pack.tsv and shaders/)</string>
+    <string name="prepare_a_copy_is_already_running">A copy is already running.</string>
+    <string name="prepare_copy_into_the_app">Copy into the app</string>
+    <string name="game_remove_driver">Remove driver</string>
+    <string name="settings_settings">Settings</string>
+    <string name="settings_turn_adb_control_on">Turn ADB control on?</string>
+    <string name="settings_turn_on">Turn on</string>
+    <string name="home_cannot_use_this_file">Cannot use this file</string>
+    <string name="home_cannot_use_this_nsp">Cannot use this NSP</string>
+    <string name="common_remove">Remove</string>
+    <string name="home_no_pack_for_the_switch">No pack for the Switch 2 Edition yet</string>
+    <string name="home_game_file_gone">Game file gone</string>
+    <string name="home_no_pack_for_this_game">No pack for this game</string>
+    <string name="home_this_game_has_no_pack">This game has no pack that can be used. The game page › Storage › Folders picks one.</string>
+    <string name="home_unsupported_game_version">Unsupported game version</string>
+    <string name="home_the_pack_cannot_start_this">The pack cannot start this game</string>
+    <string name="home_n_nprepare_again_rewrites_the">\n\nPrepare again rewrites the game\'s code from your dump (a few minutes; shaders are kept).</string>
+    <string name="home_overlay">Overlay</string>
+    <string name="home_frame_generation">Frame generation</string>
+    <string name="home_no_log_yet">No log yet.</string>
+    <string name="home_no_log_of_this_game">No log of this game yet.</string>
+    <string name="prepare_pick_the_folder_for_the">Pick the folder for the pack\'s .zip</string>
+    <string name="prepare_shader_library_not_imported">Shader library not imported</string>
+    <string name="prepare_shader_library_imported">Shader library imported</string>
+    <string name="prepare_pack_not_imported">Pack not imported</string>
+    <string name="prepare_pack_imported">Pack imported</string>
+    <string name="ready_readiness_check">Readiness check</string>
+    <string name="settings_update_available">Update available</string>
+    <string name="game_no_backup_made">No backup made</string>
+    <string name="game_the_save_could_not_be">The save could not be backed up. It was only read, never changed.</string>
+    <string name="game_saves_backed_up">Saves backed up</string>
+    <string name="game_backup_not_exported">Backup not exported</string>
+    <string name="game_the_zip_could_not_be">The zip could not be written or did not check out. The save was only read, never changed.</string>
+    <string name="game_not_imported">Not imported</string>
+    <string name="game_restore">Restore</string>
+    <string name="game_not_restored">Not restored</string>
+    <string name="game_not_everything_was_removed">Not everything was removed</string>
+    <string name="prepare_manage">Manage</string>
+    <string name="prepare_cannot_prepare_this_dump">Cannot prepare this dump</string>
+    <string name="prepare_preparing_is_not_finished">Preparing is not finished</string>
+    <string name="prepare_update_the_pack">Update the pack?</string>
+    <string name="prepare_build_all_shaders_now">Build all shaders now?</string>
+    <string name="prepare_prepare_shaders">Prepare shaders?</string>
+    <string name="prepare_this_pack_was_made_by">This pack was made by the simulated engine: it is a placeholder, so the game is not started. Play is enabled because the pack and its library are complete.</string>
+    <string name="prepare_forget_this_job_2">Forget this job?</string>
+    <string name="prepare_forget">Forget</string>
+    <string name="prepare_your_dump">your dump</string>
+    <string name="prepare_your_save_folder">your save folder</string>
+    <string name="prepare_delete_the_prepared_pack">Delete the prepared pack?</string>
+    <string name="prepare_delete_working_files_2">Delete working files?</string>
+    <string name="prepare_delete">Delete</string>
+
+    <!-- placeholders: sentences that had variables glued in (MainActivity) -->
+    <string name="settings_about_games">Games in this app:%1$s\n\nBased on nxnative by seedds. LSFG from Eden (GPL-3.0).</string>
+    <string name="home_the_save_at">The save: %1$s</string>
+    <string name="home_copied_into_the_app">Copied into the app: %1$s</string>
+    <string name="home_game_now_uses">%1$s now uses %2$s.</string>
+    <string name="home_lossless_dll_not_installed">Lossless.dll not installed: %1$s</string>
+    <string name="home_tile_details">Details ›</string>
+    <string name="home_checking_name">Checking %1$s…</string>
+    <plurals name="home_checking_games">
+        <item quantity="one">Checking %1$d game…</item>
+        <item quantity="other">Checking %1$d games…</item>
+    </plurals>
+    <string name="home_replace_name">Replace %1$s?</string>
+    <string name="home_another_dump_message">Another dump of %1$s is on your list:%2$s\n\nUse %3$s instead? Only the list entry changes: no dump, pack or save is deleted.</string>
+    <string name="home_added_name">Added %1$s.</string>
+    <string name="home_remove_name">Remove %1$s?</string>
+    <string name="home_remove_copy_message">This game is a copy in the app\'s storage (%1$s). Remove the list entry only, or delete the copy as well (it cannot be undone; your original dump, the pack and your saves stay).</string>
+    <string name="home_remove_copy_message_save">This game is a copy in the app\'s storage (%1$s). Remove the list entry only, or delete the copy as well (it cannot be undone; your original dump, the pack and your saves (%2$s) stay).</string>
+    <string name="home_delete_copy_confirm">Deleted: %1$s. This cannot be undone.</string>
+    <string name="err_not_all_deleted">Not all of %1$s could be deleted.</string>
+    <string name="err_no_pack_found_next_to">No pack found for %1$s next to %2$s.</string>
+    <string name="err_folder_not_on_storage">That folder is not on this phone\'s storage (%1$s).</string>
+    <string name="err_save_busy">A save backup or restore of %1$s is still working: Play waits for it.</string>
+    <string name="err_pack_busy">An export or import of the pack of %1$s is still working: Play waits for it.</string>
+    <string name="err_no_app_can_open">No app can open %1$s</string>
+
+    <!-- placeholders (MainActivity dialogs) -->
+    <string name="settings_adb_control_warning">While it is on, adb, and any other app on this phone, can add games, start Prepare and install or pick a GPU driver through Banana Native\'s launcher, without asking you. A GPU driver is code that runs inside the game. Turn it on only while you use adb, then off again.</string>
+    <string name="home_pick_dump_folder_again">Pick the dump folder of %1$s again</string>
+    <string name="err_no_game_in_folder">%1$s has no main.npdm (base/exefs/, updates/&lt;version&gt;/exefs/ or exefs/), no .nup file and no game folder in it. Pick the game\'s own folder, its .nup file, or the folder that holds your games.</string>
+    <string name="err_nup_rename">%1$s: rename it so that its name ends in ".nup" or ".nsp" (lower case); the game and the tools read only that name.</string>
+    <string name="err_cannot_be_read">%1$s cannot be read. Check that All files access is on.</string>
+    <string name="home_no_pack_found_for_this">No pack found for this %1$s, and it is not a dump Prepare can start from.</string>
+    <string name="home_no_pack_for_this_what">No pack for this %1$s</string>
+    <string name="home_pick_a_pack_folder_hint">%1$s\n\nIf you have a pack folder made for exactly this %2$s (with pack.tsv), you can pick it.</string>
+    <string name="home_remove_entry_message">Only the list entry goes. Your dump, its pack and your saves stay on the phone; Add game brings it back.</string>
+    <string name="home_remove_entry_message_save">Only the list entry goes. Your dump, its pack and your saves (%1$s) stay on the phone; Add game brings it back.</string>
+    <string name="home_edition_needs_pack">%1$s needs its own pack (its own code and shaders). Prepare it on a computer with scripts/pack_android.py --program 1 and put it in the app\'s packs/%2$s, or switch the edition back on the game\'s page.</string>
+
+    <!-- titles of the game dialogs: "Setting · Game" -->
+    <string name="game_title_for">%1$s · %2$s</string>
+
+    <!-- placeholders and long explanations (GameSettings) -->
+    <string name="game_older_shaders_update_text">The game plays now on its older shaders. This version makes shaders with an updated translator. Update shaders builds the whole set now, which takes a while: keep the phone charging. Later: the game page › Storage › Prepare again.</string>
+    <string name="game_show_n">Show %1$d</string>
+    <plurals name="game_show_advanced_n_settings">
+        <item quantity="one">Show Advanced, %1$d setting</item>
+        <item quantity="other">Show Advanced, %1$d settings</item>
+    </plurals>
+    <string name="game_game_default_name">Game default (%1$s)</string>
+    <string name="game_gpu_timing_explain">Per segment: the game\'s timestamps see the real GPU time, so its dynamic resolution can adapt. Per submission: one time for the whole submission (the older behaviour). A DM_NVN_GPU_TS line in env.txt wins.</string>
+    <string name="game_window_note_tail">Menus and text follow the window. Sizes marked about are estimates. The 3D pictures are made from your game files when the game is prepared.</string>
+    <string name="game_scene_args_explain">The 3D scene as a share of the picture, set through the game\'s own settings: higher is sharper and slower, menus and text stay sharp. Sizes are the most the game draws; under load its dynamic resolution lowers them. Applies at the next start. A DM_GAME_ARGS_ADD line in env.txt wins.</string>
+    <string name="game_scene_overlay_explain">The 3D scene as a scale of the window\'s upscaler output, before the upscaler takes it to the window: lower is faster and softer. Menus and text stay sharp. Made from your game files when the game is prepared; applies at the next start. A DM_ROMFS_OVERLAY line in env.txt wins.</string>
+    <string name="game_extra_env_explain">KEY=VALUE lines for the host, one a line (# starts a comment). They come after env.txt and win over it, for %1$s only.</string>
+
+    <!-- placeholders (Prepare, Ondevice) -->
+    <string name="err_could_not_save_job">Could not save the job: %1$s</string>
+    <string name="prepare_name_is_ready">%1$s is ready to play.</string>
+    <string name="prepare_it_goes_on">It goes on from where it stopped.</string>
+    <string name="prepare_already_being_prepared">This dump is already being prepared into another pack folder. Resume it from its card, or delete its working files (⋯ › Delete working files) before preparing into another folder.</string>
+    <string name="err_being_prepared_now">%1$s is being prepared now (%2$s). Pause it first, then try again.</string>
+    <string name="err_cannot_start_reason">Cannot start: %1$s</string>
+    <string name="prepare_prepare_name">Prepare %1$s?</string>
+    <string name="prepare_rewriting_code_few_minutes">Rewriting the game\'s code (a few minutes, in the background).</string>
+    <string name="prepare_pack_fits">Its pack fits: nothing needs preparing.\n\nPack: %1$s</string>
+    <string name="err_cannot_use_pack">Cannot use %1$s: %2$s</string>
+    <string name="prepare_unsupported_version_of">Unsupported version of %1$s</string>
+    <string name="prepare_unsupported_version">Unsupported version</string>
+    <string name="prepare_preparing_name">Preparing %1$s</string>
+    <string name="prepare_forget_message">Deleted: nothing. The screen stops showing the job.\n\nKept: its files in %1$s, the pack, your dump and your saves. Picking the same dump again finds the job.\n\nThe split\'s kept progress (a copy in the app\'s own storage) is deleted when a job of another game starts; until then an unfinished split resumes from it.</string>
+    <string name="err_not_deleted_holds">Not deleted: %1$s holds or is inside %2$s.</string>
+
+    <!-- placeholders (in-game, side panel, controllers) -->
+    <string name="game_save_copied_to_app">Your save was copied into the app\'s storage (%1$s). The old folder %2$s is kept as it was.</string>
+    <string name="game_save_copy_failed">Your save could not be copied into the app\'s storage (%1$s). This start plays it where it is, %2$s.</string>
+    <string name="game_name_checking_gpu">%1$s: checking this phone\'s GPU…</string>
+    <string name="game_details_also_in_readiness">Details are also in Settings › Readiness check.</string>
+    <string name="game_name_starting_log">%1$s: starting. Log: %2$s</string>
+    <string name="err_cannot_start_name">Cannot start %1$s</string>
+    <string name="err_name_is_running">%1$s is running</string>
+    <string name="err_stop_it_first_then_start">Stop it first (the in-game panel › Stop the game), then start %1$s. One game runs at a time.</string>
+    <string name="game_menu_hint">Menu: swipe in from the right edge, or press Back</string>
+    <string name="game_tab_n_of_m">%1$s tab, %2$d of %3$d</string>
+    <string name="game_n_fps">%1$d fps</string>
+    <string name="game_size_percent">Size %1$d %%</string>
+    <string name="game_button_mapping_applies">Button mapping: %1$s, applies at the next start</string>
+    <string name="game_whole_frames">This game moves in whole frames: %1$d fps runs at %2$d fps, at full game speed.</string>
+    <string name="game_now_status">Now: %1$s</string>
+    <string name="game_n_players">%1$s players</string>
+    <string name="game_press_lr_hint">%1$s. Press L + R on each controller in turn: the first is player 1. A on a joined controller when everyone is in; B on player 1 cancels.</string>
+    <string name="game_player_n">Player %1$s</string>
+    <string name="err_turn_on_all_files_access">Turn on All files access for %1$s, then start the game again.</string>
+    <plurals name="game_own_and_imported">
+        <item quantity="one">The game\'s own and %1$d imported</item>
+        <item quantity="other">The game\'s own and %1$d imported</item>
+    </plurals>
+
+    <!-- placeholders (saves, storage) -->
+    <string name="err_save_still_working">A save backup or restore of %1$s is still working.</string>
+    <string name="err_game_running_holds_save">%1$s is running (it holds its save): stop it first (its in-game panel › Stop the game), then %2$s. The game may be writing its save.</string>
+    <string name="err_no_save_yet">%1$s has no save yet: nothing to back up.</string>
+    <string name="game_backup_summary">%1$d files, %2$s%3$s, checked file by file. The app never deletes a backup.</string>
+    <string name="game_backup_zip_summary">%1$d files, %2$s%3$s, in the zip you picked, checked file by file. Import save… brings it back. A copy stays in the app (Restore saves lists it).</string>
+    <string name="game_no_backups_of_name">No backups of %1$s here yet</string>
+    <string name="game_restore_save_from">Restore the save of %1$s from</string>
+    <string name="game_import_save_from">Import the save of %1$s from</string>
+    <string name="game_folder_not_a_save">That folder could not be read as a save. Nothing was changed.</string>
+    <string name="game_zip_not_a_save">That zip could not be read as a save. Nothing was changed.</string>
+    <string name="err_not_restored">Not restored: %1$s.</string>
+    <string name="game_restore_save_question">Restore the save of %1$s?</string>
+    <string name="game_restore_save_message">Your current save is replaced with %1$s. It is backed up first (checked), so Restore saves… can undo this. No backup is deleted.\n\nSave: %2$s\nBackup of it: %3$s</string>
+    <string name="game_save_as_it_was">The save is as it was.</string>
+    <string name="game_save_as_it_was_but_swap">The save is as it was, but for a swap that finishes at the next backup, restore or game start.</string>
+    <string name="game_restored_files">Restored %1$d files (%2$s%3$s)</string>
+    <string name="game_the_old_save_is_in">; the old save is in %1$s</string>
+    <string name="game_storage_found">Found %1$s that can go; %2$s ticked. Saves are never listed or removed.</string>
+    <string name="game_remove_name_data">Remove %1$s data…</string>
+    <string name="err_no_data_that_can_go">%1$s has no data in the app\'s storage that can go (its pack is elsewhere, or there is none). Saves are never removed.</string>
+
+    <!-- placeholders (folders, packs, GPU driver) -->
+    <string name="prepare_pick_folder_for_save">Pick the folder for the save of %1$s</string>
+    <string name="err_not_a_pack_folder">Not a pack folder: %1$s</string>
+    <string name="err_pack_is_for_other">That pack is for %1$s, not %2$s (%3$s).</string>
+    <string name="prepare_copy_save_question">The folder you picked is empty. Your current save is in %1$s.\n\nCopy it into %2$s? The current folder stays as it is: nothing is deleted.</string>
+    <string name="err_copy_failed_save_unchanged">The copy failed (%1$s); the save folder was not changed.</string>
+    <string name="err_pack_still_working">An export or import of the pack of %1$s is still working.</string>
+    <string name="err_game_running_stop_first">%1$s is running: stop it first (its in-game panel › Stop the game).</string>
+    <string name="err_no_pack_to_export">There is no pack to export: %1$s</string>
+    <string name="prepare_import_pack_from">Import the pack of %1$s from…</string>
+    <string name="err_no_game_of_id">No game of %1$s in the list.</string>
+    <string name="prepare_sentence_nothing_in_pack_changed">%1$s Nothing in the pack was changed.</string>
+    <string name="prepare_library_imported_note">%1$s Shaders built while playing that it has are dropped at the next start.</string>
+    <string name="err_file_not_on_storage_path">That file is not on this phone\'s storage by a path the app can read (%1$s). Pick it from the phone\'s storage (☰ › the phone\'s name), not from Recent or Downloads.</string>
+    <string name="err_no_pack_exported">No pack was exported: %1$s\n\nThe pack in %2$s was only read.</string>
+    <string name="prepare_pack_exported_message">%1$s\n\n%2$s, checked against the pack file by file. Import pack… on another phone (or after a new install) puts it back.</string>
+    <string name="prepare_sentence_nothing_changed">%1$s Nothing was changed.</string>
+    <string name="game_installing_what">Installing %1$s…</string>
+    <string name="game_gpu_driver_not_installed">GPU driver not installed: %1$s</string>
+    <string name="game_gpu_driver_installed_picked">GPU driver installed and picked: %1$s</string>
+    <string name="game_gpu_driver_colon">GPU driver: %1$s</string>
+    <string name="game_system_driver">system</string>
+    <string name="game_remove_driver_question">Remove %1$s?</string>
+    <string name="game_remove_driver_message">Deleted: this driver\'s copy inside the app (%1$s).\n\nKept: the zip you installed it from, your games, packs and saves. The game uses the phone\'s own driver until you pick another.</string>
+    <string name="game_driver_removed">Removed %1$s; the system driver is used</string>
+    <string name="game_no_zip_assets">%1$s: no .zip assets in its releases</string>
+    <string name="game_not_installed_reason">Not installed: %1$s</string>
+    <string name="game_installed_and_picked">Installed and picked %1$s</string>
+
+    <!-- placeholders (update, release page, Ui, controller mapping) -->
+    <string name="settings_banana_native_version">Banana Native %1$s</string>
+    <string name="settings_version_is_available">Version %1$s is available</string>
+    <string name="settings_you_have_install_over">You have %1$s. Install over it: saves, packs and settings are kept.</string>
+    <string name="settings_apk_size_from">%1$s · %2$s · from %3$s</string>
+    <string name="settings_update_check_failed">Update check failed: %1$s</string>
+    <string name="settings_up_to_date">You\'re up to date (v%1$s)</string>
+    <string name="settings_downloading_tag">Downloading %1$s</string>
+    <string name="settings_mb_of_mb">%1$s of %2$s</string>
+    <string name="ready_selftest_running">Graphics self-test running (%1$d frames, about %2$d s)</string>
+    <string name="ready_selftest_pass">PASS (return code %1$d)\nBack to return; Share log sends this run\'s log.</string>
+    <string name="ready_selftest_fail">FAIL (return code %1$d)\nBack to return; Share log sends this run\'s log.</string>
+    <string name="common_details_copied">Details copied</string>
+    <string name="common_hide_details">Hide details</string>
+    <string name="common_details">Details</string>
+    <string name="common_show_details">Show details</string>
+    <string name="common_tap_for_details">%1$s: tap for details</string>
+    <string name="common_tab_selected">%1$s, tab, selected</string>
+    <string name="common_tab">%1$s, tab</string>
+    <string name="settings_could_not_add_shortcut">Could not add the shortcut: %1$s</string>
+    <string name="game_not_a_valid_date_time">Not a valid date and time: %1$s</string>
+    <string name="game_tap_a_switch_button">Tap a Switch button, then press the controller button for it.</string>
+    <string name="game_controller_colon">Controller: %1$s</string>
+    <string name="game_switch_button">Switch %1$s</string>
+    <string name="game_press_button_for_switch">Press the controller button for Switch %1$s.</string>
+    <string name="prepare_has_this_apps_library">It has this app\'s shader library (%1$s): ready to play.</string>
+
+    <!-- labels of the pickers (arrays; the English constants in the code stay for tests and logs) -->
+    <string-array name="arr_theme">
+        <item>Follow the system</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="arr_background">
+        <item>Bananas</item>
+        <item>Plain</item>
+        <item>My picture</item>
+    </string-array>
+    <string-array name="arr_xbox">
+        <item>Off</item>
+        <item>Swap labels for X/Y and A/B</item>
+        <item>Swap labels for X/Y, swap buttons A/B</item>
+    </string-array>
+    <string-array name="arr_rotation">
+        <item>Landscape</item>
+        <item>Automatic</item>
+    </string-array>
+    <string-array name="arr_display">
+        <item>Fit (keep aspect)</item>
+        <item>Stretch to screen</item>
+    </string-array>
+    <string-array name="arr_touch_mode">
+        <item>Auto</item>
+        <item>On</item>
+        <item>Off</item>
+    </string-array>
+    <string-array name="arr_pad_open">
+        <item>Home, or hold − and + (half a second)</item>
+        <item>Home button only</item>
+        <item>Hold − and + only (half a second)</item>
+        <item>Off</item>
+    </string-array>
+    <string-array name="arr_upscaler_modes">
+        <item>Nearest neighbor (fastest, blocky)</item>
+        <item>Bilinear (fastest, softest)</item>
+        <item>FSR 1 (sharp, fast; too bright on Qualcomm\'s driver in some games)</item>
+        <item>Native (sharpest, slowest)</item>
+        <item>SGSR 1 (sharp, fast, one pass)</item>
+    </string-array>
+    <string-array name="arr_fsr_sharp">
+        <item>Off</item>
+        <item>Softer</item>
+        <item>Soft</item>
+        <item>Default</item>
+        <item>Max</item>
+    </string-array>
+    <string-array name="arr_dlss_modes">
+        <item>GSR 2 (smooth images)</item>
+        <item>FSR 1 (sharp, fast)</item>
+        <item>Bilinear (fastest, softest)</item>
+        <item>FSR 3.1 (sharp, steady)</item>
+    </string-array>
+    <string-array name="arr_panel_look">
+        <item>Small</item>
+        <item>Normal</item>
+        <item>Large</item>
+    </string-array>
+    <string-array name="arr_touch_tool">
+        <item>Top</item>
+        <item>Centre</item>
+        <item>Bottom</item>
+        <item>Reset</item>
+        <item>Done</item>
+    </string-array>
+    <string-array name="arr_panel_tabs">
+        <item>Performance</item>
+        <item>Display</item>
+        <item>Controls</item>
+        <item>General</item>
+    </string-array>
+
+    <!-- placeholders (users, copy, overlay, sliders) -->
+    <string name="settings_remove_user_question">Remove %1$s?</string>
+    <string name="settings_remove_user_message">Games no longer offer this user. Its saves stay on the phone (each game\'s save folder with _user_%1$s… at the end), and come back if the user is added again with the same ID, which a new user never has.</string>
+    <string name="err_not_copied">Not copied: %1$s. Nothing of the copy is kept.</string>
+    <string name="game_show_overlay">Show the overlay over the game</string>
+    <string name="game_default_value">Default (%1$s)</string>
+    <string name="game_recommended_puts_them_back">Recommended puts them back.</string>
+    <string name="prepare_old_pack_folder_kept">The pack folder picked before (%1$s) is kept as it was; the game now uses this one.</string>
+    <string name="game_environment_lines">Environment lines %1$s</string>
+    <plurals name="game_n_lines">
+        <item quantity="one">%1$d line: %2$s</item>
+        <item quantity="other">%1$d lines: %2$s</item>
+    </plurals>
+
+    <!-- second sweep: the in-game panel, hints, tags -->
+    <string name="game_experimental">Experimental</string>
+    <string name="game_never_drops_to_30_less">Never drops to 30; less even under 60</string>
+    <string name="game_drops_to_30_when_60">Drops to 30 when 60 does not hold</string>
+    <string name="game_normal_speed_when_the_frame">Normal speed when the frame rate drops</string>
+    <string name="game_slows_down_with_the_frame">Slows down with the frame rate</string>
+    <string name="game_all_grass_and_foliage">All grass and foliage</string>
+    <string name="game_less_grass_and_foliage_less">Less grass and foliage, less GPU work</string>
+    <string name="game_needs_prepare_again_patches_the">Needs Prepare again: patches the game\'s code (Storage › Prepare again)</string>
+    <string name="common_search_every_switch_each_starts">Search every switch; each starts at Auto</string>
+    <string name="game_needs_prepare_again_makes_this">Needs Prepare again: makes this 3D scene size from your game files (Storage › Prepare again)</string>
+    <string name="settings_your_sound">Your sound</string>
+    <string name="home_release_app_only">" · release app only"</string>
+    <string name="home_not_in_this_build">Not in this build</string>
+    <string name="home_lossless_dll_missing">" · Lossless.dll missing"</string>
+    <string name="home_why">Why?</string>
+    <string name="home_shaders_need_one_update">Shaders need one update</string>
+    <string name="home_nup">" (.nup)"</string>
+    <string name="game_applies_from_the_next_frame">Applies from the next frame, kept for this game (the same setting as Game settings › Upscaler).</string>
+    <string name="game_applies_at_the_next_start">Applies at the next start (this run takes no live changes: DM_CTL is off).</string>
+    <string name="game_applies_at_once_kept_for">Applies at once, kept for this game (the same setting as Game settings › Advanced).</string>
+    <string name="game_shaders_the_game_lacks_are_3">Shaders the game lacks are built as it runs. The switch is under the game page › Advanced › Shaders while playing (on by default; a change applies at the next start).</string>
+    <string name="game_the_game_runs_on_behind">The game runs on behind this panel; every change applies now and is kept, except those marked for the next start.</string>
+    <string name="game_the_larger_sizes_run_the">" The larger sizes run the game as on a docked console."</string>
+    <string name="game_applies_at_the_next_start_2">Applies at the next start (the same setting as Game settings › Game resolution).</string>
+    <string name="game_picture">Picture</string>
+    <string name="game_panel">Panel</string>
+    <string name="game_next_start">Next start</string>
+    <string name="game_controllers">Controllers</string>
+
+    <!-- text of the classes without Android (Words.s): Prepare progress, Readiness report, Recommend, Storage, notices -->
+    <string name="prepare_shaders_up_to_date">Shaders up to date</string>
+    <string name="prepare_ready_u00b7_checking_shaders_u2026">Ready \u00b7 checking shaders\u2026</string>
+    <string name="prepare_ready_u00b7_older_shaders">Ready \u00b7 older shaders</string>
+    <string name="prepare_the_whole_set_can_come">The whole set can come from a computer with Import a library.</string>
+    <string name="prepare_update_shaders_builds_the_whole">Update shaders builds the whole set now, which takes a while: keep the phone charging. Later: the game page \u203a Storage \u203a Prepare again.</string>
+    <string name="prepare_the_ones_it_has_stay">"The ones it has stay as they were made; Update shaders makes them all again with this version. "</string>
+    <string name="prepare_shaders_older_built_while_playing">Shaders: older, built while playing</string>
+    <string name="prepare_also_build_all_shaders_now">Also build all shaders now</string>
+    <string name="prepare_or_finish_with_the_game">Or finish with the game\'s code only: the game then plays and builds its shaders while you play; Build all on its page makes the whole set later.</string>
+    <string name="prepare_finish_without_shaders">Finish without shaders</string>
+    <string name="prepare_ready_to_play_it_builds">Ready to play. It builds shaders while you play.</string>
+    <string name="prepare_no_pack_yet_prepare_makes">No pack yet. Prepare makes one from your dump.</string>
+    <string name="prepare_the_pack_cannot_be_read">The pack cannot be read. Prepare makes it again.</string>
+    <string name="prepare_the_pack_s_game_code">The pack\'s game code was left unfinished. Prepare finishes it (a few minutes; shaders are kept).</string>
+    <string name="prepare_preparing_was_not_finished_tap">Preparing was not finished. Tap Continue to go on where it stopped.</string>
+    <string name="game_the_base_game_version_0">the base game, version 0</string>
+    <string name="game_the_base_game">the base game</string>
+    <string name="game_handheld">Handheld</string>
+    <string name="game_docked">Docked</string>
+    <string name="game_changed">Changed</string>
+    <string name="game_no_path">no path</string>
+    <string name="game_the_game_s_pack_with">The game\'s pack with its shaders, temporary files, logs and DLC links. Play then needs Prepare again; saves stay.</string>
+    <string name="game_game_data">Game data</string>
+    <string name="game_copies_made_with_copy_into">Copies made with Copy into the app that no game in the list uses.</string>
+    <string name="game_game_copies_not_in_your">Game copies not in your list</string>
+    <string name="game_adding_such_a_game_again">Adding such a game again would need Prepare again.</string>
+    <string name="game_packs_of_games_not_in">Packs of games not in your list</string>
+    <string name="game_each_game_s_temporary_folder">Each game\'s temporary folder and pipeline cache. They come back as you play; the first minutes may stutter again.</string>
+    <string name="game_game_temporary_files">Game temporary files</string>
+    <string name="game_shaders_a_game_asked_for">Shaders a game asked for that its library lacked, built while you played (each pack\'s shaders/layer). Rebuilt as you play: the first minutes after may stutter or look incomplete again.</string>
+    <string name="game_shader_cache_built_while_playing">Shader cache built while playing</string>
+    <string name="game_run_logs_except_the_newest">Run logs, except the newest of each game.</string>
+    <string name="game_old_logs">Old logs</string>
+    <string name="game_memory_files_a_game_left">Memory files a game left behind when it was stopped.</string>
+    <string name="game_ram_saver_files">RAM saver files</string>
+    <string name="game_update_and_driver_downloads_left">Update and driver downloads left in the cache.</string>
+    <string name="game_downloads">Downloads</string>
+    <string name="game_left_by_a_copy_pack">Left by a copy, pack import, driver install or restamp that was stopped part way.</string>
+    <string name="game_unfinished_copies_and_imports">Unfinished copies and imports</string>
+    <string name="game_libraries_of_earlier_app_versions">Libraries of earlier app versions in packs that already have this version\'s library.</string>
+    <string name="game_old_shader_library_versions">Old shader library versions</string>
+    <string name="game_applies_at_the_next_start_3">Applies at the next start.</string>
+    <string name="game_until_there_is_room_what">"Until there is room, what the game asks for next is not built and may not show. "</string>
+    <string name="game_the_game_plays_with_its">"The game plays with its shader library meanwhile. "</string>
+    <string name="game_shaders_built_while_playing">Shaders: built while playing</string>
+    <string name="game_all_shaders_ready">All shaders ready</string>
+    <string name="game_shaders_not_built_while_playing">Shaders: not built while playing (off for this run)</string>
+    <string name="game_shaders_from_the_prepared_library">Shaders: from the prepared library only (building while playing is off)</string>
+    <string name="prepare_import_a_library_on_the">Import a library on the game\'s page takes a library built on a computer.</string>
+    <string name="prepare_build_all_on_the_game">Build all on the game\'s page makes the whole set now.</string>
+    <string name="prepare_this_game_s_file_is">This game\'s file is not one the phone can prepare, so the whole set comes from a computer: build it there (scripts/pack_android.py) and add it with Import a library.</string>
+    <string name="prepare_build_all_makes_the_whole">Build all makes the whole set now, which takes a while: keep the phone charging.</string>
+    <string name="prepare_the_pack_has_no_shaders">The pack has no shaders for this app version.</string>
+    <string name="prepare_the_pack_s_shaders_were">The pack\'s shaders were made from other shader tables than this app version\'s, so they need making again.</string>
+    <string name="prepare_the_game_page_performance_advanced">the game page › Performance › Advanced › Extra environment</string>
+    <string name="prepare_the_game_page_performance_advanced_2">the game page › Performance › Advanced › Shaders while playing</string>
+    <string name="err_it_closed_without_saying_why">It closed without saying why.</string>
+    <string name="err_the_game_ended_with_an">The game ended with an error.</string>
+    <string name="err_android_closed_it_because_one">Android closed it because one of the app\'s permissions changed.</string>
+    <string name="err_android_closed_it_for_using">Android closed it for using too much of the phone\'s resources.</string>
+    <string name="err_android_closed_it_because_it">Android closed it because it stopped responding.</string>
+    <string name="err_android_closed_it_without_saying">Android closed it without saying why. This is often for memory: closing other apps before playing can help.</string>
+    <string name="err_android_closed_it_while_it">Android closed it while it was in the background: the phone ran out of memory. Unsaved progress is lost.</string>
+    <string name="err_android_closed_it_the_phone">Android closed it: the phone ran out of memory. Closing other apps before playing can help.</string>
+    <string name="err_the_gpu_driver_stopped_responding">The GPU driver stopped responding, so the game had to close.</string>
+    <string name="err_the_game_reached_something_the">The game reached something the app cannot handle yet, so it was stopped.</string>
+    <string name="err_the_game_ran_into_an">The game ran into an error and crashed.</string>
+    <string name="err_the_app_ran_into_an">The app ran into an error and had to close the game.</string>
+    <string name="err_the_game_stopped_unexpectedly">The game stopped unexpectedly</string>
+    <string name="ready_missing_degraded">"missing (degraded): "</string>
+    <string name="ready_status_on_android">Status on Android</string>
+    <string name="ready_this_game_is_still_being">This game is still being brought up on Android: it may stop or draw wrongly on any phone, this one included.</string>
+    <string name="ready_missing_this_game_runs_without">"Missing: this game runs without it, with less. "</string>
+    <string name="ready_this_device_lacks_it_this">"This device lacks it; this game needs it. "</string>
+    <string name="ready_not_reported">not reported</string>
+    <string name="ready_guest_address_memory_is_available">Guest-address memory is available through a tested exported-memory alias (memory.fdAlias=1).</string>
+    <string name="ready_gpu_features">GPU features</string>
+    <string name="ready_texture_tables_runtime_arrays_the">Texture tables (runtime arrays): the game\'s texture pools live in them</string>
+    <string name="ready_texture_tables_partially_bound_the">Texture tables (partially bound): the game\'s texture pools live in them</string>
+    <string name="ready_texture_tables_update_after_bind">Texture tables (update after bind): the game\'s texture pools live in them</string>
+    <string name="ready_placed_memory_maps_the_game">Placed memory maps: the game\'s GPU memory is mapped at the game\'s own addresses; without them nothing is drawn</string>
+    <string name="ready_memory_map_2_placed_memory">Memory map 2: placed memory maps need it</string>
+    <string name="ready_swapchain_without_it_no_picture">Swapchain: without it no picture reaches the screen</string>
+    <string name="ready_dynamic_rendering_every_render_pas">Dynamic rendering: every render pass is recorded with it</string>
+    <string name="ready_timeline_semaphores_the_game_s">Timeline semaphores: the game\'s fences are built on them</string>
+    <string name="ready_a_graphics_and_compute_queue">A graphics and compute queue: everything is submitted to one such queue</string>
+    <string name="ready_vulkan_1_3_gpu_driver">Vulkan 1.3 GPU driver: the graphics replay is written for Vulkan 1.3</string>
+    <string name="ready_vulkan_1_3_loader_the">Vulkan 1.3 loader: the graphics replay is written for Vulkan 1.3</string>
+    <string name="ready_android_13_or_newer_the">Android 13 or newer: the app is built for it</string>
+    <string name="ready_start_failed">start failed</string>
+    <string name="ready_a_dependency_ended">a dependency ended</string>
+    <string name="ready_a_permission_change">a permission change</string>
+    <string name="ready_too_many_resources">too many resources</string>
+    <string name="ready_none_in_env_txt">None in env.txt.</string>
+    <string name="ready_diagnostic_switches">Diagnostic switches</string>
+    <string name="ready_none_in_the_last_7">None in the last 7 days.</string>
+    <string name="ready_memory_kills">Memory kills</string>
+    <string name="ready_last_game_exit">Last game exit</string>
+    <string name="ready_ended_normally">ended normally</string>
+    <string name="ready_stopped_responding">stopped responding</string>
+    <string name="ready_stopped_by_android_for_memory">stopped by Android for memory</string>
+    <string name="ready_no_game_has_run_yet">No game has run yet.</string>
+    <string name="ready_no_restriction">No restriction.</string>
+    <string name="ready_battery">Battery</string>
+    <string name="ready_the_app_is_in_android">The app is in Android\'s restricted standby group: it may be stopped in the background.</string>
+    <string name="ready_battery_use_is_restricted_android">Battery use is Restricted: Android may stop the app in the background.</string>
+    <string name="ready_free_storage">Free storage</string>
+    <string name="ready_all_files_access">All files access</string>
+    <string name="ready_memory">Memory</string>
+    <string name="ready_phone">Phone</string>
+    <string name="ready_readiness_report">Readiness report</string>
+    <string name="ready_share_the_readiness_report">Share the readiness report</string>
+    <string name="ready_open_the_app_s_settings">Open the app\'s settings</string>
+    <string name="ready_every_game_s_needs_are">Every game\'s needs are met.</string>
+    <string name="ready_every_game_s_needs_are_2">Every game\'s needs are met; see the warnings below.</string>
+    <string name="ready_ready_with_limits">Ready, with limits</string>
+    <string name="ready_not_ready">Not ready</string>
+    <string name="ready_its_own_gpu_driver">Its own GPU driver</string>
+    <string name="ready_this_phone">This phone</string>
+    <string name="ready_gpu_driver_picked">GPU driver picked</string>
+    <string name="ready_gpu_and_driver">GPU and driver</string>
+    <!-- Prepare's steps (Job.stepText) -->
+    <string name="prepare_step_checking_the_dump">Checking the dump</string>
+    <string name="prepare_step_rewriting_the_game_s_code">Rewriting the game\'s code</string>
+    <string name="prepare_step_finding_the_shaders">Finding the shaders</string>
+    <string name="prepare_step_translating_shaders">Translating shaders</string>
+    <string name="prepare_step_finishing_the_pack">Finishing the pack</string>
+    <!-- tile states -->
+    <string name="home_checking">Checking…</string>
+    <string name="home_preparing">Preparing…</string>
+    <string name="home_ready_shader_update_waits">Ready · shader update waits for the other game\'s preparing</string>
+    <string name="home_ready_shader_update_starting">Ready · shader update starting</string>
+    <string name="home_ready_shader_update_paused">Ready · shader update paused</string>
+
+    <!-- more labels and states -->
+    <string name="home_preparing_not_finished">Preparing not finished</string>
+    <string name="home_needs_preparing">Needs preparing</string>
+    <string name="home_no_pack">No pack</string>
+    <string name="home_pack_unfinished">Pack unfinished</string>
+
+    <!-- second sweep: placeholders and notes -->
+    <plurals name="game_n_built_while_you_play">
+        <item quantity="one">%1$,d built while you play</item>
+        <item quantity="other">%1$,d built while you play</item>
+    </plurals>
+    <string name="game_turned_on_by">Turned on by %1$s</string>
+    <plurals name="common_n_set">
+        <item quantity="one">%1$d set</item>
+        <item quantity="other">%1$d set</item>
+    </plurals>
+    <string name="game_recommended_colon">Recommended: %1$s</string>
+    <string name="home_on_n_of_m_items">On · %1$d of %2$d items</string>
+    <string name="home_on_multiplier">On · %1$sx</string>
+    <string name="game_kept_for_game_resolution">Kept for this game (the same setting as Game settings › Resolution).</string>
+    <string name="game_applies_now_resizes_picture">Applies now: the game resizes its picture within a few frames. Kept for this game (the same setting as Game settings › Game resolution).</string>
+    <string name="game_fit_keeps_shape_note">Fit keeps the game\'s shape, Stretch fills the screen; below 100 % the picture is smaller, with black around it. Applies now, kept for this game.</string>
+    <string name="home_game_details">Title ID: %1$s\nGame: %2$s\nPack: %3$s\nShaders: %4$s\nSaves: %5$s</string>
+    <string name="home_nup_in_place">%1$s (.nup used where it is, picked with the file picker)</string>
+    <string name="home_shaders_present">present (%1$s)</string>
+
+    <!-- found by the whole-file sweep -->
+    <string name="home_landscape_the_game_window_stays">Landscape: the game window stays horizontal on a phone</string>
+    <string name="home_automatic_the_game_follows_the">Automatic: the game follows the phone\'s rotation, portrait too</string>
+    <string name="home_auto_hidden_while_a_controller">Auto: hidden while a controller is connected</string>
+    <string name="home_default">Default</string>
+    <string name="home_this_game_has_no_pack_2">This game has no pack that can be used yet.</string>
+    <string name="home_no_usable_pack">no usable pack</string>
+    <string name="home_the_pack_is_for_another">The pack is for another update of this game. Prepare again rewrites the game\'s code (a few minutes; shaders are kept).</string>
+    <string name="home_unsupported_version_parts_of_the">Unsupported version: parts of the picture are likely missing, or it may not start. Play asks first.</string>
+    <string name="home_this_game_has_no_pack_3">This game has no pack that fits, and it is not a dump Prepare can start from. The game page › Storage › Folders picks a pack, or Storage › Import pack… brings one made elsewhere.</string>
+    <string name="game_16_9_as_shipped">16:9 (as shipped)</string>
+    <string name="game_sharper">Sharper</string>
+    <string name="game_softer">Softer</string>
+    <string name="game_system_the_phone_s_own">System (the phone\'s own driver)</string>
+    <string name="game_game_default_its_own_dynamic">Game default (its own dynamic resolution)</string>
+    <string name="game_advanced_window_and_3d_scene">Advanced: window and 3D scene apart</string>
+    <string name="game_system_driver_2">System driver</string>
+    <string name="game_for_testing_and_troubleshooting">For testing and troubleshooting.</string>
+    <string name="game_these_apply_at_the_next">These apply at the next start.</string>
+    <string name="game_the_in_game_panel_changes">The in-game panel changes the frame rate cap, Hold 60 fps and Full game speed while the game runs.</string>
+    <string name="game_the_in_game_panel_changes_2">The in-game panel changes the upscaler and the window while the game runs; the rest applies at the next start.</string>
+    <string name="game_game_options">Game options</string>
+    <string name="game_speed">Speed</string>
+    <string name="game_shaders_while_playing_off_turn">Shaders while playing: off (turn on)</string>
+    <string name="game_shaders_while_playing_on_turn">Shaders while playing: on (turn off)</string>
+    <string name="game_this_game_picks_its_own_2">This game picks its own frame rate.</string>
+    <string name="game_this_build_has_no_frame">This build has no frame rate cap.</string>
+    <string name="game_automatic">Automatic</string>
+    <string name="game_advanced_u00b7_window">Advanced \u00b7 Window</string>
+    <string name="game_the_game_s_own_2">the game\'s own</string>
+    <string name="game_auto">Auto</string>
+    <string name="game_memory_the_game_s_and">Memory: the game\'s and the phone\'s</string>
+    <string name="game_build_tag">Build tag</string>
+    <string name="game_battery_temperature_and_level">Battery temperature and level</string>
+    <string name="game_cpu_clock_caps">CPU clock caps</string>
+    <string name="game_gpu_time_a_frame">GPU time a frame</string>
+    <string name="game_throttle_dot_green_yellow_red">Throttle dot (green / yellow / red)</string>
+    <string name="game_frame_rate_and_frame_time">Frame rate and frame time</string>
+    <string name="game_drag_a_control_or_the">Drag a control or the picture; pinch a control to resize it</string>
+    <string name="game_picture_drag_into_the_black">picture: drag into the black bars</string>
+    <string name="game_temporal_sharpness">Temporal sharpness</string>
+    <string name="game_sharpness">Sharpness</string>
+    <string name="game_original">Original</string>
+    <string name="game_phone_480p_848x480">Phone 480p (848x480)</string>
+    <string name="game_phone_540p_960x540">Phone 540p (960x540)</string>
+    <string name="game_phone_720p_1280x720">Phone 720p (1280x720)</string>
+    <string name="game_phone_1080p_1920x1080">Phone 1080p (1920x1080)</string>
+    <string name="game_phone_1440p_2560x1440">Phone 1440p (2560x1440)</string>
+    <string name="game_original_the_game_s_own">Original (the game\'s own size)</string>
+    <string name="common_copy_details">Copy details</string>
+    <string name="game_ok_a">OK (A)</string>
+    <string name="game_join_with_on_screen_controls">Join with on-screen controls</string>
+    <string name="game_cancel_b">Cancel (B)</string>
+    <string name="game_the_game_stays_in_your">The game stays in your list; Play then needs Prepare again (or Import pack…). Your saves stay.</string>
+    <string name="game_a_copy_into_the_app">A copy into the app is running: wait for it.</string>
+    <string name="game_prepare_or_a_shader_build">Prepare or a shader build is running: wait for it (or pause Prepare), then try again.</string>
+    <string name="game_the_picked_zip">the picked zip</string>
+    <string name="game_the_picked_folder">the picked folder</string>
+    <string name="game_reading_the_save">Reading the save…</string>
+    <string name="game_import_save_a_zip_or">Import save… (a .zip or a folder)</string>
+    <string name="game_back_up">back up</string>
+    <string name="game_as_a_zip_to_a">As a .zip, to a place you pick</string>
+    <string name="prepare_its_shaders_are_of_an">Its shaders are of an older version: the game plays with them while the app updates them, as after an app update.</string>
+    <string name="prepare_it_is_this_app_version">It is this app version\'s library: the game plays it at the next start.</string>
+    <string name="prepare_importing_the_shader_library">Importing the shader library…</string>
+    <string name="prepare_pick">Pick…</string>
+    <string name="prepare_save_folder">Save folder</string>
+    <string name="prepare_pack_and_shader_folder_pack">Pack and shader folder (pack.tsv, shaders/)</string>
+    <string name="game_lossless_dll_picked_by_hand">Lossless.dll: picked by hand</string>
+    <string name="game_that_file_is_not_a">that file is not a Windows DLL</string>
+    <string name="game_lossless_dll_the_copy_picked">Lossless.dll: the copy picked earlier</string>
+    <string name="game_join_pc_host_same_wi">Join PC host - same Wi-Fi</string>
+    <string name="game_join_pc_host_internet_tailscale">Join PC host - Internet / Tailscale</string>
+    <string name="game_join_pc_host_needs_setup">Join PC host - needs setup</string>
+    <string name="game_the_driver">the driver</string>
+    <string name="game_download">Download…</string>
+    <string name="game_pick_a_zip">Pick a zip…</string>
+    <string name="game_gpu_driver_system">GPU driver: system</string>
+    <string name="ready_frozen_in_the_background">frozen in the background</string>
+    <string name="ready_a_signal">a signal</string>
+    <string name="game_no_gamepad">no gamepad</string>
+    <string name="game_the_game_s_own_palette">the game\'s own palette</string>
+    <string name="game_start_anyway_black_screen">Start anyway (black screen)</string>
+    <string name="game_not_ready_for_this_game">Not ready for this game</string>
+    <string name="game_pick_system_the_phone_s">Pick System (the phone\'s own driver)</string>
+    <string name="game_missing">"Missing: "</string>
+    <string name="game_chosen_new">chosen, new</string>
+    <string name="game_a_save_restore_or_swap">a save restore or swap that was stopped was finished first</string>
+    <string name="game_for_every_game_without_its">For every game without its own mapping, from its next start.</string>
+
+    <!-- second sweep: labels with values -->
+    <string name="game_needs_prepare_again_tail">" · needs Prepare again"</string>
+    <string name="game_drs_between">Between %1$s and 100%% of the window</string>
+    <string name="game_low_performance_here">" (low performance here)"</string>
+    <string name="game_as_in_settings">As in Settings: %1$s</string>
+    <string name="game_default_settings_value">Default (Settings: %1$s)</string>
+    <string name="game_game_default_dot">Game default · %1$s</string>
+    <string name="game_recommended_value">Recommended (%1$s)</string>
+    <string name="game_default_this_games">Default (this game\'s: %1$s)</string>
+    <string name="game_default_main_screens">Default (the main screen\'s: %1$s)</string>
+    <string name="game_aspect_native">" (native)"</string>
+    <string name="game_aspect_3d_view">" (3D view)"</string>
+    <string name="game_aspect_3d_follows">" (3D view follows it; HUD and menus keep their 16:9 layout)"</string>
+    <string name="game_auto_colon">Auto: %1$s</string>
+    <string name="game_none_lower">none</string>
+    <string name="game_automatic_paren">" (automatic)"</string>
+    <string name="game_now_fps_capped">Now %1$d fps, capped at %2$d.</string>
+    <string name="game_now_fps_own">Now %1$d fps, the game\'s own.</string>
+    <string name="settings_n_users_games_start_with">%1$d users · games start with %2$s</string>
+    <string name="game_drs_title_native">Dynamic resolution: %1$s (native size)</string>
+    <string name="game_drs_title_to_100">Dynamic resolution: %1$s to 100%%</string>
+
+    <!-- DlssTune words -->
+    <string name="game_clarity_steadiest">Steadiest</string>
+    <string name="game_clarity_steady">Steady</string>
+    <string name="game_clarity_balanced">Balanced</string>
+    <string name="game_clarity_clear">Clear</string>
+    <string name="game_clarity_clearest">Clearest</string>
+    <string name="game_clarity_may_flicker">" (may flicker in combat)"</string>
+
+    <!-- second sweep: Add game results, storage, saves -->
+    <string name="home_added_list">Added: %1$s.</string>
+    <string name="home_needs_prepare_list">Needs Prepare: %1$s. No pack that fits was found: its card\'s Prepare makes one on this phone (one game at a time).</string>
+    <string name="home_not_in_version_list">Not in this app version: %1$s. Install a build that includes them (Settings › About lists the games this one has).</string>
+    <string name="home_no_pack_found_list">No pack found: %1$s. Add it on its own to pick its pack folder.</string>
+    <string name="home_not_added_list">Not added: %1$s</string>
+    <string name="home_both_cards_kept">Another dump of the same game was on the list already, so both cards are kept: %1$s. The game page › Storage › Remove from list takes one away (nothing is deleted).</string>
+    <string name="game_backup_or_export_running">A save backup or a pack export of %1$s is running: wait for it.</string>
+    <plurals name="game_remove_n_items">
+        <item quantity="one">Remove %1$d item?</item>
+        <item quantity="other">Remove %1$d items?</item>
+    </plurals>
+    <string name="game_remove_name_data_question">Remove %1$s data?</string>
+    <string name="game_in_all_cannot_be_undone">%1$s in all. This cannot be undone.</string>
+    <string name="game_saves_never_removed">Saves are never removed.</string>
+    <string name="game_n_freed">%1$s freed.</string>
+    <string name="game_backup_to">To %1$s</string>
+    <string name="game_backing_up_save">Backing up the save of %1$s…</string>
+    <string name="game_restoring_save">Restoring the save of %1$s…</string>
+    <string name="game_backup_from">from %1$s</string>
+    <string name="game_files_size_device">%1$d files, %2$s%3$s</string>
+
+    <!-- second sweep: in-game errors, notification -->
+    <string name="err_stopped_in_background">The game was stopped while it was in the background (Android ended its process).</string>
+    <string name="err_unsaved_progress_lost">Unsaved progress is lost; start it again from the launcher.</string>
+    <string name="err_gpu_no_placed_maps">This GPU\'s own driver has no placed memory maps, so nothing is drawn: the screen stays black while the game runs. The custom drivers the app can install are for Adreno GPUs only, so this phone cannot draw the game yet.</string>
+    <string name="err_gpu_driver_black_pick_custom">With this GPU driver (%1$s) nothing is drawn: the screen stays black while the game runs. Pick a custom driver that has placed memory maps in Settings › GPU driver, or in this game\'s Game settings.</string>
+    <string name="err_gpu_driver_black_pick_system">With this GPU driver (%1$s) nothing is drawn: the screen stays black while the game runs. Pick System (the phone\'s own driver) in Settings › GPU driver, or in this game\'s Game settings.</string>
+    <string name="err_may_stop_custom_driver">The game may stop or draw wrongly. A custom GPU driver (Settings › GPU driver) may help.</string>
+    <string name="err_may_stop">The game may stop or draw wrongly.</string>
+    <string name="game_controller_press_home">Controller: press Home</string>
+    <string name="game_controller_hold_minus_plus">Controller: hold − and +</string>
+    <string name="game_controller_press_home_or_hold">Controller: press Home, or hold − and +</string>
+    <string name="prepare_notification_channel">Preparing a game</string>
+    <string name="prepare_notification_channel_description">Progress while the app prepares a game from your dump</string>
+    <string name="prepare_a_game">a game</string>
+    <string name="prepare_simulated">" (simulated)"</string>
+    <string name="prepare_starting">Starting…</string>
+    <string name="prepare_name_is_ready_title">%1$s is ready to play</string>
+    <string name="prepare_open_and_tap_play">Open Banana Native and tap Play.</string>
+    <string name="prepare_waiting_name">Waiting: %1$s</string>
+    <string name="prepare_could_not_prepare_name">Could not prepare %1$s</string>
+    <string name="prepare_paused_name">Paused: %1$s</string>
+    <string name="prepare_step_n_of_m_pct">Step %1$d of %2$d · %3$d %%</string>
+
+    <!-- second sweep: notes and errors -->
+    <string name="prepare_no_shaders_yet">This game has no shaders for this app version yet. It starts now and builds the ones it needs while you play, so a scene may look incomplete the first time it shows.</string>
+    <string name="prepare_build_all_makes_set">Build all on the game\'s page makes the whole set now.</string>
+    <string name="prepare_import_library_makes_set">Import a library on the game\'s page takes a library built on a computer.</string>
+    <string name="err_path_is_not_there">%1$s is not there.</string>
+    <string name="err_game_cannot_be_used">%1$s cannot be used: %2$s</string>
+    <string name="err_game_has_no_romfs">%1$s has no %2$s with a RomFS (the pack is for version %3$s).</string>
+    <string name="err_no_romfs_in">No RomFS in %1$s (looked for %2$s, romfs/ and updates/&lt;version&gt;/romfs).</string>
+    <string name="game_put_dll_in_documents">. Put it in Documents/Emulation/bios or Switch2, or pick it.</string>
+    <string name="game_by_touch_swipe_or_back">. By touch: swipe in from the right edge, or Back</string>
+    <string name="prepare_copying_progress">Copying %1$s: %2$s of %3$s GiB (%4$d %%)\n%5$s\n\nKeep the app open. The copy goes to the app\'s own storage, so it needs no All files access.</string>
+    <string name="game_turnip_slow_note">Turnip drivers run this game slowly (low performance). A Qualcomm driver, such as 891.14, or System is faster.</string>
+    <string name="game_aspect_native_laid_out">" (native: cameras and menus laid out for %1$s)"</string>
+    <string name="game_hold60_text">Off: the game drops to 30 fps when it cannot keep 60, as on the console. On: the game always runs its 60 fps mode and Banana Native does not hold frames, so it never drops to 30; the frame rate is less even and the game runs a little slower while under 60. Only with the 60 fps cap</string>
+    <string name="game_present_only_note">Experimental for this game: the cap only limits how often the picture is shown, not the game itself. Expect bugs (for example the game running slower or faster).</string>
+
+    <!-- second sweep: folders, packs, mapping, controls, profile -->
+    <string name="prepare_save_default_earlier">" (default: your save from an earlier version, beside the game. The game's next start copies it into the app's storage, %1$s, and plays it from there; this folder is never changed)"</string>
+    <string name="prepare_save_default_in_app_copied">" (default: in the app's storage; copied from %1$s, which is kept as it was)."</string>
+    <string name="prepare_save_default_in_app">" (default: in the app's storage)."</string>
+    <string name="prepare_backup_makes_zip">Back up saves makes a .zip in a place you pick, so it stays when the app is uninstalled.</string>
+    <string name="prepare_backup_puts_copies">Back up saves puts copies in %1$s, on shared storage: they stay when the app is uninstalled.</string>
+    <string name="prepare_picked_paren">" (picked)"</string>
+    <string name="prepare_default_in_app_paren">" (default: in the app's storage)"</string>
+    <string name="prepare_default_beside_game_paren">" (default: beside the game)"</string>
+    <string name="prepare_library_of_version">It is of version %1$s, which this app version plays while the app\'s own is missing.</string>
+    <string name="prepare_card_offers_fix">The game\'s card offers what fixes it.</string>
+    <string name="game_reset_to_default">Reset to default</string>
+    <string name="game_mapping_for_game_only">For %1$s only, from its next start. Reset: back to Settings\' mapping.</string>
+    <string name="game_group_drag_to_move">%1$s: drag to move, a second finger to resize (%2$d %%)</string>
+    <string name="game_opacity_pct">Opacity %1$d %%</string>
+    <string name="game_dll_from">Lossless.dll from %1$s</string>
+    <string name="game_dll_could_not_be_copied">Lossless.dll at %1$s could not be copied: %2$s</string>
+    <string name="err_dump_has_only_switch_game">This dump has only the Switch game (%1$s). This app version runs its %2$s (%3$s), program %4$s of the game, which this dump does not hold. Dump the game again with its Nintendo Switch 2 Edition upgrade, so that the dump holds program %4$s too, then add that dump.</string>
+    <string name="err_app_does_not_include">This app version does not include %1$s (%2$s). Install a build that includes it.</string>
+    <string name="err_this_game">this game</string>
+    <string name="err_app_supports_only">This app supports %1$s (%2$s) %3$s only.</string>
+    <string name="err_or_word">" or "</string>
+
+    <!-- sentences and clauses of the long messages (Prepare, readiness, shaders ...) -->
+    <string name="prepare_in_the_background_best_on">, in the background, best on the charger). You can pause any time.</string>
+    <string name="prepare_the_game_plays_now_and">The game plays now and builds shaders while you play; this builds the whole set now (</string>
+    <string name="prepare_build_them_there_scripts_pack">build them there (scripts/pack_android.py) and add the library with Import a library.</string>
+    <string name="prepare_the_game_plays_now_on">"The game plays now on its older shaders; those it needs and the library lacks are built while you play. "</string>
+    <string name="prepare_build_all_on_the_game_2">Build all on the game\'s page makes the whole set now, and Import a library there takes one built on a computer.</string>
+    <string name="prepare_a_label_at_the_top">"A label at the top shows the progress, and later starts are much faster because the shaders are kept. "</string>
+    <string name="prepare_longest_in_a_big_game">"longest in a big game (it starts with the title and intro, then each new place): the phone is making the first shaders and gets warm, so keep it charging. "</string>
+    <string name="prepare_best_on_the_charger_or">, best on the charger), or do it later with Build all on the game\'s page.</string>
+    <string name="prepare_to_translate_it_in_the">\" to translate it in the same job (</string>
+    <string name="prepare_the_whole_set_of_shaders">The whole set of shaders is optional: tick \"</string>
+    <string name="prepare_the_app_rewrites_the_game">The app rewrites the game\'s code (a few minutes), then the game plays. It builds shaders while you play, so the first minutes in a new place may stutter.\n\n</string>
+    <string name="prepare_keeping_the_shaders_already_transl">Keeping the shaders already translated</string>
+    <string name="prepare_still_working_last_update">" · still working, last update "</string>
+    <string name="prepare_shaders_up_to_date_nothing">"  ·  shaders up to date: nothing to translate"</string>
+    <string name="prepare_tap_retry_details_says_why">. Tap Retry. Details says why.</string>
+    <string name="prepare_preparing_stopped_while">"Preparing stopped while "</string>
+    <string name="prepare_and_tap_retry_or_try">and tap Retry, or Try anyway.</string>
+    <string name="prepare_the_dump_may_be_incomplete">"). The dump may be incomplete or modified: dump the game again "</string>
+    <string name="prepare_your_dump_s_shaders_are">"Your dump's shaders are not the ones this app knows for "</string>
+    <string name="prepare_gb_close_other_apps_then">" GB). Close other apps, then tap Retry."</string>
+    <string name="prepare_times_most_likely_for_lack">" times, most likely for lack of memory (it needs up to "</string>
+    <string name="prepare_was_stopped_by_android">" was stopped by Android "</string>
+    <string name="prepare_stopped_because_of_an_error">" stopped because of an error in the app. Tap Retry. If it stops again, Details has the error."</string>
+    <string name="prepare_tap_retry_if_it_stops">" Tap Retry. If it stops again, Details has the log."</string>
+    <string name="prepare_your_dump_s_shaders_are_2">" Your dump's shaders are not the ones this app expects for this game version. If you dumped the game again, tap Retry."</string>
+    <string name="prepare_some_shaders_could_not_be">" Some shaders could not be translated, so no shader library was made. Try anyway makes it without them (those parts may not show)."</string>
+    <string name="prepare_the_storage_is_full_free">" The storage is full. Free some space, then tap Retry."</string>
+    <string name="prepare_the_phone_ran_out_of">" The phone ran out of memory. Close other apps, then tap Retry."</string>
+    <string name="prepare_and_the_game_may_not">and the game may not start or may crash. Bug reports for it can\'t be fixed. Your dump and saves are not changed.</string>
+    <string name="prepare_it_has_not_been_tested">It has not been tested this way. Your dump and saves are not changed.</string>
+    <string name="prepare_of_the_app_or_report">of the app, or report this with the log from Details.</string>
+    <string name="prepare_it_has_no_shaders_for">"It has no shaders for this app version: the game plays and builds them as you play. "</string>
+    <string name="prepare_the_game_plays_now_it">"The game plays now. It builds the shaders it needs while you play (Settings › Storage lists them as the shader cache); the first start can be black or half-empty for several minutes and objects pop in for a while. "</string>
+    <string name="prepare_or_import_a_whole_pack">or import a whole pack (the game page › Storage › Import pack…).</string>
+    <string name="prepare_this_game_s_file_is_2">" This game's file is not one the phone can prepare: build the library on a computer (scripts/pack_android.py) and add it with Import a library on the game's page, "</string>
+    <string name="prepare_the_game_s_code_is">; the game\'s code is kept).</string>
+    <string name="prepare_prepare_shaders_makes_them_from">" Prepare shaders makes them from your dump ("</string>
+    <string name="prepare_prepare_shaders_updates_them_none">" Prepare shaders updates them; none needs translating again (the game's code is kept)."</string>
+    <string name="prepare_free_some_space_or_pick">Free some space, or pick a pack folder the app can write (the game page › Storage › Folders).</string>
+    <string name="prepare_turns_off_building_them_while">" turns off building them while you play. Remove it to play now and build them as you play."</string>
+    <string name="prepare_to_play_now_and_build">) to play now and build them as you play.</string>
+    <string name="game_storage_u203a_shader_cache_built">. Storage \u203a Shader cache built while playing frees this cache; it is then built again as you play.</string>
+    <string name="game_or_build_all">" or Build all"</string>
+    <string name="game_free_space_on_the_phone">Free space on the phone, or add the whole set with Import a library (one built on a computer)</string>
+    <string name="game_stopped_the_shader_builder_could">" · stopped (the shader builder could not run)"</string>
+    <string name="game_starting_shader_build">Starting shader build (</string>
+    <string name="game_u00b7_next_try_in">") \u00b7 next try in "</string>
+    <string name="game_shader_build_waiting">Shader build waiting (</string>
+    <string name="err_a_version_this_app_does">"), a version this app does not support (it supports "</string>
+    <string name="err_the_pack_is_for">"The pack is for "</string>
+    <string name="err_its_code_would_crash_with">"). Its code would crash with this game: Prepare again rewrites the game's code from this dump (a few minutes; shaders are kept).\n\nBuild IDs that differ: "</string>
+    <string name="err_than_the_one_in_the">"…) than the one in the game "</string>
+    <string name="err_the_pack_was_made_from">"The pack was made from another build of "</string>
+    <string name="err_cannot_be_read_2">" cannot be read: "</string>
+    <string name="err_pick_the_dump_that_has">. Pick the dump that has that update, or Prepare again from this one.</string>
+    <string name="err_but_the_game">", but the game "</string>
+    <string name="err_is_read_from_a_dump">" is read from a dump folder"</string>
+    <string name="err_a_nup_holds_program_0">"a .nup holds program 0 only; this pack's "</string>
+    <string name="ready_on_in_env_txt">"On in env.txt: "</string>
+    <string name="ready_stopped_for_memory_in_the">" stopped for memory in the last 7 days, the last "</string>
+    <string name="ready_settings_share_log_sends_its">. Settings › Share log sends its log.</string>
+    <string name="ready_the_last_game">"The last game "</string>
+    <string name="ready_a_game_s_pack_takes">: a game\'s pack takes several GB.</string>
+    <string name="ready_on_the_phone">on the phone.</string>
+    <string name="ready_not_granted_the_app_reads">"Not granted: the app reads .nup files picked with the file picker and dump folders copied into it, not a dump folder elsewhere "</string>
+    <string name="ready_which_android_counts_as_low">, which Android counts as low</string>
+    <string name="ready_not_a_64_bit_arm">: not a 64-bit ARM phone, which the app needs</string>
+    <string name="ready_last_start_of">"-- last start of "</string>
+    <string name="ready_settings_changed_from_the_defaults">-- Settings changed from the defaults</string>
+    <string name="ready_sha_256_of_the_signing">" (SHA-256 of the signing certificate, first 16 hex digits)\nPhone: "</string>
+    <string name="ready_nxnative_readiness_report">"nxnative readiness report: "</string>
+    <string name="ready_a_folder_that_reads">: a folder that reads.</string>
+    <string name="ready_has_no_main_npdm_base">" has no main.npdm (base/exefs/, updates/&lt;version&gt;/exefs/ or exefs/)."</string>
+    <string name="ready_is_not_a_folder_this">" is not a folder this app can read."</string>
+    <string name="ready_cannot_be_used">" cannot be used: "</string>
+    <string name="ready_a_nup_that_reads_and">: a .nup that reads and checks (</string>
+    <string name="ready_its_card_s_button_picks">; its card\'s button picks it.)</string>
+    <string name="ready_its_card_s_button_picks_2">" (its card's button picks it.)"</string>
+    <string name="ready_packages_its_table_of_contents">" packages, its table of contents checked). It needs no All files access."</string>
+    <string name="ready_a_nup_used_where_it">": a .nup used where it is (picked with the file picker; "</string>
+    <string name="ready_with_less_here">" with less here."</string>
+    <string name="ready_what_it_needs">" what it needs"</string>
+    <string name="ready_the_check_before_the_game">. The check before the game starts uses the game\'s driver, and its result can differ from this one.</string>
+    <string name="ready_this_screen_checked">"; this screen checked "</string>
+    <string name="ready_this_game_uses_its_own">"This game uses its own GPU driver, "</string>
+    <string name="ready_the_one_this_screen_checked">, the one this screen checked.</string>
+    <string name="ready_settings_gpu_driver">" (Settings › GPU driver)."</string>
+    <string name="ready_the_gpu_driver_was_changed">. The GPU driver was changed while this screen was open: leave it and open it again to check the new one.</string>
+    <string name="err_is_on_home_add_it">" is on Home. Add it in "</string>
+    <string name="err_no_game_with_title_id">"No game with title ID "</string>
+    <string name="err_cannot_be_read_check_that">" cannot be read. Check that All files access is on."</string>
+    <string name="err_is_not_there_the_frontend">" is not there (the frontend sent "</string>
+    <string name="err_rename_it_so_that_its">: rename it so that its name ends in \".nup\" or \".nsp\" (lower case); the game and the tools read only that name.</string>
+    <string name="err_the_frontend_sent_no_game">The frontend sent no game: send the .nup (or the game folder) as the intent\'s data, or the extra \"game\" with its path.</string>
+    <string name="err_which_is_not_a_file">, which is not a file on this phone\'s storage by a path the app can read. Set the frontend to send the file\'s path, or its storage (SAF) URI from the phone\'s own storage.</string>
+    <string name="err_the_frontend_sent">"The frontend sent "</string>
+    <string name="ready_gib_android_sdk">" GiB; Android SDK "</string>
+    <string name="ready_gib_android_sdk_2">" GiB, Android SDK "</string>
+    <string name="ready_the_system_s_driver">, the system\'s driver</string>
+    <string name="ready_gpu_not_reported">GPU not reported</string>
+    <string name="ready_docs_env_switches_tsv_lists">" (docs/env_switches.tsv lists the switches)"</string>
+    <string name="ready_did_you_mean">"; did you mean "</string>
+    <string name="ready_is_not_a_switch_of">) is not a switch of this build: nothing reads it</string>
+    <string name="settings_the_installer_answered_status">"The installer answered status "</string>
+    <string name="settings_update_not_installed">Update not installed</string>
+    <string name="settings_cannot_rename_the_download">cannot rename the download</string>
+    <string name="settings_the_download_is_incomplete">the download is incomplete (</string>
+    <string name="settings_the_download_is_larger_than">the download is larger than the release says</string>
+    <string name="settings_the_download_link_is_not">"the download link is not on "</string>
+    <string name="settings_the_apk_is_larger_than">the APK is larger than 1 GB</string>
+    <string name="settings_the_release_sources">the release sources</string>
+    <string name="settings_is_not_a_release_version">) is not a release version: nothing to compare.</string>
+    <string name="settings_this_build_s_version">This build\'s version (</string>
+    <string name="settings_only_the_release_app_dev">Only the release app (dev.bananative.android) checks for updates. A test app checks when update.txt in its files folder names repo= or url=.</string>
+    <string name="settings_no_release_source">no release source</string>
+    <string name="settings_did_not_answer_in_time">" did not answer in time)"</string>
+    <string name="settings_s_answer_is_too_large">\'s answer is too large</string>
+    <string name="settings_s_answer_could_not_be">"'s answer could not be read: "</string>
+    <string name="settings_no_network_cannot_reach">"No network (cannot reach "</string>
+    <string name="settings_rate_limit_try_again_later">" rate limit, try again later"</string>
+    <string name="prepare_is_gone_using">" is gone; using "</string>
+    <string name="prepare_let_it_finish_or_forget">): let it finish, or forget it in its ⋯ Manage, first</string>
+    <string name="game_gib_it_is_not_a">" GiB: it is not a save"</string>
+    <string name="game_nin_the_app">"\nIn the app: "</string>
+    <string name="err_the_game_process_ends_n">, the game process ends\n</string>
+    <string name="err_n_nshare_log_sends_the">\n\nShare log sends the log of that run, which says more.</string>
+    <string name="game_could_be_removed">" could be removed: "</string>
+    <string name="game_not_all_of">"not all of "</string>
+    <string name="game_a_save_folder_cannot_be">"a save folder cannot be resolved: "</string>
+    <string name="game_outside_the_app_s_folders">"outside the app's folders: "</string>
+    <string name="settings_the_maximum_is_used_as">: the maximum is used as the minimum</string>
+    <string name="game_the_app_s_gpu_drivers">"  (the app's gpu_drivers folder)"</string>
+    <string name="prepare_has_a_name_the_app">" has a name the app cannot use: "</string>
+    <string name="prepare_remove_that_game_with_its">): remove that game with its copy first, or pick it there</string>
+
+    <!-- found by the whole-file sweep -->
+    <string name="prepare_base_game">Base game</string>
+    <string name="prepare_rewriting_the_game_s_code">Rewriting the game\'s code (a few minutes, in the background). Shaders up to date: nothing to translate.</string>
+    <string name="prepare_about_20_35_minutes">about 20-35 minutes</string>
+    <string name="prepare_shaders_up_to_date_nothing_2">Shaders up to date: nothing to translate.</string>
+
+    <!-- sentences and clauses of the long messages (Prepare, readiness, shaders ...) -->
+    <string name="prepare_tap_resume_to_go_on">. Tap Resume to go on.</string>
+    <string name="prepare_nif_the_phone_is_not">\nIf the phone is not hot, tap Go on anyway.</string>
+    <string name="prepare_ready_to_play_2">Ready to play.</string>
+    <string name="prepare_shaders_up_to_date_nothing_3">Shaders up to date: nothing to translate</string>
+    <string name="prepare_under_a_minute_left">under a minute left</string>
+    <string name="prepare_n_na_new_prepare_starts">\n\nA new Prepare starts from the beginning.</string>
+    <string name="prepare_n_nthe_game_will_not">\n\nThe game will not start until it is prepared again (about 30-45 minutes).</string>
+    <string name="prepare_saves_are_never_deleted_here">. Saves are never deleted here.</string>
+    <string name="prepare_and_the_pack">, and the pack (</string>
+    <string name="prepare_and_your_saves">) and your saves</string>
+    <string name="prepare_n_nkept_your_dump">\n\nKept: your dump (</string>
+    <string name="prepare_n_the_prepared_pack_and">"\n· the prepared pack and its shader library in "</string>
+    <string name="prepare_with_the_pack_inside_it">" with the pack inside it"</string>
+    <string name="prepare_n_the_split_s_kept">\n· the split\'s kept progress and the translated shaders kept in the app\'s own storage</string>
+    <string name="prepare_rewritten_code_split_and_translate">" (rewritten code, split and translated shaders, the job's progress)"</string>
+    <string name="prepare_deleted_n_the_working_files">"Deleted:\n· the working files in "</string>
+    <string name="prepare_nits_code_is">"\nIts code is "</string>
+    <string name="prepare_untested_version_try_anyway">" (untested version: Try anyway)"</string>
+    <string name="prepare_gb_free_now">" GB free now)."</string>
+    <string name="prepare_n_nneeds_about_1_5">\n\nNeeds about 1.5 GB of free space (</string>
+    <string name="prepare_in_the_background">, in the background).</string>
+    <string name="prepare_rewriting_the_game_s_code_2">Rewriting the game\'s code (a few minutes) and translating shaders from your dump (</string>
+    <string name="prepare_rewriting_the_game_s_code_3">"Rewriting the game's code (a few minutes). "</string>
+    <string name="prepare_the_pack_s_game_code_2">The pack\'s game code was made by other tools than this app\'s.\n\n</string>
+    <string name="prepare_n_nit_goes_on_from">\n\nIt goes on from where it stopped.</string>
+    <string name="prepare_translating_shaders_from_your_dump">Translating shaders from your dump (</string>
+    <string name="ready_whether_this_gpu_has_what">): whether this GPU has what the game needs is not known.</string>
+    <string name="ready_the_game_needs_vulkan_1">): the game needs Vulkan 1.3.</string>
+    <string name="ready_the_gpu_driver_could_not">The GPU driver could not be used (</string>
+
+    <!-- text of the classes without Android (Words.s): Prepare progress, Readiness report, Recommend, Storage, notices -->
+    <string name="prepare_translator_does_not_match_the">"translator does not match the lock file: "</string>
+
+    <!-- long Prepare notes (PrepareText) -->
+    <string name="prepare_this_app_build_s_shader_transl">"This app build's shader translator does not match its own tools, so retrying will not help. Install the latest release "</string>
+    <string name="prepare_this_goes_on_without_the_check">"This goes on without the check that stopped it. The game may not start, may crash, or may draw parts wrongly or not at all. "</string>
+    <string name="prepare_this_version_is_not_supported">"This version is not supported: the app has the shaders and fixes of the supported version only, so parts of the picture are likely to be missing, "</string>
+    <string name="prepare_shaders_build_as_you_play_the">"Shaders build as you play. The first start can show a black or half-empty picture for several minutes, "</string>
+    <string name="prepare_the_game_plays_with_the_shader">"The game plays with the shaders it has, of an older version. This game's file is not one the phone can prepare, so the new ones come from a computer: "</string>
+    <string name="settings_choose_an_icon">Choose an icon</string>
+    <string name="settings_new_player">Player</string>
+    <string name="settings_users_hint">Games start with the selected player.</string>
+    <string name="settings_edit_player">Edit player</string>
+    <string name="settings_choose_a_picture">Choose a picture</string>
+    <string name="settings_from_your_photos">From your photos</string>
+    <string name="settings_use_an_icon_instead">Use an icon instead</string>
+    <string name="settings_player_id">Player ID</string>
+    <string name="settings_player_id_hint">Names are only labels: saves follow the ID, so a rename never moves or mixes saves.</string>
+    <string name="settings_that_picture_could_not_be_read">That picture could not be read</string>
+    <string name="home_move_left">Move left</string>
+    <string name="home_move_right">Move right</string>
 </resources>

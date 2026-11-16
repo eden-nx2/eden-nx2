@@ -58,5 +58,11 @@
             android:exported="false"
             android:process=":pack"
             android:foregroundServiceType="dataSync" />
+        <!-- Builds the shaders a running game asked for and its library lacks, in the Prepare job's process -->
+        <service
+            android:name="dev.nxnative.android.LayerService"
+            android:exported="false"
+            android:process=":pack"
+            android:foregroundServiceType="dataSync" />
     </application>
 </manifest>
