@@ -5,17 +5,21 @@ This branch is built from three repositories:
 | Source | What it adds |
 |---|---|
 | [Eden NX2](https://git.eden-emu.dev/Takoroka/eden-nx2) (Takoroka) | Switch 2 support on top of Eden (base: Eden `26a03d247`, Oct 26 2026) |
-| [Lichii](https://github.com/zortos293/Lichii) `nx2` @ `2eb5f0819` ([build 160](https://github.com/zortos293/Lichii/releases/tag/build-160), Nov 11 2026) | ~1,200 commits after the Eden base: all of Takoroka's NX2 work, Eglantine's, and Lichii's own renderer, CPU and compatibility work |
-| [Hokkaido](https://github.com/pavelgajdo/Hokkaido) `nx2` @ `32c408955` (Nov 11 2026) | Fork of Lichii (split at `09b78bd2d`, Nov 6) with Android phone work |
+| [Lichii](https://github.com/zortos293/Lichii) `nx2` @ `be1f4d9c8` ([build 228](https://github.com/zortos293/Lichii/releases/tag/build-228), Nov 15 2026) | ~1,200 commits after the Eden base: all of Takoroka's NX2 work, Eglantine's, and Lichii's own renderer, CPU and compatibility work |
+| [Hokkaido](https://github.com/pavelgajdo/Hokkaido) `nx2` @ `8396939c1` (Nov 15 2026) | Fork of Lichii (split at `09b78bd2d`, Nov 6) with Android phone work |
 
 Hokkaido is a fork of Lichii, and Lichii already contains Eden NX2, so the branch is
 **Lichii's tip, then Hokkaido's own commits cherry-picked on top (`-x`, so each one names its
 source), then one commit restoring Eden's branding.** Newer Lichii builds are merged in
-(`git merge`), and the merge commit renames any new Lichii references to Eden.
+(`git merge`), and `tools/eden-nx2/apply_branding.py` renames any new Lichii references to Eden
+(see [UPDATING.md](./UPDATING.md)).
 
 | Lichii build | Merge commit | Brings |
 |---|---|---|
 | build 160 (`2eb5f08`) | `df68f409` | LAN play for local wireless games without a room (#1359; works with Lichii and ldn_mitm), game list row layout, folder counts, title IDs and favourite stars (#1371), quieter would-block socket logs (#1384) |
+| build 228 (`be1f4d9`) | `85f3f2fd` | 245 commits: Ocarina FPS Unlock fixes, solid NSZ/NCZ, Mario Kart World 60 FPS mode, Intel/AMD/NVIDIA shader and hang fixes, texture/buffer cache memory work, trigger rumble, SteamGridDB art, GPU trace record/replay, crash and hang diagnostics. Lichii renamed its sources (`src/lichii`, `io.github.zortos293.lichii`, `LICHII_*`); here they are `src/eden`, `io.github.zortos293.eden`, `EDEN_*` |
+
+Hokkaido commits picked after the first import (Nov 15 2026): `04096bcc` (free the scale helper's views and framebuffers with their original), `cf1501f5` (`EDEN_NX2_GPU_LIST_DUMP`), `5e2c4b38`, `74cb62b5`, `a1f6cd13` (NCE loads from GPU-cached pages taken as reads, Pokémon Pokopia only: its sky renders), `d4df53b3` (reactive flushing on for Pokopia under NCE, folded into `Settings::ReactiveFlushing()`), and Lichii #1825 (`1ecdc49d`). Not taken: `31f7a2c3` (Lichii's batched ASTC decode already submits once after its last batch), `7e410b85` + `d029ce76` (revert each other), `c8d7f3fa` (fixes a test list this tree does not have), docs and CI.
 
 ## Lichii (everything up to its `nx2` tip)
 
