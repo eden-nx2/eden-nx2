@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <atomic>
@@ -30,6 +29,7 @@ namespace {
 
 struct sigaction g_orig_bus_action;
 struct sigaction g_orig_segv_action;
+struct sigaction g_orig_ill_action;
 
 // Verify assembly offsets.
 using NativeExecutionParameters = Kernel::KThread::NativeExecutionParameters;
@@ -252,18 +252,38 @@ bool ArmNce::HandleGuestAccessFault(GuestContext* guest_ctx, void* raw_info, voi
     // Try to handle an invalid access.
     // TODO: handle accesses which split a page?
     const Common::ProcessAddress addr =
-        (reinterpret_cast<u64>(info->si_addr) & ~Memory::YUZU_PAGEMASK);
+        (reinterpret_cast<u64>(info->si_addr) & ~Memory::EDEN_PAGEMASK);
     auto& memory = guest_ctx->parent->m_running_thread->GetOwnerProcess()->GetMemory();
     if (RunStoreToGpuPage(memory, static_cast<ucontext_t*>(raw_context)->uc_mcontext,
                           GetInteger(addr))) {
         return true;
     }
-    if (memory.InvalidateNCE(addr, Memory::YUZU_PAGESIZE)) {
+    if (memory.InvalidateNCE(addr, Memory::EDEN_PAGESIZE)) {
         // We handled the access successfully and are returning to guest code.
         return true;
     }
 
     // We couldn't handle the access.
+    return HandleFailedGuestFault(guest_ctx, raw_info, raw_context);
+}
+
+bool ArmNce::HandleGuestIllegalInstruction(GuestContext* guest_ctx, void* raw_info,
+                                           void* raw_context) {
+    // A sent SIGILL (kill, tgkill) is no guest fault: it gets the previous disposition.
+    if (static_cast<siginfo_t*>(raw_info)->si_code <= 0) {
+        HandleHostIllegalInstruction(GuestIllegalInstructionSignal, raw_info, raw_context);
+        return true;
+    }
+
+    // knob2 (debug_knobs bit 2, value 4): skip undefined instructions in guest code instead of
+    // halting the thread, like Dynarmic, which logs them and carries on.
+    if (Settings::GetDebugKnobAt(2)) {
+        static_cast<ucontext_t*>(raw_context)->uc_mcontext.pc += 4;
+        return true;
+    }
+
+    // Halt the guest thread instead of taking down the whole process.
+    // The faulting pc equals si_addr, so this is handled as a prefetch abort.
     return HandleFailedGuestFault(guest_ctx, raw_info, raw_context);
 }
 
@@ -273,6 +293,39 @@ void ArmNce::HandleHostAlignmentFault(int sig, void* raw_info, void* raw_context
 
 void ArmNce::HandleHostAccessFault(int sig, void* raw_info, void* raw_context) {
     return g_orig_segv_action.sa_sigaction(sig, static_cast<siginfo_t*>(raw_info), raw_context);
+}
+
+// Only SA_SIGINFO is looked at in the previous action's flags; SA_RESETHAND and SA_NODEFER are not
+// emulated. A library that installs its own SIGILL handler after NCE does replaces this one, and
+// guest SIGILLs then reach that handler instead.
+void ArmNce::HandleHostIllegalInstruction(int sig, void* raw_info, void* raw_context) {
+    auto* const info = static_cast<siginfo_t*>(raw_info);
+    if (g_orig_ill_action.sa_flags & SA_SIGINFO) {
+        return g_orig_ill_action.sa_sigaction(sig, info, raw_context);
+    }
+
+    // si_code <= 0 means the signal was sent (kill, tgkill, raise) rather than raised by a faulting
+    // instruction, so returning does not deliver it again.
+    const bool sent = info->si_code <= 0;
+    if (g_orig_ill_action.sa_handler == SIG_IGN) {
+        if (sent) {
+            // Drop it, but keep this handler installed for guest SIGILLs.
+            return;
+        }
+        // The kernel kills on a faulting instruction whose SIGILL is ignored.
+        Common::SigAction(sig, &g_orig_ill_action, nullptr);
+        return;
+    }
+    if (g_orig_ill_action.sa_handler == SIG_DFL) {
+        Common::SigAction(sig, &g_orig_ill_action, nullptr);
+        if (sent) {
+            // Pending until this handler returns, then the default action runs.
+            raise(sig);
+        }
+        // Otherwise the instruction faults again on return.
+        return;
+    }
+    g_orig_ill_action.sa_handler(sig);
 }
 
 void ArmNce::LockThread(Kernel::KThread* thread) {
@@ -395,6 +448,7 @@ void ArmNce::Initialize() {
         sigaddset(&signal_mask, BreakFromRunCodeSignal);
         sigaddset(&signal_mask, GuestAlignmentFaultSignal);
         sigaddset(&signal_mask, GuestAccessFaultSignal);
+        sigaddset(&signal_mask, GuestIllegalInstructionSignal);
 
         struct sigaction return_to_run_code_action {};
         return_to_run_code_action.sa_flags = SA_SIGINFO | SA_ONSTACK;
@@ -424,6 +478,14 @@ void ArmNce::Initialize() {
             reinterpret_cast<HandlerType>(&ArmNce::GuestAccessFaultSignalHandler);
         access_fault_action.sa_mask = signal_mask;
         Common::SigAction(GuestAccessFaultSignal, &access_fault_action, &g_orig_segv_action);
+
+        struct sigaction illegal_instruction_action {};
+        illegal_instruction_action.sa_flags = SA_SIGINFO | SA_ONSTACK;
+        illegal_instruction_action.sa_sigaction =
+            reinterpret_cast<HandlerType>(&ArmNce::GuestIllegalInstructionSignalHandler);
+        illegal_instruction_action.sa_mask = signal_mask;
+        Common::SigAction(GuestIllegalInstructionSignal, &illegal_instruction_action,
+                          &g_orig_ill_action);
     });
 }
 

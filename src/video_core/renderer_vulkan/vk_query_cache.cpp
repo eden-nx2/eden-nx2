@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <algorithm>
@@ -11,6 +10,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <span>
 #include <thread>
 #include <type_traits>
@@ -20,6 +20,7 @@
 #include "video_core/renderer_vulkan/vk_texture_cache.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
+#include "common/logging.h"
 #include "video_core/engines/maxwell_3d.h"
 #include "video_core/host1x/gpu_device_memory_manager.h"
 #include "video_core/query_cache/frame_trace.h"
@@ -63,11 +64,15 @@ public:
     ~SamplesQueryBank() = default;
 
     void Reset() override {
-        ASSERT(references == 0);
+        ASSERT(References() == 0);
         VideoCommon::BankBase::Reset();
         if (device.IsHostQueryResetSupported()) {
-            const auto& dev = device.GetLogical();
-            dev.ResetQueryPool(*query_pool, 0, BANK_SIZE);
+            // On the Vulkan worker, ahead of the BeginQuery commands recorded after it: a host
+            // reset costs the recording thread ~100 us a bank on AMD's driver. The bank is dead
+            // (no query uses it and the GPU is done with it), so nothing else touches the pool.
+            scheduler.Record([dev = &device.GetLogical(), pool = *query_pool](vk::CommandBuffer) {
+                dev->ResetQueryPool(pool, 0, BANK_SIZE);
+            });
         } else {
             scheduler.RequestOutsideRenderPassOperationContext();
             scheduler.Record([pool = *query_pool](vk::CommandBuffer cmdbuf) {
@@ -94,7 +99,7 @@ public:
     // Once the GPU has finished the bank's last submission, a slot that is still not available
     // never will be: stop shortly after that instead of at the 2 s deadline. Fire Emblem:
     // Fortune's Weave (04007EF01F8AE000) hit it on nearly every frame and ran at 0 FPS.
-    void Sync(size_t start, size_t size) {
+    void SyncTolerant(size_t start, size_t size, u64 written_tick) {
         const auto& dev = device.GetLogical();
         std::vector<std::array<u64, 2>> results(size);
         auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
@@ -103,7 +108,7 @@ public:
             if (!gpu_done && (spins & 63) == 0) {
                 scheduler.GetMasterSemaphore().Refresh();
             }
-            if (!gpu_done && scheduler.IsFree(last_used_tick)) {
+            if (!gpu_done && scheduler.IsFree(written_tick)) {
                 gpu_done = true;
                 deadline = (std::min)(deadline, std::chrono::steady_clock::now() +
                                                     std::chrono::milliseconds{2});
@@ -144,10 +149,58 @@ public:
             if (logged++ < 32) {
                 LOG_WARNING(Render_Vulkan,
                             "Occlusion query bank {}: {} of slots {}..{} never became available "
-                            "(first {}); read as 0. GPU tick {}, last used tick {}",
+                            "(first {}); read as 0. GPU tick {}, written at tick {}",
                             index, unavailable, start, start + size - 1, start + first_unavailable,
-                            scheduler.GetMasterSemaphore().KnownGpuTick(), last_used_tick);
+                            scheduler.GetMasterSemaphore().KnownGpuTick(), written_tick);
             }
+        }
+    }
+
+    void Sync(size_t start, size_t size, u64 written_tick) {
+#ifdef __ANDROID__
+        // Phone drivers (RADV on Xclipse) leave some slots unavailable with all GPU work done and
+        // no ring reset: Fire Emblem: Fortune's Weave hit it on nearly every frame. Read those as
+        // 0 instead of treating the submission as lost. (From Hokkaido.)
+        SyncTolerant(start, size, written_tick);
+        return;
+#endif
+        const auto& dev = device.GetLogical();
+        const auto read = [&] {
+            return dev.GetQueryResults(*query_pool, static_cast<u32>(start),
+                                       static_cast<u32>(size), sizeof(u64) * size,
+                                       &host_results[start], sizeof(u64), VK_QUERY_RESULT_64_BIT);
+        };
+        // Polled instead of VK_QUERY_RESULT_WAIT_BIT: once the host GPU has passed the submission
+        // that wrote these queries, their results are written. If they still aren't, that
+        // submission was dropped (the kernel reset a hung ring and recovered without a device
+        // loss), and RADV's wait would spin for 20 s per query.
+        VkResult query_result = read();
+        std::optional<std::chrono::steady_clock::time_point> passed_at;
+        while (query_result == VK_NOT_READY) {
+            scheduler.GetMasterSemaphore().Refresh();
+            if (!passed_at && scheduler.IsFree(written_tick)) {
+                passed_at = std::chrono::steady_clock::now();
+            }
+            if (passed_at &&
+                std::chrono::steady_clock::now() - *passed_at > std::chrono::seconds{1}) {
+                LOG_CRITICAL(Render_Vulkan,
+                             "Occlusion queries {}..{} of bank {} are unavailable 1 s after the "
+                             "GPU passed tick {}: their submission was dropped",
+                             start, start + size, index, written_tick);
+                query_result = VK_ERROR_DEVICE_LOST;
+                break;
+            }
+            std::this_thread::yield();
+            query_result = read();
+        }
+        switch (query_result) {
+        case VK_SUCCESS:
+            return;
+        case VK_ERROR_DEVICE_LOST:
+            device.ReportLoss();
+            [[fallthrough]];
+        default:
+            throw vk::Exception(query_result);
         }
     }
 
@@ -170,8 +223,10 @@ private:
     Scheduler& scheduler;
     const size_t index;
     vk::QueryPool query_pool;
-    std::array<u64, BANK_SIZE> host_results;
-    u64 last_used_tick{};
+    /// The fencing thread writes the results (Sync): on lines of their own, away from the
+    /// members the GPU thread reads at every report.
+    alignas(64) std::array<u64, BANK_SIZE> host_results;
+    alignas(64) u64 last_used_tick{};
 };
 
 using BaseStreamer = VideoCommon::SimpleStreamer<VideoCommon::HostQueryBase>;
@@ -483,19 +538,33 @@ public:
         {
             std::scoped_lock lk(flush_guard);
             pending_flush_sets.emplace_back(std::move(pending_flush_queries));
+            pending_flush_ticks.push_back(scheduler.CurrentTick());
+            // A list the fencing thread is done with, with its capacity: a fence made with
+            // reports pending grew a new one from nothing (~2,400 a second at Ocarina's water).
+            if (!spare_flush_queries.empty()) {
+                pending_flush_queries = std::move(spare_flush_queries.back());
+                spare_flush_queries.pop_back();
+            } else {
+                pending_flush_queries = {};
+            }
         }
     }
 
     void PopUnsyncedQueries() override {
         std::vector<size_t> current_flush_queries;
+        u64 written_tick;
         {
             std::scoped_lock lk(flush_guard);
             current_flush_queries = std::move(pending_flush_sets.front());
             pending_flush_sets.pop_front();
+            written_tick = pending_flush_ticks.front();
+            pending_flush_ticks.pop_front();
         }
         ApplyBanksWideOp<false>(
-            current_flush_queries,
-            [](SamplesQueryBank* bank, size_t start, size_t amount) { bank->Sync(start, amount); });
+            current_flush_queries, [written_tick](SamplesQueryBank* bank, size_t start,
+                                                  size_t amount) {
+                bank->Sync(start, amount, written_tick);
+            });
         for (auto q : current_flush_queries) {
             auto* query = GetQuery(q);
             u64 total = 0;
@@ -515,6 +584,11 @@ public:
                          trace, query->guest_address, GetId(), q, query->value,
                          static_cast<u32>(query->flags));
             }
+        }
+        current_flush_queries.clear();
+        std::scoped_lock lk(flush_guard);
+        if (spare_flush_queries.size() < MaxSpareFlushQueries) {
+            spare_flush_queries.push_back(std::move(current_flush_queries));
         }
     }
 
@@ -618,6 +692,17 @@ private:
         ReleaseQuery(query_id);
     }
 
+    void FreeMany(std::span<const size_t> query_ids) override {
+        std::scoped_lock lk(guard);
+        for (const size_t query_id : query_ids) {
+            auto* query = GetQuery(query_id);
+            ApplyBankOp(query, [](SamplesQueryBank* bank, size_t start, size_t amount) {
+                bank->CloseReference(amount);
+            });
+            ReleaseQuery(query_id);
+        }
+    }
+
     void AbandonCurrentQuery() {
         if (!current_query) {
             return;
@@ -707,6 +792,9 @@ private:
     // flush levels
     std::vector<size_t> pending_flush_queries;
     std::deque<std::vector<size_t>> pending_flush_sets;
+    std::deque<u64> pending_flush_ticks; ///< Tick that recorded each set; guarded by flush_guard
+    static constexpr size_t MaxSpareFlushQueries = 16;
+    std::vector<std::vector<size_t>> spare_flush_queries; ///< Guarded by flush_guard
 
     // State Machine
     size_t current_bank_slot;
@@ -749,7 +837,7 @@ public:
     ~TFBQueryBank() = default;
 
     void Reset() override {
-        ASSERT(references == 0);
+        ASSERT(References() == 0);
         VideoCommon::BankBase::Reset();
     }
 

@@ -1,14 +1,13 @@
 # SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# SPDX-FileCopyrightText: 2018 yuzu Emulator Project
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Enable modules to include each other's files
 include_directories(.)
 
 # Dynarmic
-if ((ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64 OR ARCHITECTURE_riscv64 OR ARCHITECTURE_loongarch64) AND NOT YUZU_STATIC_ROOM)
+if ((ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64 OR ARCHITECTURE_riscv64 OR ARCHITECTURE_loongarch64) AND NOT EDEN_STATIC_ROOM)
     add_subdirectory(dynarmic)
     add_library(dynarmic::dynarmic ALIAS dynarmic)
 endif()
@@ -17,7 +16,7 @@ endif()
 set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
-if (YUZU_STATIC_BUILD)
+if (EDEN_STATIC_BUILD)
     add_compile_definitions(QT_STATICPLUGIN)
 endif()
 
@@ -27,9 +26,9 @@ if (NIGHTLY_BUILD)
 endif()
 
 # Legacy (android only)
-if (YUZU_LEGACY)
+if (EDEN_LEGACY)
     message(WARNING "Making legacy build. Performance may suffer.")
-    add_compile_definitions(YUZU_LEGACY)
+    add_compile_definitions(EDEN_LEGACY)
 endif()
 
 # Genshin Spoof (android only)
@@ -91,7 +90,7 @@ if (MSVC AND NOT CXX_CLANG)
     # Diagnostics the project does not accept. ENABLE_WERROR decides whether they are
     # errors (/we) or warnings at level 4 (/w4), the same way it decides between
     # -Werror=... and -W... for GCC and Clang below.
-    set(YUZU_MSVC_DIAGNOSTIC_CODES
+    set(EDEN_MSVC_DIAGNOSTIC_CODES
         4062 # Enumerator 'identifier' in a switch of enum 'enumeration' is not handled
         4189 # 'identifier': local variable is initialized but not referenced
         4265 # 'class': class has virtual functions, but destructor is not virtual
@@ -111,14 +110,14 @@ if (MSVC AND NOT CXX_CLANG)
     )
 
     if (ENABLE_WERROR)
-        set(YUZU_MSVC_DIAGNOSTIC_LEVEL /we)
+        set(EDEN_MSVC_DIAGNOSTIC_LEVEL /we)
     else()
-        set(YUZU_MSVC_DIAGNOSTIC_LEVEL /w4)
+        set(EDEN_MSVC_DIAGNOSTIC_LEVEL /w4)
     endif()
 
-    unset(YUZU_MSVC_DIAGNOSTICS)
-    foreach (code IN LISTS YUZU_MSVC_DIAGNOSTIC_CODES)
-        list(APPEND YUZU_MSVC_DIAGNOSTICS ${YUZU_MSVC_DIAGNOSTIC_LEVEL}${code})
+    unset(EDEN_MSVC_DIAGNOSTICS)
+    foreach (code IN LISTS EDEN_MSVC_DIAGNOSTIC_CODES)
+        list(APPEND EDEN_MSVC_DIAGNOSTICS ${EDEN_MSVC_DIAGNOSTIC_LEVEL}${code})
     endforeach()
 
     add_compile_options(
@@ -140,7 +139,7 @@ if (MSVC AND NOT CXX_CLANG)
         /external:anglebrackets # Treats all headers included by #include <header>, where the header file is enclosed in angle brackets (< >), as external headers
         /external:W0            # Sets the default warning level to 0 for external headers, effectively disabling warnings for them.
 
-        ${YUZU_MSVC_DIAGNOSTICS} # /we or /w4, see above
+        ${EDEN_MSVC_DIAGNOSTICS} # /we or /w4, see above
         /w44505 # 'function': unreferenced local function has been removed
 
         /wd4100 # 'identifier': unreferenced formal parameter
@@ -256,10 +255,10 @@ else()
         add_compile_definitions(_FILE_OFFSET_BITS=64)
     endif()
 
-    if (YUZU_STATIC_BUILD AND NOT APPLE AND NOT MSVC)
+    if (EDEN_STATIC_BUILD AND NOT APPLE AND NOT MSVC)
         add_compile_options(-static)
 
-        # yuzu-cmd requires us to explicitly link libpthread, libgcc, and libstdc++ as static
+        # eden-cmd requires us to explicitly link libpthread, libgcc, and libstdc++ as static
         add_link_options(-Wl,-Bstatic -static -lpthread)
         add_link_options(-static-libgcc -static-libstdc++)
     endif()
@@ -286,16 +285,16 @@ endif()
 add_subdirectory(common)
 add_subdirectory(network)
 
-if (YUZU_ROOM)
+if (EDEN_ROOM)
     add_subdirectory(dedicated_room)
 endif()
 
-if (YUZU_ROOM_STANDALONE)
-    add_subdirectory(yuzu_room_standalone)
-    set_target_properties(yuzu-room PROPERTIES OUTPUT_NAME "eden-room")
+if (EDEN_ROOM_STANDALONE)
+    add_subdirectory(eden_room_standalone)
+    set_target_properties(eden-room PROPERTIES OUTPUT_NAME "eden-room")
 endif()
 
-if (YUZU_STATIC_ROOM)
+if (EDEN_STATIC_ROOM)
     return()
 endif()
 
@@ -307,7 +306,7 @@ add_subdirectory(input_common)
 add_subdirectory(frontend_common)
 add_subdirectory(shader_recompiler)
 
-if (YUZU_TESTS)
+if (EDEN_TESTS)
     add_subdirectory(tests)
 endif()
 
@@ -315,16 +314,39 @@ if (EDEN_FUZZERS)
     add_subdirectory(fuzz)
 endif()
 
-if (YUZU_CMD)
-    add_subdirectory(yuzu_cmd)
-    set_target_properties(yuzu-cmd PROPERTIES OUTPUT_NAME "eden-cli")
+# Version resource for the programs in the Windows zips: antivirus heuristics count an unsigned
+# program without file metadata against it.
+function(eden_add_version_info target description file_name)
+    if (NOT WIN32)
+        return()
+    endif()
+    if (EDEN_BUILD_TAG MATCHES "^build-([0-9]+)$")
+        set(EDEN_VERSION_NUMBER ${CMAKE_MATCH_1})
+        set(EDEN_VERSION_STRING ${EDEN_BUILD_TAG})
+    else()
+        set(EDEN_VERSION_NUMBER 0)
+        set(EDEN_VERSION_STRING "local build")
+    endif()
+    set(EDEN_FILE_DESCRIPTION ${description})
+    set(EDEN_FILE_NAME ${file_name})
+    set(rc ${CMAKE_CURRENT_BINARY_DIR}/${target}_version.rc)
+    configure_file(${PROJECT_SOURCE_DIR}/dist/version_info.rc.in ${rc} @ONLY)
+    target_sources(${target} PRIVATE ${rc})
+endfunction()
+
+if (EDEN_CMD)
+    add_subdirectory(eden_cmd)
+    set_target_properties(eden-cmd PROPERTIES OUTPUT_NAME "eden-cli")
+    eden_add_version_info(eden-cmd "Eden command line" eden-cli.exe)
 endif()
 
 if (ENABLE_QT)
     add_subdirectory(qt_common)
-    add_subdirectory(yuzu)
+    add_subdirectory(eden)
+    eden_add_version_info(eden "Eden" eden.exe)
     if (WIN32 AND ENABLE_UPDATE_CHECKER)
         add_subdirectory(updater)
+        eden_add_version_info(eden-updater "Eden update installer" eden-updater.exe)
     endif()
 endif()
 
@@ -334,7 +356,7 @@ endif()
 
 if (ANDROID)
     add_subdirectory(android/app/src/main/jni)
-    target_include_directories(yuzu-android PRIVATE android/app/src/main)
+    target_include_directories(eden-android PRIVATE android/app/src/main)
 endif()
 
 include(GenerateDepHashes)

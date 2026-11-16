@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -187,6 +186,14 @@ public:
         return true;
     }
 
+    /// Any thread: whether the texture or query cache may hold GPU data for the range that guest
+    /// memory lacks (an image was registered there, or a report can still land). Without caches
+    /// that can tell, assume so.
+    [[nodiscard]] virtual bool MayHoldImagesOrReports([[maybe_unused]] DAddr addr,
+                                                      [[maybe_unused]] u64 size) {
+        return true;
+    }
+
     /// Notify rasterizer that any caches of the specified region should be invalidated
     virtual void InvalidateRegion(DAddr addr, u64 size,
                                   VideoCommon::CacheType which = VideoCommon::CacheType::All) = 0;
@@ -203,6 +210,12 @@ public:
         for (const auto& [cpu_addr, size] : sequences) {
             InvalidateRegion(cpu_addr, size, which);
         }
+    }
+
+    /// InnerInvalidation of constant buffer data (MemoryManager::WriteConstantBufferData).
+    virtual void InvalidateConstantBufferData(
+        std::span<const std::pair<DAddr, std::size_t>> sequences) {
+        InnerInvalidation(sequences);
     }
 
     /// Notify rasterizer that any caches of the specified region are desync with guest
@@ -294,8 +307,11 @@ public:
 
     /// Records a health check of a game's DLSS network output (dst) against its input (src) and
     /// returns the result of an earlier check once the GPU has finished it.
+    /// `src_region` is the part of src the game rendered, from its top-left corner (a dynamic
+    /// resolution network's render region); without it, the whole of src.
     [[nodiscard]] virtual std::optional<VideoCore::GameDlssProbe> ProbeGameDlssOutput(
-        const Tegra::Engines::Fermi2D::Surface& src, const Tegra::Engines::Fermi2D::Surface& dst) {
+        const Tegra::Engines::Fermi2D::Surface& src, const Tegra::Engines::Fermi2D::Surface& dst,
+        std::optional<std::array<u32, 2>> src_region = std::nullopt) {
         return std::nullopt;
     }
 

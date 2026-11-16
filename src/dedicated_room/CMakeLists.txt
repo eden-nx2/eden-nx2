@@ -4,24 +4,24 @@
 # SPDX-FileCopyrightText: 2017 Citra Emulator Project
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-add_library(yuzu-room STATIC EXCLUDE_FROM_ALL
-    yuzu_room.cpp
-    yuzu_room.h
-    yuzu_room.rc)
+add_library(eden-room STATIC EXCLUDE_FROM_ALL
+    eden_room.cpp
+    eden_room.h
+    eden_room.rc)
 
-target_link_libraries(yuzu-room PRIVATE common network)
+target_link_libraries(eden-room PRIVATE common network)
 if (ENABLE_WEB_SERVICE)
-    target_compile_definitions(yuzu-room PRIVATE ENABLE_WEB_SERVICE)
-    target_link_libraries(yuzu-room PRIVATE web_service)
+    target_compile_definitions(eden-room PRIVATE ENABLE_WEB_SERVICE)
+    target_link_libraries(eden-room PRIVATE web_service)
 endif()
 
-target_link_libraries(yuzu-room PRIVATE
+target_link_libraries(eden-room PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto)
 
 if (MSVC)
-    target_link_libraries(yuzu-room PRIVATE getopt)
+    target_link_libraries(eden-room PRIVATE getopt)
 endif()
-target_link_libraries(yuzu-room PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+target_link_libraries(eden-room PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
-create_target_directory_groups(yuzu-room)
+create_target_directory_groups(eden-room)

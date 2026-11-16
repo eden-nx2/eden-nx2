@@ -80,7 +80,7 @@ if (IOS)
 endif()
 AddJsonPackage(httplib)
 
-if (YUZU_STATIC_ROOM)
+if (EDEN_STATIC_ROOM)
     return()
 endif()
 
@@ -152,7 +152,7 @@ if(ENABLE_CUBEB)
     endif()
 endif()
 
-if (NOT YUZU_USE_BUNDLED_SDL3)
+if (NOT EDEN_USE_BUNDLED_SDL3)
     if (NOT WIN32)
         # Yuzu itself needs: Atomic Audio Events Joystick Haptic Sensor Threads Timers
         # Since 2.0.18 Atomic+Threads required for HIDAPI/libusb (see https://github.com/libsdl-org/SDL/issues/5095)
@@ -200,7 +200,7 @@ endif()
 AddJsonPackage(spirv-headers)
 
 # Sirit
-if (YUZU_USE_BUNDLED_SIRIT)
+if (EDEN_USE_BUNDLED_SIRIT)
     AddJsonPackage(sirit-ci)
 else()
     AddJsonPackage(sirit)
@@ -256,7 +256,7 @@ if (ENABLE_RESHADE)
 endif()
 
 # Catch2
-if (YUZU_TESTS OR DYNARMIC_TESTS)
+if (EDEN_TESTS OR DYNARMIC_TESTS)
     AddJsonPackage(catch2)
 endif()
 
@@ -294,7 +294,7 @@ if (ENABLE_WEB_SERVICE OR ENABLE_UPDATE_CHECKER)
 endif()
 
 # FFMpeg
-if (YUZU_USE_EXTERNAL_FFMPEG OR YUZU_USE_BUNDLED_FFMPEG)
+if (EDEN_USE_EXTERNAL_FFMPEG OR EDEN_USE_BUNDLED_FFMPEG)
     add_subdirectory(ffmpeg)
 
     set(FFmpeg_PATH "${FFmpeg_PATH}" PARENT_SCOPE)
@@ -337,7 +337,7 @@ endif()
 # TODO(crueter): Breakpad needs additional fetches
 # https://github.com/google/breakpad/blob/main/DEPS
 # https://github.com/microsoft/vcpkg/blob/master/ports/breakpad/CMakeLists.txt
-if (YUZU_CRASH_DUMPS AND NOT TARGET libbreakpad_client)
+if (EDEN_CRASH_DUMPS AND NOT TARGET libbreakpad_client)
     set(BREAKPAD_WIN32_DEFINES
         NOMINMAX
         UNICODE
@@ -448,12 +448,12 @@ endif()
 
 if (APPLE)
     # moltenvk
-    if (NOT YUZU_USE_BUNDLED_MOLTENVK)
+    if (NOT EDEN_USE_BUNDLED_MOLTENVK)
         find_library(MOLTENVK_LIBRARY MoltenVK)
     endif()
 
     # TODO: kosmickrisp?
-    if (NOT MOLTENVK_LIBRARY OR YUZU_USE_BUNDLED_MOLTENVK)
+    if (NOT MOLTENVK_LIBRARY OR EDEN_USE_BUNDLED_MOLTENVK)
         AddJsonPackage(moltenvk)
 
         set(MOLTENVK_LIBRARY "${moltenvk_SOURCE_DIR}/MoltenVK/dylib/macOS/libMoltenVK.dylib" CACHE STRING "" FORCE)

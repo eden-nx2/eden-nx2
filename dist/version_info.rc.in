@@ -1,0 +1,33 @@
+// SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include "winresrc.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION @EDEN_VERSION_NUMBER@,0,0,0
+PRODUCTVERSION @EDEN_VERSION_NUMBER@,0,0,0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0x0L
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Eden Emulator Project"
+            VALUE "FileDescription", "@EDEN_FILE_DESCRIPTION@"
+            VALUE "FileVersion", "@EDEN_VERSION_STRING@"
+            VALUE "InternalName", "@EDEN_FILE_NAME@"
+            VALUE "LegalCopyright", "Copyright Eden Emulator Project, GPL-3.0-or-later"
+            VALUE "OriginalFilename", "@EDEN_FILE_NAME@"
+            VALUE "ProductName", "Eden"
+            VALUE "ProductVersion", "@EDEN_VERSION_STRING@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
