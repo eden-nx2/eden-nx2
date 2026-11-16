@@ -228,6 +228,9 @@ public final class HokkaidoBridge {
         if (RAM_SAVER_LOW_RAM.contains(id) && Prefs.lowRam(c) && !Prefs.of(c).contains(Prefs.gameKey("ram_saver", id))) {
             Prefs.ramSaver(c, id, true);
         }
+        // Full vegetation (its Game settings, which Hokkaido does not show) unless it was set: the vegetation it leaves out
+        // otherwise looked missing in Ocarina of Time.
+        if (!Prefs.of(c).contains(Prefs.gameKey("full_vegetation", id))) Prefs.fullVegetation(c, id, true);
         if (driverZip == null || driverZip.isEmpty()) {
             GpuDriver.choice(c, id, GpuDriver.SYSTEM);
         } else {
