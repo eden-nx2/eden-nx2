@@ -34,7 +34,9 @@ git commit                                    # the merge commit; list the code 
 ```
 
 The script ends with checks: no path or text may still say Lichii (except upstream links and
-Lichii's compatibility site), and build files must not point at missing assets. Fix what it
+Lichii's compatibility site), build files must not point at missing assets, and no
+`std::atomic_ref` may appear outside the tests: Lichii only builds for desktop, and Android's
+libc++ lacks it (use `__atomic_load_n` and friends). Fix what it
 reports, rerun it until it passes, and build before pushing (`build-check` runs on every push).
 
 ## Hokkaido commits

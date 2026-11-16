@@ -287,6 +287,14 @@ def check():
             ref = next(r for r in ref if r)
             if not os.path.exists(os.path.normpath(os.path.join(ROOT, os.path.dirname(f), ref))):
                 problems.append(f"{f}: points at missing {ref}")
+    # Android's libc++ has no std::atomic_ref (Lichii only builds for desktop): use
+    # __atomic_load_n/__atomic_store_n and friends instead.
+    for f in files:
+        if f.startswith("src/") and not f.startswith(("src/tests/", "src/dynarmic/externals/")) \
+                and f.endswith((".cpp", ".h", ".inc")):
+            for n, line in enumerate((read(f) or "").splitlines(), 1):
+                if "std::atomic_ref" in line and not line.lstrip().startswith("//"):
+                    problems.append(f"{f}:{n}: std::atomic_ref does not build for Android")
     return problems
 
 
