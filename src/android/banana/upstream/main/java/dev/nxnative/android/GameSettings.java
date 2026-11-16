@@ -302,6 +302,10 @@ final class GameSettings {
                 .says("Busy threads off the small cores", "Android places the threads"));
         advanced.add(new Ui.Setting(a, "⏸️", "Pause on return", null).toggle(a, Prefs.pauseOnReturn(a, id), (b, on) -> Prefs.pauseOnReturn(a, id, on))
                 .says("Back from the background: paused until a tap", "Back from the background: runs at once"));
+        Ui.Setting advRow = new Ui.Setting(a, "🛠️", "Advanced switches", null).chevron(a);   // every switch for this game, by area, with search (AdvancedPage.java)
+        advRow.view.setOnClickListener(v -> AdvancedPage.show(a, id, g.name, again));
+        advRow.value(AdvancedSettings.count(a, id) == 0 ? "Search every switch; each starts at Auto" : AdvancedSettings.count(a, id) + " set");
+        advanced.add(advRow);
         String env = Prefs.gameEnv(a, id);
         int envLines = env.isEmpty() ? 0 : env.split("\n").length;
         advanced.add(new Ui.Setting(a, "📝", "Extra environment", v -> env(a, g, again))

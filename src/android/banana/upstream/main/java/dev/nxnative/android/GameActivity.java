@@ -183,6 +183,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         setContentView(root);
         immersive();
         TextInput.screen(this);
+        CtrlScreen.screen(this);   // the controller applet's join screen shows on this screen (again, when the game was waiting on it as the screen was recreated)
         UserPicker.screen(this);   // the user selector shows on this screen, as the input box   // the keyboard applet's input box shows on this screen (again, when the game was waiting on it as the screen was recreated)
         // The host starts once per process. A screen created again while it runs (Android recreated the activity: "Don't keep activities", a font or language
         // change while in the background) takes its window over; a screen restored into a new process (Android ended the old one while it was in the background)
@@ -406,6 +407,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     /** The DM_ switches this build reads (BuildConfig.NX_ENV_SWITCHES, from docs/env_switches.tsv) */
     static final java.util.Set<String> KNOWN_SWITCHES = new java.util.HashSet<>(java.util.Arrays.asList(BuildConfig.NX_ENV_SWITCHES.split(" ")));
     private final List<String> unknownNotes = new ArrayList<>();
+    private List<String> advNotes = new ArrayList<>();   // the [adv] log lines: every override in effect and where it came from (AdvancedSettings.notes)
     private String shapeNote;   // Aspect ratio › Screen shape: the window it read and the shape passed, for the log
     private int readinessEnv;   // the lines the readiness check ran with (readinessHold), for the log
 
@@ -505,6 +507,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         // process's first Vulkan device, and a driver reads some variables only then (FD_DEV_FEATURES, TU_DEBUG: GitHub #40)
         List<String> genv = new ArrayList<>();
         settingsEnv(id, genv);
+        genv.addAll(AdvancedSettings.lines(this, id, PROTECTED));   // Advanced rows come before env.txt's lines
         genv.addAll(quietEnv(new File(files, "env.txt")));
         genv.addAll(envLines(Prefs.gameEnv(this, id)));
         genv.addAll(quietEnv(new File(files, "env-" + id + ".txt")));
@@ -680,9 +683,16 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             int nupFd = PickedNup.is(this, game.getPath()) ? PickedNup.detachedFd(this, game) : -1;
             if (nupFd >= 0) romfs = PickedPath.forHost(romfs, game, nupFd);
             // The user's lines, read first: the paths the launcher sets cannot be changed by them (guard), but the test app's env-<id>.txt may name a test save folder (one game's file only: a global DM_SAVE would point every game at one save)
-            List<String> user = new ArrayList<>(guard(userEnv(new File(files, "env.txt")), "env.txt", false));   // diagnostic switches (every game: never DM_SAVE) (DM_SVC=1, DM_FS=1, ...), as the iPhone's Documents/env.txt
+            List<String> user = new ArrayList<>(guard(AdvancedSettings.lines(this, id, PROTECTED), "Advanced", false));   // Settings > Advanced and the game's Advanced switches: before env.txt, so its lines and the game's own win
+            List<String> envTxt = guard(userEnv(new File(files, "env.txt")), "env.txt", false);
+            user.addAll(envTxt);   // diagnostic switches (every game: never DM_SAVE) (DM_SVC=1, DM_FS=1, ...), as the iPhone's Documents/env.txt
             user.addAll(guard(LinkPlay.env(this, id), "Link Play", false));   // Game settings › Link Play (before the typed lines, which win)
-            user.addAll(guard(envLines(Prefs.gameEnv(this, id)), "the game's settings", false));   // the game's own lines (its Game settings): after env.txt, so they win for this game
+            List<String> extra = guard(envLines(Prefs.gameEnv(this, id)), "the game's settings", false);
+            user.addAll(extra);   // the game's own lines (its Game settings): after env.txt, so they win for this game
+            List<String[]> fromFiles = new ArrayList<>();   // for the log's [adv] lines
+            for (String l : envTxt) fromFiles.add(new String[] {l, "env.txt"});
+            for (String l : extra) fromFiles.add(new String[] {l, "Extra environment"});
+            advNotes = AdvancedSettings.notes(this, id, PROTECTED, fromFiles);
             user.addAll(guard(userEnv(new File(files, "env-" + id + ".txt")), "env-" + id + ".txt", testApp()));   // and env-<title ID>.txt (adb), the same for one game
             // the save is the application's: a program pack (a Switch 2 Edition's program 1, its pack.tsv's application row) keeps the game's save, as on the console;
             // its temp, logs and host are its own. So every start of it (the card's edition switch, a frontend, a shortcut) plays the same save
@@ -798,6 +808,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             Native.note(Recommend.logLine(Prefs.recStates(this, id)));   // each recommended setting with its value and source (yours / recommended / default); env.txt lines come later and win
             if (resNote != null) Native.note(resNote);
             if (shapeNote != null) Native.note(shapeNote);
+            for (String n : advNotes) Native.note(n);
             if (sceneNote != null) Native.note(sceneNote);
             input = Native.hasInput();
             started = true;
@@ -931,6 +942,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     @Override protected void onDestroy() {
         TextInput.gone(this);
         UserPicker.gone(this);
+        CtrlScreen.gone(this);
         ui.removeCallbacksAndMessages(null);
         if (rumble != null) rumble.stopAll();
         if (padMotion != null) { padMotion.release(); padMotion = null; }
@@ -1071,11 +1083,12 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             @Override public int add(PadOrder.Pad p) { int pl = Native.deviceAdded(p.id, p.name, false); if (pl >= 0) padConnected(p.id); return pl; }
             @Override public int first(PadOrder.Pad p) {
                 int pl = Native.deviceFirst(p.id, p.name);
-                if (pl == 0 && rumble != null) for (int id : pads) rumble.route(id);   // two players traded devices: each gets its device's vibrator
+                if (pl == 0 && rumble != null) rumble.reroute(pads);   // two players traded devices: each gets its device's vibrator
                 return pl;
             }
             @Override public int player(int id) { return Native.devicePlayer(id); }
         }, Prefs.padFirst(this));
+        ui.postDelayed(padPlayers, 1000);
         java.util.List<PadOrder.Pad> now = new java.util.ArrayList<>();
         for (int id : inputManager.getInputDeviceIds()) { InputDevice d = InputDevice.getDevice(id); if (gamepadLike(d)) now.add(pad(d)); }
         order.start(now);   // best first: an external controller is player 1 before a phone's own gamepad-like device (PadOrder)
@@ -1280,6 +1293,21 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
                 || code == KeyEvent.KEYCODE_DPAD_RIGHT || code == KeyEvent.KEYCODE_DPAD_CENTER;
     }
 
+    /**
+     * The host moves a controller to another player when the game does not read its own (input_android.c fill: after a connect or a disconnect, when the game's supported
+     * npads change, when its controller applet opens), so the players are looked at once a second and the rumble follows them
+     */
+    private final java.util.HashMap<Integer, Integer> padPlayer = new java.util.HashMap<>();
+    private final Runnable padPlayers = new Runnable() {
+        @Override public void run() {
+            boolean moved = false;
+            for (int id : pads) { int p = Native.devicePlayer(id); Integer was = padPlayer.put(id, p); if (was != null && was != p) moved = true; }
+            padPlayer.keySet().retainAll(pads);
+            if (moved && rumble != null) rumble.reroute(pads);
+            ui.postDelayed(this, 1000);
+        }
+    };
+
     @Override public void onInputDeviceAdded(int id) {
         InputDevice d = InputDevice.getDevice(id);
         if (order != null && gamepadLike(d)) order.connected(pad(d));
@@ -1368,7 +1396,12 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     }
 
 
-    /** Back (the phone's button or its edge swipe) opens and closes the in-game panel, which has Stop */
+    /** Back (the phone's button or its edge swipe) opens and closes the in-game panel, which has Stop; while the controller applet's join screen shows, it cancels that */
     @SuppressWarnings("deprecation")
-    @Override public void onBackPressed() { if (panel != null) panel.toggle(); else end(); }
+    @Override public void onBackPressed() { if (panel != null && !panel.isOpen() && CtrlScreen.back()) return; if (panel != null) panel.toggle(); else end(); }
+
+    // For CtrlScreen: the view tree it goes into (under the in-game panel), and whether a gamepad is connected (then the on-screen controls are hidden and cannot join)
+    FrameLayout rootView() { return rootView; }
+    View panelView() { return panel; }
+    boolean gamepadConnected() { return !pads.isEmpty(); }
 }

@@ -135,6 +135,12 @@ final class Native {
     /** The gamepad becomes player 1 (PadOrder); player 1's device moves to its old player. 0, or -1 (every player taken, or not in this host). */
     static native int deviceFirst(int device, String name);
 
+    /** The controller applet's join screen (CtrlScreen): its state as UTF-8 text (nxhost_ctrl_state: "closed", or "open" and a line per player). */
+    static native byte[] ctrlState();
+
+    /** The join screen's own buttons: 0 cancel (Back), 1 OK, 2 the on-screen controls join as player 1 (nxhost_ctrl_button). */
+    static native void ctrlButton(int what);
+
     /** Rumble (Rumble.java): the listener's onRumble(player, intensity, sharpness) gets every change of a player's vibration; set once, before start. False without rumble in this host. */
     static native boolean setRumbleListener(Object listener);
 

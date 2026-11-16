@@ -53,6 +53,8 @@ public final class MainActivity extends Activity {
     private TextView poppedText;   // Settings › About: "Bananas Popped: n" (null when Settings is not shown)
     private Ui.Setting overlayRow, resRow, capRow, upsRow, sharpRow, drsRow, lsfgRow, gpuRow, updateRow, timeRow;
     private boolean resumed, settingsPage;
+    private boolean advancedOpen;   // the Advanced page (AdvancedPage) is open over Settings or a game's page
+    private String advancedTitleId, advancedName;   // its game (null: Settings' page for every game)
     private Game settingsGame;   // the game whose settings page shows (GameSettings), else null
     private boolean merged;   // the list's duplicates were merged (Game.collapse) since this activity started
     private File pendingGame;   // a game folder (or .nup) waiting for its pack folder
@@ -99,7 +101,22 @@ public final class MainActivity extends Activity {
     private boolean onHome() { return !settingsPage && settingsGame == null; }
 
     /** Home ↔ Settings */
+    /** The Advanced page in place of the current one (AdvancedPage); Back returns to it */
+    void openAdvanced(String titleId, String name) {
+        advancedOpen = true;
+        advancedTitleId = titleId;
+        advancedName = name;
+        build();
+    }
+
+    private void closeAdvanced() {
+        advancedOpen = false;
+        build();
+        if (resumed) onResumeViews();
+    }
+
     private void page(boolean settings) {
+        advancedOpen = false;
         if (settingsPage == settings && settingsGame == null) return;
         settingsPage = settings;
         settingsGame = null;
@@ -110,6 +127,7 @@ public final class MainActivity extends Activity {
 
     /** A game's settings page (a tap on its tile, GameSettings): a full page in place of Home; Back returns to Home */
     void gameSettings(Game g) {
+        advancedOpen = false;
         settingsGame = g;
         settingsPage = false;
         Ondevice.pause(this);
@@ -133,7 +151,7 @@ public final class MainActivity extends Activity {
     /** A controller: B goes back one level (a game's page or Settings to Home), L1 / R1 switch a game page's tabs; the rest is Android's focus (D-pad, A) */
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
         int k = e.getKeyCode();
-        if (PadFocus.isBack(k) && (settingsPage || settingsGame != null)) {
+        if (PadFocus.isBack(k) && (settingsPage || settingsGame != null || advancedOpen)) {
             if (e.getAction() == KeyEvent.ACTION_UP) onBackPressed();
             return true;
         }
@@ -159,7 +177,8 @@ public final class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() {
         if (ReleasePage.back(this)) return;   // the release page over Home
-        if (settingsPage || settingsGame != null) page(false);
+        if (advancedOpen) closeAdvanced();
+        else if (settingsPage || settingsGame != null) page(false);
         else super.onBackPressed();
     }
 
@@ -168,14 +187,15 @@ public final class MainActivity extends Activity {
         FrameLayout frame = (FrameLayout) bananas.getParent();
         while (frame.getChildCount() > 1) frame.removeViewAt(1);
         boolean wide = getResources().getConfiguration().screenWidthDp >= 600;
-        LinearLayout content = Ui.page(this, frame, settingsGame != null && wide ? 1040 : 640);
+        LinearLayout content = Ui.page(this, frame, settingsGame != null && !advancedOpen && wide ? 1040 : 640);
         poppedText = null;
         if (settingsGame != null) for (Game x : Game.load(this)) if (x.gameDir.equals(settingsGame.gameDir)) { settingsGame = x; break; }   // its folders as they are now (Folders, Import pack)
-        if (settingsGame != null) { accessCard = null; gameBox = null; overlayRow = null; GameSettings.build(this, content, settingsGame, this::gameSettingsAgain, () -> page(false)); }
+        if (advancedOpen) { accessCard = null; gameBox = null; overlayRow = null; AdvancedPage.build(this, content, advancedTitleId, advancedName, this::closeAdvanced); }
+        else if (settingsGame != null) { accessCard = null; gameBox = null; overlayRow = null; GameSettings.build(this, content, settingsGame, this::gameSettingsAgain, () -> page(false)); }
         else if (settingsPage) buildSettings(content);
         else buildHome(content);
         bananaTaps(frame);
-        if (settingsGame != null || settingsPage) frame.post(() -> {   // a controller (not touch mode): the focus starts on the page's selected tab, else its first row (Home: refresh puts it on the first tile)
+        if (settingsGame != null || settingsPage || advancedOpen) frame.post(() -> {   // a controller (not touch mode): the focus starts on the page's selected tab, else its first row (Home: refresh puts it on the first tile)
             if (frame.isInTouchMode() || getCurrentFocus() != null && frame.hasFocus()) return;
             View v = PadFocus.first(PadFocus.focusables(frame));
             if (v != null) v.requestFocus();
@@ -295,8 +315,12 @@ public final class MainActivity extends Activity {
         upd.addView(new Ui.Setting(this, "📖", "Player wiki", v -> openLink(WIKI_URL)).chevron(this)
                 .value("Guides, what every setting does, a page for each game (opens the browser)").view);
 
-        Ui.add(content, Ui.section(this, "Game defaults"), Ui.SECTION_GAP);
+        Ui.add(content, Ui.section(this, "Display"), Ui.SECTION_GAP);
         LinearLayout play = settingsCard(content);
+        Ui.add(content, Ui.section(this, "Controls"), Ui.SECTION_GAP);
+        LinearLayout ctl = settingsCard(content);
+        Ui.add(content, Ui.section(this, "Performance and picture"), Ui.SECTION_GAP);
+        LinearLayout perf = settingsCard(content);
         overlayRow = new Ui.Setting(this, "👀", "Overlay", v -> overlayItems())
                 .toggle(this, Prefs.overlay(this), (b, on) -> { Prefs.overlay(this, on); refreshSettings(); });
         play.addView(overlayRow.view);
@@ -305,14 +329,14 @@ public final class MainActivity extends Activity {
                 .setSingleChoiceItems(TouchControls.MODE_NAMES, TouchControls.mode(this), (d, w) -> { TouchControls.mode(this, w); touch.value(touchLabel(w)); d.dismiss(); })
                 .setNegativeButton("Cancel", null).show());
         touch.value(touchLabel(TouchControls.mode(this)));
-        play.addView(touch.view);
+        ctl.addView(touch.view);
         Ui.Setting rot = new Ui.Setting(this, "🔄", "Screen rotation", null).chevron(this);
         rot.view.setOnClickListener(v -> new PadFocus.Builder(this).setTitle("Screen rotation")
                 .setSingleChoiceItems(Prefs.ROTATION_NAMES, Prefs.rotationAuto(this) ? 1 : 0, (d, w) -> { Prefs.rotationAuto(this, w == 1); rot.value(rotationLabel(w == 1)); d.dismiss(); })
                 .setNegativeButton("Cancel", null).show());
         rot.value(rotationLabel(Prefs.rotationAuto(this)));
         play.addView(rot.view);
-        play.addView(new Ui.Setting(this, "🔘", "Show / hide button", null).toggle(this, TouchControls.toggleButton(this), (b, on) -> TouchControls.toggleButton(this, on))
+        ctl.addView(new Ui.Setting(this, "🔘", "Show / hide button", null).toggle(this, TouchControls.toggleButton(this), (b, on) -> TouchControls.toggleButton(this, on))
                 .value("The small button at the top centre that hides the on-screen controls").view);
         // How a controller opens the in-game panel (PadPanel); the panel opens by touch with a swipe in from the right edge or Back
         Ui.Setting padPanel = new Ui.Setting(this, "🎛️", "Controller: in-game panel", null).chevron(this);
@@ -320,36 +344,36 @@ public final class MainActivity extends Activity {
                 .setSingleChoiceItems(PadPanel.OPEN_NAMES, Prefs.panelPad(this), (d, w) -> { Prefs.panelPad(this, w); padPanel.value(padPanelLabel(w)); d.dismiss(); })
                 .setNegativeButton("Cancel", null).show());
         padPanel.value(padPanelLabel(Prefs.panelPad(this)));
-        play.addView(padPanel.view);
+        ctl.addView(padPanel.view);
         resRow = new Ui.Setting(this, "🖼️", "Resolution", v -> gameRes()).chevron(this);
-        play.addView(resRow.view);
+        perf.addView(resRow.view);
         if (!Profile.anyResolution()) resRow.view.setVisibility(View.GONE);   // no game of this APK has a window_fn or graphics_scale lever: the default would do nothing
         capRow = new Ui.Setting(this, "⏱️", "Frame rate cap", v -> fpsCap()).chevron(this);
-        play.addView(capRow.view);
-        play.addView(new Ui.Setting(this, "📳", "Rumble", null).toggle(this, Prefs.rumble(this), (b, on) -> Prefs.rumbleDefault(this, on))
+        perf.addView(capRow.view);
+        ctl.addView(new Ui.Setting(this, "📳", "Rumble", null).toggle(this, Prefs.rumble(this), (b, on) -> Prefs.rumbleDefault(this, on))
                 .value("On the controller, or the phone without one").view);
-        play.addView(new Ui.Setting(this, "🚀", "Use fast cores", null).toggle(this, Prefs.pinThreads(this), (b, on) -> Prefs.pinThreadsDefault(this, on))
+        perf.addView(new Ui.Setting(this, "🚀", "Use fast cores", null).toggle(this, Prefs.pinThreads(this), (b, on) -> Prefs.pinThreadsDefault(this, on))
                 .value("Keeps the busiest threads off the small cores").view);
         Ui.Setting xbox = new Ui.Setting(this, "🅰️", "Xbox button label swap", null).chevron(this);
         xbox.view.setOnClickListener(v -> new PadFocus.Builder(this).setTitle("Xbox button label swap")
                 .setSingleChoiceItems(Prefs.XBOX_NAMES, Prefs.xboxButtons(this), (d, w) -> { Prefs.xboxButtonsDefault(this, w); xbox.value(Prefs.xboxLabel(w)); d.dismiss(); })
                 .setNegativeButton("Cancel", null).show());
         xbox.value(Prefs.xboxLabel(Prefs.xboxButtons(this)));
-        play.addView(xbox.view);
+        ctl.addView(xbox.view);
         Ui.Setting padMap = new Ui.Setting(this, "🕹️", "Button mapping", null).chevron(this);
         padMap.view.setOnClickListener(v -> PadMapUi.forDefault(this, () -> padMap.value(PadMapUi.label(this, null))));
         padMap.value(PadMapUi.label(this, null));
-        play.addView(padMap.view);
+        ctl.addView(padMap.view);
         upsRow = new Ui.Setting(this, "🔍", "Upscaler", v -> pick("Upscaler", GameUpscaler.MODES, GameUpscaler.mode(this), w -> GameUpscaler.modeDefault(this, w))).chevron(this);
-        play.addView(upsRow.view);
+        perf.addView(upsRow.view);
         sharpRow = new Ui.Setting(this, "✨", "FSR sharpness", v -> pick("FSR sharpness", GameUpscaler.SHARP_NAMES, GameUpscaler.sharpIndex(GameUpscaler.sharp(this)),
                 w -> GameUpscaler.sharpDefault(this, GameUpscaler.SHARPS[w]))).chevron(this);
-        play.addView(sharpRow.view);
+        perf.addView(sharpRow.view);
         drsRow = new Ui.Setting(this, "📐", "Dynamic resolution", v -> DrsSlider.dialog(this, "", Prefs.drs(this), null, true, w -> Prefs.drsDefault(this, w),
                 this::refreshSettings)).chevron(this);
-        play.addView(drsRow.view);
+        perf.addView(drsRow.view);
         lsfgRow = new Ui.Setting(this, "✨", "Frame generation", v -> frameGen()).chevron(this);
-        play.addView(lsfgRow.view);
+        perf.addView(lsfgRow.view);
         TextView hint = Ui.small(this, "A game's own settings (tap its tile) override these.");
         hint.setPadding(dp(4), 0, dp(4), 0);
         Ui.add(content, hint, 8);
@@ -364,6 +388,10 @@ public final class MainActivity extends Activity {
         usersRow.view.setOnClickListener(v -> UsersUi.dialog(this, () -> usersRow.value(UsersUi.summary(this))));
         usersRow.value(UsersUi.summary(this));
         sys.addView(usersRow.view);
+        Ui.Setting advRow = new Ui.Setting(this, "🛠️", "Advanced", null).chevron(this);   // every switch the host offers, by area, with search (AdvancedPage.java)
+        advRow.view.setOnClickListener(v -> AdvancedPage.show(this, null, null, () -> advRow.value(AdvancedSettings.count(this, null) == 0 ? "Search every switch; each starts at Auto" : AdvancedSettings.count(this, null) + " set")));
+        advRow.value(AdvancedSettings.count(this, null) == 0 ? "Search every switch; each starts at Auto" : AdvancedSettings.count(this, null) + " set");
+        sys.addView(advRow.view);
         sys.addView(new Ui.Setting(this, "📁", "Folders", v -> Folders.dialog(this)).value("Game, pack and save folders").chevron(this).view);
         sys.addView(new Ui.Setting(this, "🧹", "Storage", v -> StorageUi.dialog(this)).value("Remove leftovers and old files; never saves").chevron(this).view);   // (StorageUi.java)
         // some phones stop or slow a background job once the screen is off (GitHub discussion 58): Home keeps the screen on while preparing (Ondevice), the service its wake lock
