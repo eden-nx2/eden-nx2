@@ -20,8 +20,10 @@ release, tagged `build-<run number>`:
    - **notes**: Markdown highlights (optional).
    - **Mark the release as a pre-release**: untick for a release users should get as "Latest".
 4. Wait for the run (about 1–2 hours; the PGO and Android builds are the longest). The release
-   appears under **Releases** when every platform has built. If one platform fails, nothing is
-   published; re-run the failed jobs.
+   appears under **Releases** when Windows, Linux and Android have built; if one of them fails,
+   nothing is published, so re-run the failed jobs. macOS is the exception: when GitHub has no
+   macOS runner free, the release goes out without it and says so. Re-run the macOS job later and
+   upload `eden-macos-arm64.zip` to the release.
 
 Releases are only published from these manual runs; pushes to `nx2` are build-checked but not released.
 
