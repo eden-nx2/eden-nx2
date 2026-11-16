@@ -223,6 +223,11 @@ public final class HokkaidoBridge {
             Prefs.gameWindow(c, id, window);
             Prefs.of(c).edit().putString(given, window).commit();
         }
+        // Banana Native's RAM saver (its Game settings, which Hokkaido does not show) for a game that runs out of memory
+        // on a phone of 12 GB or less, unless it was set: Ocarina of Time swapped 4.7 GB out on the Galaxy S26.
+        if (RAM_SAVER_LOW_RAM.contains(id) && Prefs.lowRam(c) && !Prefs.of(c).contains(Prefs.gameKey("ram_saver", id))) {
+            Prefs.ramSaver(c, id, true);
+        }
         if (driverZip == null || driverZip.isEmpty()) {
             GpuDriver.choice(c, id, GpuDriver.SYSTEM);
         } else {
@@ -237,6 +242,9 @@ public final class HokkaidoBridge {
         if (first && isEmpty(shared) && !own.getAbsoluteFile().equals(shared.getAbsoluteFile()) && !isEmpty(own)) copyTree(own, shared);
         Prefs.folder(c, "save_" + id, shared.getPath());
     }
+
+    /** The games that take Banana Native's RAM saver by default on a phone of 12 GB or less (prepareStart). */
+    private static final List<String> RAM_SAVER_LOW_RAM = List.of("0400486024DEC000");
 
     /** The driver unpacked from a zip, unpacked again only when the zip changed since (by its size and time). */
     private static GpuDriver.Info installedDriver(Context c, File zip) throws IOException {
@@ -318,13 +326,14 @@ public final class HokkaidoBridge {
 
     /**
      * Starts a ready game (Plan.READY) in Banana Native's game process, as FrontendLaunch.play does, with Hokkaido's
-     * theme (its style resources in order, and its dark mode) for the in-game menu there.
+     * theme (its style resources in order, and its dark mode) for the in-game menu there. Not as a frontend's game: the
+     * game screen joins Hokkaido's own task, so its end shows Hokkaido (a frontend's would send that task back).
      */
     public static void play(Context c, Plan plan, int[] themes, boolean night) {
         Game g = plan.game;
         c.startActivity(new Intent(c, GameActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra("title_id", g.titleId).putExtra("name", g.name).putExtra("game", g.gameDir)
-                .putExtra("pack", g.packDir).putExtra("frontend", true)
+                .putExtra("pack", g.packDir)
                 .putExtra(EXTRA_THEMES, themes).putExtra(EXTRA_NIGHT, night));
     }
 

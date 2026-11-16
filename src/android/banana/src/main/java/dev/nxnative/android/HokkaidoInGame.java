@@ -155,12 +155,17 @@ public final class HokkaidoInGame {
             act.touchControls().setMode(m);
         }
 
-        /** Ends the game and goes back to Hokkaido, as the panel's Stop the game does. */
+        /**
+         * Ends the game, as the panel's Stop the game does, and goes back to Hokkaido's screen under it: the game
+         * screen shares Hokkaido's task, so it finishes (backToFrontend would send that whole task to the background).
+         * The process ends once the screen has gone.
+         */
         public void stop() {
             Native.note("stopped by the user");
             ExitWatch.stopped();
-            act.backToFrontend();
-            android.os.Process.killProcess(android.os.Process.myPid());
+            act.finish();
+            new android.os.Handler(android.os.Looper.getMainLooper())
+                    .postDelayed(() -> android.os.Process.killProcess(android.os.Process.myPid()), 300);
         }
     }
 }
