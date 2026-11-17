@@ -5,8 +5,8 @@ This branch is built from three repositories:
 | Source | What it adds |
 |---|---|
 | [Eden NX2](https://git.eden-emu.dev/Takoroka/eden-nx2) (Takoroka) | Switch 2 support on top of Eden (base: Eden `26a03d247`, Oct 26 2026) |
-| [Lichii](https://github.com/zortos293/Lichii) `nx2` @ `be1f4d9c8` ([build 228](https://github.com/zortos293/Lichii/releases/tag/build-228), Nov 15 2026) | ~1,200 commits after the Eden base: all of Takoroka's NX2 work, Eglantine's, and Lichii's own renderer, CPU and compatibility work |
-| [Hokkaido](https://github.com/pavelgajdo/Hokkaido) `nx2` @ `8396939c1` (Nov 15 2026) | Fork of Lichii (split at `09b78bd2d`, Nov 6) with Android phone work |
+| [Lichii](https://github.com/zortos293/Lichii) `nx2` @ `5a66c8959` ([build 316](https://github.com/zortos293/Lichii/releases/tag/build-316), Nov 16 2026) | ~1,200 commits after the Eden base: all of Takoroka's NX2 work, Eglantine's, and Lichii's own renderer, CPU and compatibility work |
+| [Hokkaido](https://github.com/pavelgajdo/Hokkaido) `nx2` @ `4b8ca7a25` ([android-0.7.0](https://github.com/pavelgajdo/Hokkaido/releases/tag/android-0.7.0), Nov 17 2026) | Fork of Lichii (split at `09b78bd2d`, Nov 6) with Android phone work, and Banana Native as a second Android engine |
 
 Hokkaido is a fork of Lichii, and Lichii already contains Eden NX2, so the branch is
 **Lichii's tip, then Hokkaido's own commits cherry-picked on top (`-x`, so each one names its
@@ -18,8 +18,18 @@ source), then one commit restoring Eden's branding.** Newer Lichii builds are me
 |---|---|---|
 | build 160 (`2eb5f08`) | `df68f409` | LAN play for local wireless games without a room (#1359; works with Lichii and ldn_mitm), game list row layout, folder counts, title IDs and favourite stars (#1371), quieter would-block socket logs (#1384) |
 | build 228 (`be1f4d9`) | `85f3f2fd` | 245 commits: Ocarina FPS Unlock fixes, solid NSZ/NCZ, Mario Kart World 60 FPS mode, Intel/AMD/NVIDIA shader and hang fixes, texture/buffer cache memory work, trigger rumble, SteamGridDB art, GPU trace record/replay, crash and hang diagnostics. Lichii renamed its sources (`src/lichii`, `io.github.zortos293.lichii`, `LICHII_*`); here they are `src/eden`, `io.github.zortos293.eden`, `EDEN_*` |
+| build 316 (`5a66c89`) | `08c491c9` | 141 commits: Nextendo online play (friends, presence, one account per user profile), IPv6 sockets, frame pacing that counts game frames, Fire Emblem's DLSS replacement temporal by default, DK Bananza tutorial video fix, Ocarina FPS Unlock and No sharpening fixes, GPU address space leak fix (FF Resonance), solid NCZ and ticket fixes, Switch 1 add-ons on Switch 2 Editions, texture cache budget and scaling-limit fixes, optional Nsight Aftermath test builds and Windows symbols. Its conflicts were re-merged with both sides branded first, so only real code differences were resolved by hand |
 
 Hokkaido commits picked after the first import (Nov 15 2026): `04096bcc` (free the scale helper's views and framebuffers with their original), `cf1501f5` (`EDEN_NX2_GPU_LIST_DUMP`), `5e2c4b38`, `74cb62b5`, `a1f6cd13` (NCE loads from GPU-cached pages taken as reads, Pokémon Pokopia only: its sky renders), `d4df53b3` (reactive flushing on for Pokopia under NCE, folded into `Settings::ReactiveFlushing()`), and Lichii #1825 (`1ecdc49d`). Not taken: `31f7a2c3` (Lichii's batched ASTC decode already submits once after its last batch), `7e410b85` + `d029ce76` (revert each other), `c8d7f3fa` (fixes a test list this tree does not have), docs and CI.
+
+Hokkaido 0.7.0 (Nov 15–17 2026), picked after build 316:
+
+- **Banana Native** (`44cf0048` and 26 follow-ups up to `8d935d8e`): [Banana Native](https://git.eden-emu.dev/moceure/BananaNative) (MIT) built into the Android mainline flavor as a second engine. Game properties has an **Engine** item: Auto, Eden NX2 or Banana Native; Auto picks Banana Native for the games its profiles call playable (Donkey Kong Bananza among them). Banana Native runs the game's code natively and draws NVN with Vulkan; it uses this app's GPU driver, save folder and resolution scale, shows this app's in-game menu, and imports packs exported from its own app. Its Android sources are in `src/android/banana/upstream` (v0.3.41); its native libraries come from its release APK, which the build downloads once and checks against the SHA-256 in `src/android/banana/UPSTREAM.txt`.
+- Frame skip (from Hokkaido PR #19): `EDEN_NX2_FRAMESKIP`, `_PARTS`, `_AUTO` (drops only late frames), per-title values for it and `EDEN_NX2_FPS_LIMIT`, draws that write memory always kept, and a per-game Frame skip setting (0–3) on Android.
+- Colour targets a draw samples are copied first (`cd48347d`, *adapted* to Lichii's delta draws: fixes DK Bananza's tiled video panel on RADV); disjoint query copies with declared binding strides (`c5cfb2bc`).
+- Save delete and import also clear Banana Native's save transaction files.
+
+Not taken from 0.7.0, because build 316 already has them: `b1e4264a` and `47972ec1` (NCE XZR and SIGILL), `eabbeb6d` (syncpoint mirror, #844), `93f57a50` (guest RAM released on stop), `3f8de877`, `e9054534`, `d7b38358`, `f6272e51` (shader fixes and their test), `846d09bc` (sparse block check), `54af45e6` and `ce219677` (Mario Kart World timestamps). Left out: `a85ba18b` (write protection dropped for pages the CPU rewrites every frame), whose page-tracking state does not cover the tracking paths Lichii added since, so mixing the two could leave pages stale. Hokkaido's docs are not taken.
 
 ## Lichii (everything up to its `nx2` tip)
 

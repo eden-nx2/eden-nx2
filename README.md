@@ -35,6 +35,9 @@ every platform with Eden's icons. It installs next to official Eden instead of r
 Android app is `com.eden.eden_nx2`, the desktop entry and macOS bundle are `com.eden.eden_nx2` and
 `com.eden.eden-nx2`, and its data lives in its own `eden-nx2` folders. The executables keep
 Eden's file names (`eden`, `eden-cli`).
+On Android it also includes [Banana Native](https://git.eden-emu.dev/moceure/BananaNative) (MIT)
+as a second engine, which runs some games' code natively; each game's properties choose the engine
+(Auto, Eden NX2 or Banana Native).
 [docs/MIRROR_CHANGES.md](./docs/MIRROR_CHANGES.md) lists what came from where and how each
 conflict was resolved.
 
