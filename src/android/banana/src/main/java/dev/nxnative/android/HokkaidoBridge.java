@@ -50,6 +50,30 @@ public final class HokkaidoBridge {
         ShaderLibs.appFiles = app.getExternalFilesDir(null);
         Readiness.minSdk = BuildConfig.NX_MIN_SDK;
         UpdateCheck.android12 = BuildConfig.NX_MIN_SDK < 33;
+        DumpCheck.workOverride = (dump, titleId) -> workFolder(app, dump, titleId);
+    }
+
+    /**
+     * Prepare's work folder for a dump: &lt;dump&gt;/../&lt;title ID&gt;-hokkaido-work. Banana Native's own app keeps its job in
+     * &lt;title ID&gt;-work beside the same dump; sharing it, each app resumed or overwrote the other's job, whose pack is in
+     * the other app's storage. An unfinished Prepare of this app in &lt;title ID&gt;-work (Hokkaido 0.7.0) goes on there.
+     */
+    static File workFolder(Context c, File dump, String titleId) {
+        File parent = dump.getAbsoluteFile().getParentFile();
+        File base = parent != null ? parent : dump;
+        File ours = new File(base, titleId + "-hokkaido-work"), shared = new File(base, titleId + "-work");
+        if (!ours.exists()) {
+            File jf = Job.fileOf(shared);
+            if (jf.isFile()) {
+                try {
+                    Job j = Job.read(jf);
+                    if (!"done".equals(j.state()) && SaveStore.inside(j.pack(), AppStorage.packs(c))) return shared;
+                } catch (IOException e) {
+                    // not a job of this app
+                }
+            }
+        }
+        return ours;
     }
 
     /**

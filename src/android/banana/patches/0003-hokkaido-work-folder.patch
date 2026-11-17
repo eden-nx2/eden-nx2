@@ -1,0 +1,15 @@
+--- a/ondevice/java/dev/nxnative/android/DumpCheck.java
++++ b/ondevice/java/dev/nxnative/android/DumpCheck.java
+@@ -46,8 +46,12 @@ final class DumpCheck {
+      */
+     static String versionPath(File dump, long version, String sub) { return DumpLayout.path(dump, version, sub); }
+
++    /** Hokkaido: its own work folder for a dump (HokkaidoBridge.workFolder), so it never shares a job with Banana Native's app */
++    static java.util.function.BiFunction<File, String, File> workOverride;
++
+     /** The work folder a dump's job uses: <dump>/../<title ID>-work (the Mac's layout; the pack goes to its android-pack) */
+     static File workOf(File dump, String titleId) {
++        if (workOverride != null) return workOverride.apply(dump, titleId);
+         File parent = dump.getAbsoluteFile().getParentFile();
+         return new File(parent != null ? parent : dump, titleId + "-work");
+     }
