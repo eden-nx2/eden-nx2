@@ -315,6 +315,14 @@ public:
     /// Whether the handle words and descriptors `memo` was built from still match guest memory.
     [[nodiscard]] bool TextureMemoStillHolds(const SampledTextureMemo& memo,
                                              std::span<const GPUVAddr> handle_addresses) const;
+    /// Points sampled views of the draw's own colour targets at copies taken before the draw.
+    void ReplaceColorFeedbackViews(std::span<ImageViewInOut> views);
+
+    /// How many copies ReplaceColorFeedbackViews has taken. Views resolved while it changed are
+    /// only valid for that draw: they must not be memoized or kept for later draws.
+    [[nodiscard]] u64 FeedbackCopies() const noexcept {
+        return feedback_copies;
+    }
 
     /// Fills views and samplers of a draw from the pipeline's memo when nothing they were
     /// resolved from has changed since (true), prepares the images as FillImageViews does.
@@ -809,6 +817,15 @@ private:
 
     std::deque<PendingUnswizzle> unswizzle_queue;
     u8 current_unswizzle_frame;
+
+    /// Copies of colour targets their own draws sample, one per image shape and draw; retired
+    /// after 120 frames unused.
+    struct FeedbackShadow {
+        ImageId id;
+        u64 last_frame;
+    };
+    std::vector<FeedbackShadow> feedback_shadows;
+    u64 feedback_copies{};
 
     // Join caching
     boost::container::small_vector<ImageId, 4> join_overlap_ids;

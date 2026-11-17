@@ -476,6 +476,29 @@ void TextureCache<P>::TickFrame() {
             gpu_sentenced_images.pop_front();
         }
     }
+    // Submitted draws may still sample idle shadows: they are destroyed later, as DeleteImage does.
+    std::erase_if(feedback_shadows, [&](const FeedbackShadow& entry) {
+        if (frame_tick - entry.last_frame <= 120) {
+            return false;
+        }
+        Image& image = slot_images[entry.id];
+        RemoveImageViewReferences(image.image_view_ids);
+        for (const ImageViewId id : image.image_view_ids) {
+            sentenced_image_view.Push(std::move(slot_image_views[id]));
+            slot_image_views.erase(id);
+        }
+        const u64 bytes = ImageMemoryBytes(image);
+        total_used_memory -= (std::min)(total_used_memory, bytes);
+        if constexpr (requires { runtime.CurrentTick(); }) {
+            gpu_sentenced_images.push_back({runtime.CurrentTick(), bytes, std::move(image)});
+            gpu_sentenced_bytes += bytes;
+        } else {
+            sentenced_images.Push(std::move(image));
+            sentenced_image_bytes[sentenced_image_index] += bytes;
+        }
+        slot_images.erase(entry.id);
+        return true;
+    });
     // If we can obtain the memory info, use it instead of the estimate. Read before the budget
     // check below, which counts what isn't images from it.
     if (runtime.CanReportMemoryUsage()) {
@@ -962,6 +985,86 @@ void TextureCache<P>::FillImageViews(std::span<ImageViewInOut> views, bool compu
             }
         }
     } while (has_deleted_images || (blacklist && has_blacklisted));
+    if (!compute) {
+        ReplaceColorFeedbackViews(views);
+    }
+}
+
+template <class P>
+void TextureCache<P>::ReplaceColorFeedbackViews(std::span<ImageViewInOut> views) {
+    // A draw that samples its own colour target reads it while the host writes it, a feedback
+    // loop: RADV reads compressed tiles back as garbage (DK Bananza's video panel came out in
+    // tiles). Maxwell reads the texel before the draw's write lands, so sample a copy instead.
+    boost::container::small_vector<ImageId, 4> used_shadows;
+    const auto& regs = maxwell3d->regs;
+    for (ImageViewInOut& view : views) {
+        if (view.id == NULL_IMAGE_VIEW_ID || view.blacklist) {
+            continue;
+        }
+        const ImageViewBase& image_view = slot_image_views[view.id];
+        if (image_view.IsBuffer()) {
+            continue;
+        }
+        const ImageId image_id = image_view.image_id;
+        const GPUVAddr gpu_addr = slot_images[image_id].gpu_addr;
+        bool is_target = false;
+        for (u32 index = 0; index < regs.rt_control.count; ++index) {
+            const auto& rt = regs.rt[regs.rt_control.Map(index)];
+            is_target |= rt.format != Tegra::RenderTargetFormat::NONE && rt.Address() == gpu_addr;
+        }
+        // Rescaled and multisampled targets keep the loop; copy them when a game needs it. So do
+        // sparse ones, whose copy would be made sparse as well.
+        constexpr ImageFlagBits sparse_flags =
+            ImageFlagBits::Unbacked | ImageFlagBits::SparseLayers | ImageFlagBits::SparseTiles;
+        if (!is_target || True(slot_images[image_id].flags & ImageFlagBits::Rescaled) ||
+            True(slot_images[image_id].flags & sparse_flags) ||
+            slot_images[image_id].info.num_samples != 1) {
+            continue;
+        }
+        // Two targets of one shape sampled by the same draw each get their own shadow.
+        const auto same_shape = [&](const FeedbackShadow& entry) {
+            if (std::ranges::find(used_shadows, entry.id) != used_shadows.end()) {
+                return false;
+            }
+            const ImageInfo& a = slot_images[entry.id].info;
+            const ImageInfo& b = slot_images[image_id].info;
+            return a.type == b.type && a.format == b.format && a.size == b.size &&
+                   a.resources.levels == b.resources.levels &&
+                   a.resources.layers == b.resources.layers;
+        };
+        auto it = std::ranges::find_if(feedback_shadows, same_shape);
+        if (it == feedback_shadows.end()) {
+            const ImageInfo info = slot_images[image_id].info;
+            const DAddr cpu_addr = slot_images[image_id].cpu_addr;
+            const ImageId id = slot_images.insert(runtime, info, gpu_addr, cpu_addr);
+            bool unusable = True(slot_images[id].flags & ImageFlagBits::Unbacked);
+            if constexpr (requires(const Image& image) { image.OutOfMemory(); }) {
+                unusable |= slot_images[id].OutOfMemory();
+            }
+            if (unusable) {
+                // No memory for the copy: the draw keeps the loop.
+                slot_images.erase(id);
+                continue;
+            }
+            total_used_memory += ImageMemoryBytes(slot_images[id]);
+            feedback_shadows.push_back({id, frame_tick});
+            LOG_INFO(HW_GPU, "Colour target {}x{} format {} sampled by its own draw: copying it",
+                     info.size.width, info.size.height, static_cast<u32>(info.format));
+            it = std::prev(feedback_shadows.end());
+        }
+        const ImageId shadow_id = it->id;
+        it->last_frame = frame_tick;
+        used_shadows.push_back(shadow_id);
+        Image& image = slot_images[image_id];
+        Image& shadow = slot_images[shadow_id];
+        const auto copies = MakeShrinkImageCopies(shadow.info, image.info, SubresourceBase{});
+        runtime.CopyImage(shadow, image, copies);
+        ++feedback_copies;
+        const auto view_it = std::ranges::find(image.image_view_ids, view.id);
+        const ImageViewInfo view_info =
+            image.image_view_infos[std::distance(image.image_view_ids.begin(), view_it)];
+        view.id = FindOrEmplaceImageView(shadow_id, view_info);
+    }
 }
 
 template <class P>
@@ -1014,6 +1117,8 @@ bool TextureCache<P>::ResolveMemoizedTextures(SampledTextureMemo& memo,
         memo.valid = false;
         return false;
     }
+    // The render targets may have changed since the memo was taken.
+    ReplaceColorFeedbackViews(views);
     return true;
 }
 
