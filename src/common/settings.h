@@ -388,6 +388,18 @@ struct Values {
                                            true,
                                            true};
 
+    // Hokkaido: frames left undrawn after each drawn one (0 to 3). A game whose logic advances once
+    // per presented frame keeps its speed when the GPU can't keep up, and shows fewer frames.
+    SwitchableSetting<int, true> frame_skip{linkage,
+                                            0,
+                                            0,
+                                            3,
+                                            "frame_skip",
+                                            Category::Renderer,
+                                            Specialization::Scalar,
+                                            true,
+                                            true};
+
     SwitchableSetting<ScalingFilter> scaling_filter{linkage,
                                                     ScalingFilter::ScaleForce,
                                                     "scaling_filter",

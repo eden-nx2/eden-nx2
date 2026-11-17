@@ -3962,9 +3962,13 @@ void RasterizerVulkan::TickFrame() {
         trace_sample_frame = trace_frame < 4 || trace_rate.Ready(now);
     }
     ComputePipeline::TickUpscalerTrace();
-    // Read again each frame: on Android one process runs every game launched.
-    const u32 frameskip_interval =
-        std::min<u32>(Settings::PerTitleEnv("EDEN_NX2_FRAMESKIP"), 4);
+    // Read again each frame: on Android one process runs every game launched, and the setting
+    // can change in game. EDEN_NX2_FRAMESKIP, when set, wins over the setting.
+    u32 frameskip_interval = std::min<u32>(Settings::PerTitleEnv("EDEN_NX2_FRAMESKIP"), 4);
+    if (frameskip_interval == 0) {
+        frameskip_interval =
+            static_cast<u32>(std::clamp(Settings::values.frame_skip.GetValue(), 0, 3)) + 1;
+    }
     if (frameskip_interval != std::exchange(frameskip_logged_interval, frameskip_interval)) {
         LOG_WARNING(Render_Vulkan, "Frameskip: drawing one frame in {}",
                     std::max<u32>(frameskip_interval, 1));

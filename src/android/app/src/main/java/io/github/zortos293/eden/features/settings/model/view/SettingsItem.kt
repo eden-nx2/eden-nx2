@@ -639,6 +639,15 @@ abstract class SettingsItem(
             )
             put(
                 SliderSetting(
+                    IntSetting.RENDERER_FRAME_SKIP,
+                    titleId = R.string.frame_skip,
+                    descriptionId = R.string.frame_skip_description,
+                    min = 0,
+                    max = 3
+                )
+            )
+            put(
+                SliderSetting(
                     IntSetting.ANDROID_PIPELINE_WORKERS,
                     titleId = R.string.pipeline_worker_cores,
                     descriptionId = R.string.pipeline_worker_cores_description,

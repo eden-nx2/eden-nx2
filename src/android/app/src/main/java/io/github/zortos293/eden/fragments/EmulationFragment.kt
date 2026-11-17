@@ -1182,6 +1182,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback {
                 units = "%",
             )
 
+            quickSettings.addSliderSetting(
+                R.string.frame_skip,
+                container,
+                IntSetting.RENDERER_FRAME_SKIP,
+                minValue = 0,
+                maxValue = 3,
+            )
+
             quickSettings.addBooleanSetting(
                 R.string.use_docked_mode,
                 container,

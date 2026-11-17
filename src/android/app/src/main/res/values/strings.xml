@@ -500,6 +500,8 @@
     <!-- General settings strings -->
     <string name="frame_limit_enable">Limit speed</string>
     <string name="frame_limit_enable_description">Limits emulation speed to a specified percentage of normal speed.</string>
+    <string name="frame_skip">Frame skip</string>
+    <string name="frame_skip_description">Frames left undrawn after each drawn one. A game that slows down when the phone cannot keep up runs at its own speed again, but shows fewer frames. 0 draws every frame.</string>
     <string name="frame_limit_slider">Limit speed percent</string>
     <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. 100% is the normal speed. Values higher or lower will increase or decrease the speed limit.</string>
     <string name="turbo_speed_limit">Turbo speed</string>
