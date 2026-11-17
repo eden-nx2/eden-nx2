@@ -1141,22 +1141,22 @@
     <string name="game_engine">Engine</string>
     <string name="banana_pack_import">Import Banana Native pack</string>
     <string name="banana_pack_import_description">Use a pack this game already has in the Banana Native app, so it starts without preparing again. In Banana Native: the game\'s Manage › Export pack…</string>
-    <string name="banana_pack_import_working">Copying and checking the pack. A large pack takes a few minutes; keep Hokkaido open.</string>
+    <string name="banana_pack_import_working">Copying and checking the pack. A large pack takes a few minutes; keep Eden NX2 open.</string>
     <string name="banana_pack_import_done">Pack imported</string>
     <string name="banana_pack_import_done_message">%1$s now starts on Banana Native without preparing. Shaders Banana Native built while you played are not in an exported pack: the game builds them again while you play.</string>
     <string name="banana_pack_import_failed">Pack not imported</string>
     <string name="banana_pack_import_failed_message">Nothing was changed. %1$s</string>
-    <string name="banana_pack_import_unavailable">This build of Hokkaido has no Banana Native.</string>
+    <string name="banana_pack_import_unavailable">This build of Eden NX2 has no Banana Native.</string>
     <string name="banana_pack_import_unreadable">The picked file can\'t be read.</string>
-    <string name="game_engine_description">Which engine runs this game: Hokkaido emulates the Switch 2 GPU; Banana Native runs the game\'s code natively and draws with Vulkan (its games need preparing once). Auto picks what we consider best.</string>
+    <string name="game_engine_description">Which engine runs this game: Eden NX2 emulates the Switch 2 GPU; Banana Native runs the game\'s code natively and draws with Vulkan (its games need preparing once). Auto picks what we consider best.</string>
     <string name="game_engine_auto">Auto</string>
     <string name="game_engine_auto_now">Auto (%1$s)</string>
-    <string name="game_engine_emulate">Hokkaido</string>
+    <string name="game_engine_emulate">Eden NX2</string>
     <string name="game_engine_native">Banana Native</string>
     <string name="game_engine_native_experimental">Banana Native (experimental)</string>
     <string name="game_engine_banana_missing">Banana Native could not start</string>
-    <string name="game_engine_banana_missing_description">This game is set to run in Banana Native, but this build has no Banana Native or it could not start. Play it with Hokkaido instead?</string>
-    <string name="game_engine_play_here">Play with Hokkaido</string>
+    <string name="game_engine_banana_missing_description">This game is set to run in Banana Native, but this build has no Banana Native or it could not start. Play it with Eden NX2 instead?</string>
+    <string name="game_engine_play_here">Play with Eden NX2</string>
 
     <!-- ASTC Decoding Method Choices -->
     <string name="accelerate_astc_cpu" translatable="false">CPU</string>

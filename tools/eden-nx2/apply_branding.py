@@ -90,6 +90,10 @@ DESKTOP_ID = ("io.github.zortos293.eden", "com.eden.eden_nx2")
 
 # Fix-ups of Lichii asset references that the generic rename would point at missing files.
 FIXUPS = [
+    # Banana Native's LogProvider authority is the host app's ID: Hokkaido's (dev.lichii.android)
+    # becomes ours, with the build types' suffixes.
+    ("src/android/banana/build.gradle.kts", re.compile(r'\\"dev\.(?:lichii|eden)\.android'),
+     r'\\"com.eden.eden_nx2'),
     ("CMakeLists.txt",
      re.compile(r'    install\(FILES "dist/eden\.png"\n\s*DESTINATION "share/icons/hicolor/256x256/apps"\n'
                 r'\s*RENAME "[^"]+"\)\n'),
@@ -210,6 +214,9 @@ def rebrand_text(text, path):
     return text
 
 
+HOKKAIDO_WORD = re.compile(r"\bHokkaido\b")
+
+
 def nx2_name(text):
     if any(k in text for k in NX2_KEEP_PHRASES):
         return text
@@ -246,6 +253,11 @@ def nx2_ui_strings(path, text):
             body = m.group(2).replace("Eglantine", "Eden").replace("Hokkaido", "Eden")
             return m.group(0)[: m.start(2) - m.start(0)] + nx2_name(body) + m.group(0)[m.end(2) - m.start(0):]
         text = re.sub(r'<string name="([^"]+)"[^>]*>(.*?)</string>', string, text, flags=re.S)
+    elif path.startswith("src/android/") and path.endswith((".java", ".kt")):
+        # Messages in Hokkaido's Banana Native integration name the app. Class names
+        # (HokkaidoBridge), settings keys ("hokkaido_...") and comments keep Hokkaido's names, so
+        # its later commits still apply.
+        text = re.sub(r'"(?:[^"\\\n]|\\.)*"', lambda q: HOKKAIDO_WORD.sub("Eden NX2", q.group(0)), text)
     return text
 
 
@@ -337,6 +349,18 @@ def check():
             re.findall(r"@(?:string|array|plurals)/(\w+)", text)
         for name in sorted(set(refs) - defined - library):
             problems.append(f"{f}: uses Android resource {name}, which is not defined")
+    for f in files:
+        if not f.startswith("src/android/"):
+            continue
+        text = read(f) or ""
+        if re.search(r"/res/values[^/]*/strings\.xml$", f):
+            for m in re.finditer(r'<string name="([^"]+)"[^>]*>(.*?)</string>', text, re.S):
+                if "Hokkaido" in m.group(2):
+                    problems.append(f"{f}: string {m.group(1)} still says Hokkaido")
+        elif f.endswith((".java", ".kt")):
+            for m in re.finditer(r'"(?:[^"\\\n]|\\.)*"', text):
+                if HOKKAIDO_WORD.search(m.group(0)):
+                    problems.append(f"{f}: message {m.group(0)[:60]} still says Hokkaido")
     return problems
 
 

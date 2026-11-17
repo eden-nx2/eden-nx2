@@ -317,7 +317,7 @@ public final class HokkaidoBridge {
 
     /** The driver unpacked from a zip, unpacked again only when the zip changed since (by its size and time). */
     private static GpuDriver.Info installedDriver(Context c, File zip) throws IOException {
-        if (!zip.isFile()) throw new IOException("The GPU driver " + zip + " is not there: pick another one in Hokkaido.");
+        if (!zip.isFile()) throw new IOException("The GPU driver " + zip + " is not there: pick another one in Eden NX2.");
         String key = "hokkaido_driver_" + zip.getPath(), stamp = zip.length() + ":" + zip.lastModified();
         String known = Prefs.of(c).getString(key, "");
         if (known.startsWith(stamp + ":")) {

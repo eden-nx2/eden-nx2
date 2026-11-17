@@ -40,13 +40,13 @@ android {
     // BuildConfig.APPLICATION_ID is Hokkaido's application ID (LogProvider's authority).
     buildTypes {
         getByName("release") {
-            buildConfigField("String", "APPLICATION_ID", "\"dev.lichii.android\"")
+            buildConfigField("String", "APPLICATION_ID", "\"com.eden.eden_nx2\"")
         }
         create("relWithDebInfo") {
-            buildConfigField("String", "APPLICATION_ID", "\"dev.lichii.android.relWithDebInfo\"")
+            buildConfigField("String", "APPLICATION_ID", "\"com.eden.eden_nx2.relWithDebInfo\"")
         }
         getByName("debug") {
-            buildConfigField("String", "APPLICATION_ID", "\"dev.lichii.android.debug\"")
+            buildConfigField("String", "APPLICATION_ID", "\"com.eden.eden_nx2.debug\"")
         }
     }
 
