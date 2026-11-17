@@ -33,8 +33,23 @@ if (Test-Path $VULKAN_SDK) {
 }
 
 echo "Downloading Vulkan SDK $VulkanSDKVer from $Uri"
-$WebClient = New-Object System.Net.WebClient
-$WebClient.DownloadFile($Uri, $Destination)
+# LunarG's server sometimes drops a download midway; try again a few times before failing.
+$Attempts = 5
+for ($Attempt = 1; $Attempt -le $Attempts; $Attempt++) {
+    try {
+        $WebClient = New-Object System.Net.WebClient
+        $WebClient.DownloadFile($Uri, $Destination)
+        break
+    } catch {
+        Remove-Item -Path $Destination -Force -ErrorAction SilentlyContinue
+        if ($Attempt -eq $Attempts) {
+            throw
+        }
+        $Delay = 15 * $Attempt
+        Write-Host "Download attempt $Attempt of $Attempts failed: $($_.Exception.InnerException.Message). Retrying in $Delay s"
+        Start-Sleep -Seconds $Delay
+    }
+}
 echo "Finished downloading $ExeFile"
 
 $Arguments = "--root `"$VULKAN_SDK`" --accept-licenses --default-answer --confirm-command install"
