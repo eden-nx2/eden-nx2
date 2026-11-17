@@ -117,10 +117,12 @@ TEST_CASE("Safe command list reads on the split flush what the texture and query
     REQUIRE(rasterizer.flushes.size() == 1);
     REQUIRE(rasterizer.flushes[0] == std::pair{DAddr{0x11000}, texture_and_queries});
 
-    // The GPU wrote the image: written out, and the list is read from memory instead of its copy.
+    // The GPU wrote the image: every cache is written out, buffers too (a buffer cache list copy
+    // of the page is older than the image), and the list is read from guest memory.
     rasterizer.image_written = true;
     REQUIRE(pusher.FlushCachedCommands(0x101000, 0x100, false));
     REQUIRE(rasterizer.flushes.size() == 2);
+    REQUIRE(rasterizer.flushes[1] == std::pair{DAddr{0x11000}, CacheType::All});
 
     // A list on another page is left alone.
     REQUIRE_FALSE(pusher.FlushCachedCommands(0x100000, 0x100, true));
@@ -174,6 +176,5 @@ TEST_CASE("Safe command list reads on the split see an image the back registers 
     split.NoteSync();
     REQUIRE(pusher.FlushCachedCommands(0x101000, 0x100, false));
     REQUIRE(rasterizer.flushes.size() == 1);
-    REQUIRE(rasterizer.flushes[0] ==
-            std::pair{DAddr{0x11000}, CacheType::TextureCache | CacheType::QueryCache});
+    REQUIRE(rasterizer.flushes[0] == std::pair{DAddr{0x11000}, CacheType::All});
 }

@@ -286,6 +286,10 @@ bool ReactiveFlushing() {
             current_program_id == PokemonPokopia);
 }
 
+bool SkipCpuInnerInvalidation() {
+    return values.skip_cpu_inner_invalidation.GetValue() && !values.keep_cpu_inner_invalidation;
+}
+
 bool CurrentProgramIsSwitch2() {
     return current_program_is_switch2;
 }
