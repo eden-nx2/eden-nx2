@@ -49,6 +49,9 @@ class BananaLauncher : NativeEngineUi {
 
     override fun status(titleId: String): String? = HokkaidoBridge.status(titleId)
 
+    override fun importPack(context: Context, source: java.io.File, titleId: String, dumpPath: String?): String? =
+        HokkaidoBridge.importPack(context, source, titleId, dumpPath)
+
     override fun launch(
         activity: FragmentActivity,
         gamePath: String,

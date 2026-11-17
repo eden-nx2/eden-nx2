@@ -71,6 +71,25 @@ object GameEngine {
     /** Whether Banana Native has a profile for the game: only then is it a choice. */
     fun supports(game: Game): Boolean = status(game) != null
 
+    /**
+     * Imports a pack that Banana Native's own app exported (Manage › Export pack…) for this game, from the zip
+     * the user picked. Null when it is in, else why not. Blocks while it copies: call it off the main thread.
+     */
+    fun importPack(context: Context, game: Game, zip: Uri): String? {
+        val engine = ui ?: return context.getString(R.string.banana_pack_import_unavailable)
+        val titleId = game.programIdHex.uppercase().padStart(16, '0')
+        // A file on shared storage is read in place (Hokkaido has all files access for Banana Native);
+        // any other document through its descriptor.
+        storagePath(zip)?.let { File(it) }?.takeIf { it.isFile }?.let {
+            return engine.importPack(context, it, titleId, filePath(game))
+        }
+        val descriptor = runCatching { context.contentResolver.openFileDescriptor(zip, "r") }.getOrNull()
+            ?: return context.getString(R.string.banana_pack_import_unreadable)
+        return descriptor.use {
+            engine.importPack(context, File("/proc/self/fd/${it.fd}"), titleId, filePath(game))
+        }
+    }
+
     /** What Auto picks: Banana Native for the games its profiles call playable, Hokkaido for the rest. */
     fun autoIsNative(game: Game): Boolean = status(game) == "playable"
 
@@ -101,8 +120,21 @@ object GameEngine {
      * the one holding base/ and updates/<version>/ (or exefs/), as Banana Native expects.
      */
     private fun filePath(game: Game): String? {
-        val uri = Uri.parse(game.path)
-        val path = if (uri.scheme == null || uri.scheme == "file") {
+        val path = storagePath(Uri.parse(game.path)) ?: return null
+        if (!path.endsWith("/exefs/main")) {
+            return path
+        }
+        val folder = path.removeSuffix("/exefs/main")
+        return when {
+            Regex(".*/updates/[0-9]+$").matches(folder) -> folder.replace(Regex("/updates/[0-9]+$"), "")
+            folder.endsWith("/base") -> folder.removeSuffix("/base")
+            else -> folder
+        }
+    }
+
+    /** A file URI's path, or a shared storage document's /storage/<volume>/<path>; null for other documents. */
+    private fun storagePath(uri: Uri): String? {
+        return if (uri.scheme == null || uri.scheme == "file") {
             uri.path ?: return null
         } else {
             if (uri.authority != "com.android.externalstorage.documents") {
@@ -113,15 +145,6 @@ object GameEngine {
             val relative = id.substringAfter(':', "")
             val root = if (volume == "primary") "/storage/emulated/0" else "/storage/$volume"
             if (relative.isEmpty()) root else "$root/$relative"
-        }
-        if (!path.endsWith("/exefs/main")) {
-            return path
-        }
-        val folder = path.removeSuffix("/exefs/main")
-        return when {
-            Regex(".*/updates/[0-9]+$").matches(folder) -> folder.replace(Regex("/updates/[0-9]+$"), "")
-            folder.endsWith("/base") -> folder.removeSuffix("/base")
-            else -> folder
         }
     }
 

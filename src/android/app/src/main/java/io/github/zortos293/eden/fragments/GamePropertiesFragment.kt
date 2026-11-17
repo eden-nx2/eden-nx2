@@ -344,6 +344,16 @@ class GamePropertiesFragment : Fragment() {
                         action = { showEngineDialog() }
                     )
                 )
+                if (GameEngine.isBananaAvailable) {
+                    add(
+                        SubmenuProperty(
+                            R.string.banana_pack_import,
+                            R.string.banana_pack_import_description,
+                            R.drawable.ic_import,
+                            action = { importBananaPack.launch(arrayOf("application/zip", "application/octet-stream")) }
+                        )
+                    )
+                }
             }
 
             if (!args.game.isHomebrew) {
@@ -789,6 +799,42 @@ class GamePropertiesFragment : Fragment() {
                 getText(R.string.share_config_failed),
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    /** A pack that Banana Native's own app exported (Manage › Export pack…), into Hokkaido's packs. */
+    private val importBananaPack = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { result ->
+        if (result == null) {
+            return@registerForActivityResult
+        }
+        val context = requireContext()
+        val working = com.google.android.material.dialog.MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.banana_pack_import)
+            .setMessage(R.string.banana_pack_import_working)
+            .setCancelable(false)
+            .show()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val error = withContext(Dispatchers.IO) {
+                runCatching { GameEngine.importPack(context, args.game, result) }
+                    .getOrElse { it.message ?: it.toString() }
+            }
+            working.dismiss()
+            if (!isAdded) {
+                return@launch
+            }
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(
+                    if (error == null) R.string.banana_pack_import_done
+                    else R.string.banana_pack_import_failed
+                )
+                .setMessage(
+                    if (error == null) getString(R.string.banana_pack_import_done_message, args.game.title)
+                    else getString(R.string.banana_pack_import_failed_message, error)
+                )
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
         }
     }
 

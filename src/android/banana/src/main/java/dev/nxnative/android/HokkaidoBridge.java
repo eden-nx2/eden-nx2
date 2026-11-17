@@ -390,6 +390,47 @@ public final class HokkaidoBridge {
         return null;
     }
 
+    /**
+     * Banana Native's Import pack (PackUi.importRun) for Hokkaido: a pack that Banana Native's own app exported (its
+     * game's Manage › Export pack…, banana-pack-&lt;title ID&gt;-&lt;version&gt;.zip) or a pack folder, checked against the game
+     * in dumpPath and put into this app's packs/&lt;title ID&gt;, which the game's next start finds first. Null when it is
+     * in, else why not; nothing changes then. Blocks for as long as the copy takes: call it off the main thread.
+     */
+    public static String importPack(Context c, File source, String titleId, String dumpPath) {
+        File packs = AppStorage.packs(c), target = AppStorage.pack(c, titleId);
+        try {
+            String[] running = runningGame(c);
+            if (running != null && running[0].equalsIgnoreCase(titleId)) {
+                throw new IOException("the game is running in Banana Native: close it first");
+            }
+            if (!packs.isDirectory() && !packs.mkdirs()) throw new IOException("cannot create " + packs);
+            long need = source.length();
+            if (packs.getUsableSpace() < need + (256L << 20)) {
+                throw new IOException("the pack needs " + SaveStore.size(need) + ", and the phone has " + SaveStore.size(packs.getUsableSpace()) + " free");
+            }
+            File remembered = Job.remembered(c);
+            if (remembered != null && remembered.isFile()) {
+                Job j = Job.read(remembered);
+                if (SaveStore.same(j.pack(), target) && !"done".equals(j.state())) {
+                    throw new IOException("this game is being prepared: let it finish, or start it once and cancel the Prepare");
+                }
+            }
+            Pack p = PackZip.stage(source, packs, titleId);
+            try {
+                String bad = dumpPath == null ? null : PackCheck.blocking(c, p, new File(dumpPath));
+                if (bad != null) throw new IOException(bad);
+                PackZip.swapIn(p.dir, target);
+            } finally {
+                if (p.dir.exists()) SaveStore.deleteTree(p.dir);
+            }
+            Folders.pickedPack(c, titleId, null);   // a folder picked in Banana Native's own launcher would win over the import
+            return null;
+        } catch (IOException | RuntimeException e) {
+            String m = e.getMessage();
+            return m == null || m.isEmpty() ? e.toString() : m;
+        }
+    }
+
     /** Hokkaido's theme for the game screen's menu (HokkaidoInGame.Screen): its style resources, and its dark mode. */
     static final String EXTRA_THEMES = "hokkaido_themes", EXTRA_NIGHT = "hokkaido_night";
 

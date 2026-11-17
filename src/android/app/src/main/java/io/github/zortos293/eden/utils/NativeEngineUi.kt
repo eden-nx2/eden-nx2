@@ -21,6 +21,12 @@ interface NativeEngineUi {
     fun closeGame(context: Context, titleId: String)
 
     /**
+     * Puts a pack that Banana Native's own app exported ([source]: its zip) into Hokkaido's packs for [titleId],
+     * checked against the game in [dumpPath]. Null when it is in, else why not. Blocks: call it off the main thread.
+     */
+    fun importPack(context: Context, source: java.io.File, titleId: String, dumpPath: String?): String?
+
+    /**
      * Starts the game in Banana Native, preparing it first when it needs that, with Hokkaido's GPU driver for it
      * ([driverZip]: a driver zip, empty for the system's), Hokkaido's save folder ([saveDir], shared by both
      * engines) and the render size of Hokkaido's resolution scale ([window]: "<width>x<height>" or "original");
