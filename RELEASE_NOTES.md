@@ -7,7 +7,7 @@
 - **Your own files are needed.** Dump your keys, firmware and games from your own console. None are included or provided.
 - **Updates.** The desktop builds' built-in updater offers newer releases from this page.
 
-### Highlights
+### What's new
 
 **Android**
 - **Two engines.** Game properties → **Engine**: *Eden NX2* (the emulator), *Banana Native* or *Auto*. [Banana Native](https://git.eden-emu.dev/moceure/BananaNative) runs a supported game's code natively and draws with Vulkan. A game needs a one-time preparation before its first start in it. Auto uses Banana Native for the games its profiles mark as playable (Donkey Kong Bananza among them) and the emulator for the rest. Both engines share the same save folder, GPU driver and resolution scale. Packs exported from Banana Native's own app can be imported in Game properties.
@@ -20,7 +20,7 @@
 - Mario Kart World 60 FPS mode, and stable dynamic resolution.
 - Fire Emblem: Fortune's Weave upscaling that keeps detail over time (temporal by default).
 - Donkey Kong Bananza: the tutorial video renders correctly, including on AMD/RADV.
-- Optional online play through **Nextendo**, a third-party service run by the Lichii community (not Nintendo): Configure → Network. It is **off by default**.
+- Optional online play through **Nextendo**, a third-party online service (not Nintendo): Configure → Network. It is **off by default**.
 - LAN play for local wireless games without a room, IPv6 networking, solid NSZ/NCZ support, Switch 1 add-ons shown on Switch 2 Edition games.
 - Many fixes for Intel, AMD and NVIDIA GPUs, and texture and buffer cache memory improvements.
 
