@@ -82,6 +82,12 @@
             android:screenOrientation="sensorLandscape"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density" />
+        <!-- The crop screen of a game's cover image (CropActivity, Covers) -->
+        <activity
+            android:name=".CropActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Banana"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode" />
         <!-- The readiness check (ReadinessActivity), in a process of its own: it loads a host and the GPU driver to ask Vulkan what the phone has -->
         <activity
             android:name=".ReadinessActivity"

@@ -19,6 +19,9 @@ import java.util.Map;
 final class Readiness {
     enum Status { PASS, WARNING, FAIL, INFO }
 
+    /** The APK's minSdk (BuildConfig.NX_MIN_SDK, set by NxApp): 33, or 31 in an experimental Android 12 build (-PnxMinSdk=31), which lowers the Android row to it */
+    static int minSdk = 33;
+
     /** One requirement: the fact (a key of the facts) must be at least min (a number, a dotted version, or 0x hex). what: "title: why" */
     static final class Req {
         final boolean required;
@@ -125,7 +128,9 @@ final class Readiness {
         // error: the driver answered and failed (no Vulkan library, no instance, no GPU): the game cannot run either. unchecked: nobody answered (the check timed out,
         // or the host cannot report): nothing is known, so nothing is called missing; one warning says the GPU was not checked
         String err = facts.get("error"), unchecked = facts.get("unchecked");
-        List<Req> all = new ArrayList<>(HOST);
+        List<Req> all = new ArrayList<>();
+        for (Req r : HOST) all.add(r.fact.equals("android.sdk") && minSdk < 33
+                ? new Req(true, "android.sdk", String.valueOf(minSdk), Words.s("ready_android_12_or_newer_the", "Android 12 or newer (experimental): the app is built for it")) : r);
         all.addAll(game);
         List<String> failed = new ArrayList<>(), seen = new ArrayList<>();
         for (Req r : all) {

@@ -790,11 +790,11 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
                 env.add("DM_ROMFS_PROGRAM_" + e.getKey() + "=" + e.getValue());
             try (java.io.InputStream fin = getAssets().open(GameFonts.ASSET)) {   // the shared-font stand-in (dm/third_party/fonts): the host serves it instead of the phone's own fonts; a DM_FONT_DIR line of the user's comes later and wins
                 File fontDir = new File(getFilesDir(), "fonts");
-                GameFonts.place(fontDir, GameFonts.STANDARD, fin.readAllBytes());
+                GameFonts.place(fontDir, GameFonts.STANDARD, Streams.readAll(fin));
                 env.add(GameFonts.envLine(fontDir));
             } catch (IOException e) { unknownNotes.add("[nxlaunch] the shared font stand-in is not placed (" + e.getMessage() + "): the host uses the phone's own fonts"); }
             try (java.io.InputStream fin = getAssets().open(GameFonts.EXT_ASSET)) {   // the button icons in game text (shared-font type 5: hle_sdk16.c), in the same folder; without it they draw as '?'
-                GameFonts.place(new File(getFilesDir(), "fonts"), GameFonts.EXT, fin.readAllBytes());
+                GameFonts.place(new File(getFilesDir(), "fonts"), GameFonts.EXT, Streams.readAll(fin));
             } catch (java.io.FileNotFoundException e) {   // an APK built without fontTools: the host's [YELLOW] line says so
             } catch (IOException e) { unknownNotes.add("[nxlaunch] the button-icon font is not placed (" + e.getMessage() + "): button icons in game text draw as '?'"); }
             String gpuNote = settingsEnv(id, env);
@@ -818,6 +818,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
                 if (argLine != null) env.add(argLine);
                 sceneNote = SceneRes.note(scenes, sceneName, ov);
             }
+            Mods.addTo(env, ModsUi.overlay(this, id));   // the player's mods (Game settings › Mods), after the Resolution choice's overlay; a DM_ROMFS_OVERLAY line of the user's comes later and wins
             String resNote = resPresets.isEmpty() ? null   // the choice in force, for the log: which preset (or Advanced), and the window and scene it gave
                     : "[nxlaunch] resolution " + Prefs.resolutionChoice(this, id) + (Prefs.resPreset(this, id).isEmpty() ? " (nothing chosen: the earlier settings' match or the default)" : "")
                     + ": window " + Prefs.startWindow(this, id) + ", scene " + (sceneName.isEmpty() ? "the game's own palette" : sceneName);

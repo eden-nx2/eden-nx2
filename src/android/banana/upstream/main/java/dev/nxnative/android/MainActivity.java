@@ -83,6 +83,7 @@ public final class MainActivity extends Activity {
             if (n == null) return;
             if (!n.isInTouchMode()) UiSound.tick(this);   // a controller or keyboard moves the focus
             if (n.getTag() instanceof TileInfo) selectTile(n);   // the focused tile grows and the dock says what it is
+            hintUpdate();
         });   // a controller or keyboard moves the focus
         PadFocus.watch(getWindow());   // a controller: the focus frame (PadFocus)
         build();
@@ -187,6 +188,14 @@ public final class MainActivity extends Activity {
             return true;
         }
         if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0 && (k == KeyEvent.KEYCODE_BUTTON_A || k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER)) UiSound.select(this);
+        if (moveId != null && onHome() && moveKey(e)) return true;
+        if (k == KeyEvent.KEYCODE_BUTTON_X && onHome() && !advancedOpen) {   // Hold X: the focused game's options, as a long press
+            View f = getCurrentFocus();
+            if (f != null && f.getTag() instanceof TileInfo && !((TileInfo) f.getTag()).work) {
+                if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 1) f.performLongClick();
+                return true;
+            }
+        }
         if (k == KeyEvent.KEYCODE_BUTTON_Y && !settingsPage && !usersPage && settingsGame == null && !advancedOpen) {   // Home: the focused game's reorder menu, as a long press
             View f = getCurrentFocus();
             if (f != null && f.getTag() instanceof TileInfo && !((TileInfo) f.getTag()).work) {
@@ -263,6 +272,7 @@ public final class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() {
         if (ReleasePage.back(this)) return;   // the release page over Home
+        if (moveId != null) { endMove(false); return; }   // a lifted game goes back to its place
         if (advancedOpen) closeAdvanced();
         else if (usersPage) { if (usersEdit != null) usersBack(); else page(false); }
         else if (settingsPage && settingsGame == null && settingsOpen >= 0 && getResources().getConfiguration().screenWidthDp < 600) { settingsOpen = -1; build(); }   // a section back to the list
@@ -274,6 +284,7 @@ public final class MainActivity extends Activity {
     private void build() {
         FrameLayout frame = (FrameLayout) bananas.getParent();
         while (frame.getChildCount() > 1) frame.removeViewAt(1);
+        if (!onHome()) { moveId = null; moveOrig = null; }   // a lifted game is put back when Home is left
         boolean wide = getResources().getConfiguration().screenWidthDp >= 600;
         boolean home = settingsGame == null && !settingsPage && !usersPage;   // Home never scrolls up or down: its games are one row that scrolls sideways
         splitScroll = null;
@@ -287,6 +298,11 @@ public final class MainActivity extends Activity {
         else if (usersPage) { accessCard = null; gameBox = null; overlayRow = null; UsersUi.build(this, content, usersEdit); }
         else if (settingsPage) buildSettings(content);
         else buildHome(content);
+        hint = new HintBar(this);
+        FrameLayout.LayoutParams hl = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        hl.bottomMargin = dp(12);
+        frame.addView(hint, hl);
+        hintUpdate();
         bananaTaps(frame);
         noFocusTint(frame);
         if (settingsGame != null || settingsPage || usersPage || advancedOpen) frame.post(() -> {   // a controller (not touch mode): the focus starts on the page's selected tab, else its first row (Home: refresh puts it on the first tile)
@@ -368,7 +384,7 @@ public final class MainActivity extends Activity {
     // ---- Home: the games as one row of artwork tiles, a dock of round buttons under it, and under the dock what is selected (as the console's home screen) ----
 
     /** What a tile says to the dock's label: the game's name, its state (a TextView kept out of sight, the check writes it) and what the state's chip does */
-    private static final class TileInfo {
+    static final class TileInfo {
         final String name;
         final TextView st;
         final View.OnClickListener open;
@@ -377,6 +393,8 @@ public final class MainActivity extends Activity {
         android.widget.ProgressBar pb;   // its moving bar
         ProgressRing badge, ring;   // the small corner ring (something checked or updated in the background), the big ring (the game is being prepared)
         boolean work;   // the game is being prepared (workTile): the ring shows the job's progress
+        TextView sub;   // the grid's and the list's second line (HomeLayout.caption)
+        String version, workLine;   // the game's version once read; the step of the job being prepared
         TileInfo(String name, TextView st, View.OnClickListener open) { this.name = name; this.st = st; this.open = open; }
     }
 
@@ -473,7 +491,7 @@ public final class MainActivity extends Activity {
     }
 
     /** A banana ring (focused, or selected when withSelected) over a view, and a dim wash while it is pressed */
-    private android.graphics.drawable.Drawable ring(int radiusDp, boolean withSelected) {
+    android.graphics.drawable.Drawable ring(int radiusDp, boolean withSelected) {
         android.graphics.drawable.StateListDrawable s = new android.graphics.drawable.StateListDrawable();
         android.graphics.drawable.Drawable on = Ui.round(0, dp(radiusDp), Ui.col(this, R.color.bn_banana_deep), Ui.dp(this, 3.5f));
         s.addState(new int[]{android.R.attr.state_focused}, on);
@@ -486,7 +504,7 @@ public final class MainActivity extends Activity {
     private void selectTile(View t) { selectTile(t, true); }
 
     /** The tile the focus or a swipe is on grows; with centre, a sideways row also moves so it is in the middle (not just near the edge, then jumping to the next) */
-    private void selectTile(View t, boolean centre) {
+    void selectTile(View t, boolean centre) {
         if (t != null && centre && t.getParent() instanceof LinearLayout && t.getParent().getParent() instanceof android.widget.HorizontalScrollView && t.getTag() instanceof TileInfo) {
             android.widget.HorizontalScrollView hs = (android.widget.HorizontalScrollView) t.getParent().getParent();
             int to = Math.max(0, t.getLeft() + t.getWidth() / 2 - hs.getWidth() / 2);
@@ -499,7 +517,7 @@ public final class MainActivity extends Activity {
         if (t != null) t.setSelected(true);
         // The selected tile grows
         ViewGroup row = (ViewGroup) (t != null ? t.getParent() : old != null ? old.getParent() : null);
-        if (row == null) return;
+        if (row == null || layoutNow != HomeLayout.ROW) return;   // only the sideways row grows the selected tile; the grid and the list have the ring
         int sel = t == null ? -1 : row.indexOfChild(t);
         final float[] grow = {1.2f};   // only the selected tile is big, the others stay as they are
         for (int k = 0; k < row.getChildCount(); k++) {
@@ -525,7 +543,7 @@ public final class MainActivity extends Activity {
         t.setTag(kind);
     }
 
-    private static int kindOf(TextView t) { return t.getTag() instanceof Integer ? (Integer) t.getTag() : 0; }
+    static int kindOf(TextView t) { return t.getTag() instanceof Integer ? (Integer) t.getTag() : 0; }
 
     private final java.util.Map<TextView, Float> shaderProgress = new java.util.WeakHashMap<>();   // a card's background shader update: done / total (none: not known)
 
@@ -715,6 +733,15 @@ public final class MainActivity extends Activity {
                 }).setNegativeButton(Tx.s(R.string.common_cancel), null).show());
         bg.value(Tx.arr(R.array.arr_background)[Prefs.background(this)]);
         look.addView(bg.view);
+        Ui.Setting lay = new Ui.Setting(this, "\uD83D\uDDC2\uFE0F", Tx.s(R.string.settings_home_layout), null).chevron(this);
+        lay.view.setOnClickListener(v -> new PadFocus.Builder(this).setTitle(Tx.s(R.string.settings_home_layout))
+                .setSingleChoiceItems(Tx.arr(R.array.arr_home_layout), HomeLayout.mode(this), (d, w) -> {
+                    d.dismiss();
+                    Prefs.homeLayout(this, w);
+                    lay.value(Tx.arr(R.array.arr_home_layout)[w]);   // Home is built again when Settings closes
+                }).setNegativeButton(Tx.s(R.string.common_cancel), null).show());
+        lay.value(Tx.arr(R.array.arr_home_layout)[HomeLayout.mode(this)]);
+        look.addView(lay.view);
         look.addView(new Ui.Setting(this, "🔊", Tx.s(R.string.settings_ui_sounds), null).toggle(this, Prefs.uiSounds(this), (b, on) -> { Prefs.uiSounds(this, on); if (on) UiSound.select(this); })
                 .value(Tx.s(R.string.settings_a_tick_when_the_focus)).view);
         Ui.Setting snd = new Ui.Setting(this, "🎵", Tx.s(R.string.settings_my_sound), null).chevron(this);
@@ -1074,11 +1101,17 @@ public final class MainActivity extends Activity {
         }
         gameBox.removeAllViews();
         selectedTile = null;
-        if (addFab != null) addFab.setVisibility(games.isEmpty() && !Ondevice.showing() ? View.GONE : View.VISIBLE);   // the welcome card has its own Add game
-        if (games.isEmpty() && !Ondevice.showing()) { gameBox.addView(emptyCard(), new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)); noFocusTint(gameBox); return; }
+        if (addFab != null) addFab.setVisibility(View.VISIBLE);   // Add game is always there: with no game it is the only way in (#381: it was hidden and the welcome card had no button)
+        if (games.isEmpty() && !Ondevice.showing()) {   // no game: one line, the button has the focus
+            gameBox.addView(emptyHint(), new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+            noFocusTint(gameBox);
+            if (addFab != null) addFab.post(() -> { if (addFab.isAttachedToWindow() && !addFab.isInTouchMode() && getCurrentFocus() == null) addFab.requestFocus(); });
+            hintUpdate();
+            return;
+        }
         // One tile per game: while a game is being prepared its tile carries the ring (workTile) and a tap opens the job's sheet (Ondevice.sheet); a game not listed yet gets its tile first
         workTiles.clear();
-        LinearLayout row = tileRow();
+        ViewGroup row = homeBox();
         boolean prep = Ondevice.showing(), placed = false;
         if (prep) for (Game g : games) placed |= Ondevice.shows(g);
         if (prep && !placed) { View t = prepTile(); addTile(row, t); workTile(t); }   // a game not listed yet: its tile first
@@ -1087,7 +1120,7 @@ public final class MainActivity extends Activity {
             View t = gameCard(g);
             addTile(row, t);
             if (prep && Ondevice.shows(g)) workTile(t);
-            if (g.orderId().equals(keepSelected)) keep = t;
+            if (g.orderId().equals(keepSelected)) keep = layoutNow == HomeLayout.ROW ? t : (View) t.getParent();   // the grid's and the list's item holds the tile
         }
         startSelection(row);
         if (keep != null) {   // after a move the selection stays on the moved game and the row scrolls to it (once the tiles are laid out)
@@ -1097,6 +1130,8 @@ public final class MainActivity extends Activity {
             gameBox.postDelayed(() -> { if (moved.isAttachedToWindow()) selectTile(moved, true); }, 250);
         }
         keepSelected = null;
+        if (moveId != null && keep != null) { keep.setTranslationY(-dp(10)); keep.setScaleX(1.06f); keep.setScaleY(1.06f); keep.setTranslationZ(dp(12)); }   // the lifted game
+        hintUpdate();
     }
 
     // ---- Reorder games: a long press (or Y on a controller) on a tile opens Move left / Move right; the order is kept as game ids (GameOrder, Prefs.gameOrder) ----
@@ -1105,24 +1140,100 @@ public final class MainActivity extends Activity {
     /** Home's games in the player's order; a game not in it goes last */
     private List<Game> shownGames() { return GameOrder.sort(games, Prefs.gameOrder(this), Game::orderId); }
 
-    private void reorderMenu(Game g) {
-        List<Game> shown = shownGames();
-        int at = -1;
-        for (int i = 0; i < shown.size(); i++) if (shown.get(i).orderId().equals(g.orderId())) at = i;
-        if (at < 0 || shown.size() < 2) { manage(g); return; }   // the only game: nothing to move, the page opens as before
-        boolean rtl = getResources().getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;   // the row is mirrored: left is the next place
-        int left = rtl ? 1 : -1;
+    /**
+     * A game's options, from a long press on its tile (Hold X or Y on a controller): Move (a reorder mode, below), Set cover image (and Reset cover when it has one: CoverUi)
+     * and Remove game (GameDelete). A tile being prepared keeps its job sheet on a long press (workTile)
+     */
+    private void optionsMenu(Game g) {
+        if (moveId != null) return;
         List<String> labels = new ArrayList<>();
-        List<Integer> deltas = new ArrayList<>();
-        if (at + left >= 0 && at + left < shown.size()) { labels.add(Tx.s(R.string.home_move_left)); deltas.add(left); }
-        if (at - left >= 0 && at - left < shown.size()) { labels.add(Tx.s(R.string.home_move_right)); deltas.add(-left); }
-        new PadFocus.Builder(this).setTitle(g.name).setItems(labels.toArray(new String[0]), (d, w) -> {
-            List<String> ids = new ArrayList<>();
-            for (Game x : shown) ids.add(x.orderId());
-            Prefs.gameOrder(this, GameOrder.write(GameOrder.move(ids, g.orderId(), deltas.get(w))));
-            keepSelected = g.orderId();
-            refresh();
-        }).show();
+        List<Runnable> acts = new ArrayList<>();
+        if (shownGames().size() > 1) { labels.add(Tx.s(R.string.home_move_game)); acts.add(() -> startMove(g)); }
+        labels.add(Tx.s(R.string.game_cover_set)); acts.add(() -> CoverUi.start(this, g));
+        if (CoverUi.has(this, g)) { labels.add(Tx.s(R.string.game_cover_reset)); acts.add(() -> CoverUi.reset(this, g)); }
+        labels.add(Tx.s(R.string.home_delete_game_menu)); acts.add(() -> GameDelete.ask(this, g));
+        new PadFocus.Builder(this).setTitle(g.name).setItems(labels.toArray(new String[0]), (d, w) -> acts.get(w).run()).show();
+    }
+
+    // ---- Move: a reorder mode. The game is lifted; D-pad (the grid: all four directions) or a tap on another game's place moves it, A or a tap on it puts it down, B cancels ----
+    private String moveId;
+    private List<String> moveOrig;
+
+    private void startMove(Game g) {
+        moveId = g.orderId();
+        moveOrig = new ArrayList<>();
+        for (Game x : shownGames()) moveOrig.add(x.orderId());
+        keepSelected = moveId;
+        refresh();
+        hintUpdate();
+    }
+
+    /** Moves the lifted game by delta places (clamped at the ends) */
+    private void stepMove(int delta) {
+        List<String> ids = new ArrayList<>();
+        for (Game x : shownGames()) ids.add(x.orderId());
+        List<String> now = GameOrder.move(ids, moveId, delta);
+        if (now.equals(ids)) return;
+        Prefs.gameOrder(this, GameOrder.write(now));
+        keepSelected = moveId;
+        refresh();
+    }
+
+    private void endMove(boolean keep) {
+        if (moveId == null) return;
+        if (!keep) Prefs.gameOrder(this, GameOrder.write(moveOrig));
+        keepSelected = moveId;
+        moveId = null;
+        moveOrig = null;
+        refresh();
+        hintUpdate();
+    }
+
+    /** A tap in move mode: on the lifted game puts it down, on another moves the lifted one to that place */
+    private void tapMove(Game g) {
+        if (g.orderId().equals(moveId)) { endMove(true); return; }
+        List<Game> shown = shownGames();
+        int from = -1, to = -1;
+        for (int k = 0; k < shown.size(); k++) { if (shown.get(k).orderId().equals(moveId)) from = k; if (shown.get(k).orderId().equals(g.orderId())) to = k; }
+        if (from >= 0 && to >= 0) stepMove(to - from);
+    }
+
+    /** A key while a game is lifted: true when it was used (the others are swallowed so nothing else on Home moves) */
+    private boolean moveKey(KeyEvent e) {
+        int k = e.getKeyCode();
+        boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
+        if (PadFocus.isBack(k) || k == KeyEvent.KEYCODE_BACK) { if (!down) endMove(false); return true; }
+        if (k == KeyEvent.KEYCODE_BUTTON_A || k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) { if (down && e.getRepeatCount() == 0) endMove(true); return true; }
+        boolean rtl = layoutNow == HomeLayout.ROW && getResources().getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
+        int cols = layoutNow == HomeLayout.GRID ? HomeLayout.columns(gameBox) : 1;
+        int d = 0;
+        if (k == KeyEvent.KEYCODE_DPAD_LEFT) d = rtl ? 1 : -1;
+        else if (k == KeyEvent.KEYCODE_DPAD_RIGHT) d = rtl ? -1 : 1;
+        else if (k == KeyEvent.KEYCODE_DPAD_UP) d = layoutNow == HomeLayout.GRID ? -cols : layoutNow == HomeLayout.LIST ? -1 : 0;
+        else if (k == KeyEvent.KEYCODE_DPAD_DOWN) d = layoutNow == HomeLayout.GRID ? cols : layoutNow == HomeLayout.LIST ? 1 : 0;
+        else return false;
+        if (down && d != 0) stepMove(d);
+        return true;
+    }
+
+    // ---- The hint bar: the buttons that work now (HintBar), at the bottom of every page ----
+    private HintBar hint;
+
+    void hintUpdate() {
+        if (hint == null) return;
+        boolean pad = HintBar.hasPad(this);
+        if (moveId != null) {
+            if (pad) hint.set(new String[] {"\u2194", Tx.s(R.string.hint_move)}, new String[] {"A", Tx.s(R.string.hint_place)}, new String[] {"B", Tx.s(R.string.hint_cancel)});
+            else hint.set(new String[] {null, Tx.s(R.string.hint_tap_move)});
+        } else if (onHome()) {
+            View f = getCurrentFocus();
+            boolean onTile = f != null && f.getTag() instanceof TileInfo;
+            if (games.isEmpty()) { if (pad) hint.set(new String[] {"A", Tx.s(R.string.home_add_game)}); else hint.set(); }
+            else if (pad && onTile) hint.set(new String[] {"A", Tx.s(R.string.hint_open)}, new String[] {"X", Tx.s(R.string.hint_options_hold)});
+            else if (!pad) hint.set(new String[] {null, Tx.s(R.string.hint_hold_for_options)});
+            else hint.set();
+        } else if (pad) hint.set(new String[] {"A", Tx.s(R.string.hint_select)}, new String[] {"B", Tx.s(R.string.hint_back)});
+        else hint.set();
     }
 
     // ---- A game being prepared: its tile dims and shows a ring with the job's progress and a line on the step, as an install on an icon; a tap opens the job's sheet ----
@@ -1173,6 +1284,8 @@ public final class MainActivity extends Activity {
             ti.ring.set(state == Ondevice.TILE_QUEUED ? -1f : state == Ondevice.TILE_FAILED || state == Ondevice.TILE_DONE ? 1f : p);
             ti.ring.look(state == Ondevice.TILE_FAILED ? Ui.col(this, R.color.bn_danger) : state == Ondevice.TILE_PAUSED ? 0xFFFFFFFF : ti.ring.baseColor(),
                     state == Ondevice.TILE_FAILED ? "!" : state == Ondevice.TILE_PAUSED ? "II" : null);
+            ti.workLine = line;
+            HomeLayout.caption(ti);
             ti.ot.setText(line + "\n" + Tx.s(R.string.home_tile_details));   // a hint that the tile opens the job's sheet
             ti.ring.setContentDescription(null);
         }
@@ -1180,7 +1293,7 @@ public final class MainActivity extends Activity {
     }
 
     /** A controller or keyboard starts on the first game's tile (nothing happens in touch mode, where tiles take no focus); the first game is the selected one either way */
-    private void startSelection(LinearLayout row) {
+    private void startSelection(ViewGroup row) {
         if (gameBox != null) noFocusTint(gameBox);   // the tiles were made after the page was
         for (int k = 0; k < row.getChildCount(); k++)
             if (row.getChildAt(k).getTag() instanceof TileInfo) {
@@ -1262,7 +1375,16 @@ public final class MainActivity extends Activity {
         return b;
     }
 
-    private void addTile(LinearLayout row, View v) {
+    private int layoutNow = HomeLayout.ROW;   // the layout Home was built in (Prefs.homeLayout, read at each refresh)
+
+    /** The box Home's tiles go into, for the chosen layout: the sideways row, or the grid or the list (HomeLayout) */
+    private ViewGroup homeBox() {
+        layoutNow = HomeLayout.mode(this);
+        return layoutNow == HomeLayout.ROW ? tileRow() : HomeLayout.container(this, gameBox, layoutNow);
+    }
+
+    private void addTile(ViewGroup row, View v) {
+        if (layoutNow != HomeLayout.ROW) { HomeLayout.add(this, row, layoutNow, (FrameLayout) v); return; }
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(150), dp(150));
         if (row.getChildCount() > 0) lp.setMarginStart(dp(16));
         row.addView(v, lp);
@@ -1315,7 +1437,7 @@ public final class MainActivity extends Activity {
         c.setFocusable(true);
         c.setClickable(true);
         c.setContentDescription(name);
-        c.setOnClickListener(v -> { if (ov.getVisibility() == View.VISIBLE && st.hasOnClickListeners()) st.performClick(); else open.onClick(v); });   // a tile with something to do (Prepare, Fix the save folder) does it; a long press opens the page
+        c.setOnClickListener(v -> { if (moveId == null && ov.getVisibility() == View.VISIBLE && st.hasOnClickListeners()) st.performClick(); else open.onClick(v); });   // a tile with something to do (Prepare, Fix the save folder) does it; a long press opens the page
         c.setOnLongClickListener(v -> { open.onClick(v); return true; });   // a game's tile: gameCard makes this the reorder menu
         c.setOnTouchListener((v, e) -> { if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) selectTile(c, false); return false; });   // a touch selects it (it grows) before the tap
         st.addTextChangedListener(new android.text.TextWatcher() {
@@ -1332,10 +1454,16 @@ public final class MainActivity extends Activity {
         st.setTag(ST_HIDDEN);
         LinearLayout meta = new LinearLayout(this);
         meta.setOrientation(LinearLayout.VERTICAL);
-        FrameLayout c = artTile(g.name, st, meta, v -> manage(g));
-        c.setOnLongClickListener(v -> { reorderMenu(g); return true; });   // Reorder games (workTile puts the job's sheet back on the tile being prepared)
+        FrameLayout c = artTile(g.name, st, meta, v -> { if (moveId != null) tapMove(g); else manage(g); });   // in move mode a tap places the lifted game
+        c.setOnLongClickListener(v -> { optionsMenu(g); return true; });   // the game's options (workTile puts the job's sheet back on the tile being prepared)
         TextView tile = (TextView) c.getChildAt(0);
-        GameMeta.loadControl(new File(g.gameDir), Edition.control(this, g), m -> { if (m.icon != null) Ui.tileIcon(tile, m.icon); });   // with the edition switch on, program 1's icon
+        boolean ownCover = Covers.show(tile, g);   // the player's own cover wins over the game's icon
+        GameMeta.loadControl(new File(g.gameDir), Edition.control(this, g), m -> {
+            if (m.icon != null && !ownCover) Ui.tileIcon(tile, m.icon);
+            TileInfo ti = (TileInfo) c.getTag();
+            ti.version = m.version;
+            HomeLayout.caption(ti);   // the grid's and the list's second line
+        });   // with the edition switch on, program 1's icon
         if (Profile.of(g.titleId) == null) {   // no profile in this APK: it cannot run here (Profile.missing says why); the page still has its folders, saves and Remove
             state(st, Tx.s(R.string.common_not_in_this_app_version), R.color.bn_danger, 0);
             return c;
@@ -1346,26 +1474,12 @@ public final class MainActivity extends Activity {
         return c;
     }
 
-    /** No game yet: the banana, one line, Add game and the three steps; no card around it, the page is the welcome */
-    private View emptyCard() {
-        LinearLayout c = new LinearLayout(this);
-        c.setOrientation(LinearLayout.VERTICAL);
-        c.setGravity(Gravity.CENTER);
-        ImageView im = new ImageView(this);
-        im.setImageResource(R.drawable.ic_banana_happy);
-        im.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        c.addView(im, new LinearLayout.LayoutParams(dp(64), dp(64)));
-        TextView h = Ui.heading(this, Tx.s(R.string.home_add_your_first_game));
-        h.setGravity(Gravity.CENTER);
-        h.setTextSize(20);
-        Ui.add(c, h, 6, Ui.wrap());
-        TextView t = Ui.small(this, Tx.s(R.string.home_pick_the_dump_folder_you));
+    /** No game yet: one line over the plain page; the round Add game button (always on Home) is how a game comes in */
+    private View emptyHint() {
+        TextView t = Ui.small(this, Tx.s(R.string.home_add_a_game_to_start));
         t.setGravity(Gravity.CENTER);
-        Ui.add(c, t, 4, Ui.wrap());
-        TextView steps = Ui.small(this, Tx.s(R.string.home_1_pick_2_prepare_3));
-        steps.setGravity(Gravity.CENTER);
-        Ui.add(c, steps, 4, Ui.wrap());
-        return c;
+        t.setTextSize(15);
+        return t;
     }
 
     // ---- Sample games (test builds): what Home looks like with games, without any ----
@@ -1379,7 +1493,7 @@ public final class MainActivity extends Activity {
         gameBox.removeAllViews();
         selectedTile = null;
         workTiles.clear();
-        LinearLayout row = tileRow();
+        ViewGroup row = homeBox();
         for (String[] d : DEMO) {
             boolean bad = d[1].startsWith("Not"), ready = d[1].startsWith("Ready");
             TextView st = Ui.status(this, d[1], bad ? R.color.bn_danger : ready && !d[1].contains("update") ? R.color.bn_leaf : R.color.bn_accent);
@@ -1656,6 +1770,8 @@ public final class MainActivity extends Activity {
         Ui.add(content, info, 8);
         Ui.add(content, Ui.divider(this), 12, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1)));
         Ui.add(content, Ui.button(this, Tx.s(R.string.home_remove_from_list), Ui.Kind.DANGER, v -> { page(false); confirmRemove(g); }), 12, Ui.wrap());
+        Ui.add(content, Ui.small(this, Tx.s(R.string.home_delete_game_hint)), 6);
+        Ui.add(content, Ui.button(this, Tx.s(R.string.home_delete_game), Ui.Kind.DANGER, v -> GameDelete.ask(this, g)), 8, Ui.wrap());
     }
 
     private void openAccessSettings() {
@@ -1811,6 +1927,7 @@ public final class MainActivity extends Activity {
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
         if (Ondevice.activityResult(this, request, result, data)) return;
+        if (Covers.activityResult(this, request, result, data)) return;
         if (request == ReadinessActivity.REQUEST) { if (result == ReadinessActivity.FIX_DRIVER) GpuDriver.dialog(this, PICK_DRIVER); return; }   // its "Pick a GPU driver"
         if (result != RESULT_OK || data == null || data.getData() == null) return;
         if (request == PICK_BG) {
@@ -1836,6 +1953,7 @@ public final class MainActivity extends Activity {
         if (PackUi.documentResult(this, request, data.getData())) return;
         if (SaveUi.documentResult(this, request, data.getData())) return;
         if (CheatsUi.documentResult(this, request, data.getData())) return;
+        if (ModsUi.documentResult(this, request, data.getData())) return;
         if (request == PICK_NUP_HERE) { nupHere(data.getData()); return; }
         if (request == PICK_NUP) {
             String p = PathUtil.documentToPath(data.getData());

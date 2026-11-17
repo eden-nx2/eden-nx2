@@ -24,7 +24,7 @@ final class StorageUi {
     private StorageUi() {}
 
     /** Why nothing may be scanned now, or null */
-    private static String busy(Context c, List<Game> games) {
+    static String busy(Context c, List<Game> games) {
         ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningAppProcessInfo> l = am == null ? null : am.getRunningAppProcesses();
         if (l != null) for (ActivityManager.RunningAppProcessInfo p : l) {

@@ -475,8 +475,10 @@ final class GameSettings {
         }
 
         if (Prefs.cheatsGame(id)) CheatsUi.rows(a, g, options::add, again);   // a profile with cheat files (game.tsv cheats): the switch, off by default, and the files
+        { Profile mp = Profile.of(id); if (mp != null && mp.mods) ModsUi.row(a, g, options::add, again); }   // game.tsv mods 1: folders of replacement files over the RomFS
         if (LinkPlay.has(id))
             options.add(new Ui.Setting(a, "🔗", Tx.s(R.string.game_link_play), v -> LinkPlay.dialog(a, g, again)).value(LinkPlay.label(a, id)).chevron(a));
+        options.add(Covers.row(a, g, again));
         options.add(new Ui.Setting(a, "🌐", Tx.s(R.string.game_game_language), v -> language(a, g, again)).value(GameLanguage.label(Prefs.gameLang(a, id), phoneTag())).chevron(a));   // not a tester's knob: with the game's options, never folded
         if (prof != null && prof.timeOfDay)   // the one global setting (Prefs.timeOverride → DM_TIME), here for a game whose day/night cycle follows the user clock
             options.add(new Ui.Setting(a, "🕒", Tx.s(R.string.common_time_of_day), v -> TimeOfDay.dialog(a, again)).value(TimeOfDay.label(a)).chevron(a));
@@ -611,8 +613,9 @@ final class GameSettings {
             bar.addView(b, pl);
         }
         outer.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(a, 48)));
+        boolean ownCover = Covers.show(tile, g);   // the player's own cover wins over the game's icon
         GameMeta.loadControl(new File(g.gameDir), Edition.control(a, g), m -> {
-            if (m.icon != null) Ui.tileIcon(tile, m.icon);
+            if (m.icon != null && !ownCover) Ui.tileIcon(tile, m.icon);
             String l = m.line();
             if (l != null) { meta.setText(l); meta.setVisibility(View.VISIBLE); }
         });

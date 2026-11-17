@@ -78,7 +78,6 @@
     <string name="common_upscaler">Upscaler</string>
     <string name="common_use_fast_cores">Utiliser les cœurs rapides</string>
     <string name="common_users">Utilisateurs</string>
-    <string name="home_1_pick_2_prepare_3">"1  Choisir   →   2  Préparer   →   3  Jouer"</string>
     <string name="home_a_command_from_another_app">Une commande d\'une autre app a été ignorée (Paramètres › Contrôle ADB est désactivé)</string>
     <string name="home_a_dump_folder_copied_into">Un dossier de dump (copié dans l\'app : un dossier demande l\'accès à Tous les fichiers pour être lu sur place)</string>
     <string name="home_a_shortcut_that_starts_this">Un raccourci qui lance ce jeu</string>
@@ -87,7 +86,6 @@
     <string name="home_add_game">Ajouter un jeu</string>
     <string name="home_add_game_your_dump_is">Ajouter un jeu : votre dump est…</string>
     <string name="home_add_to_home_screen">Ajouter à l\'écran d\'accueil</string>
-    <string name="home_add_your_first_game">Ajoutez votre premier jeu</string>
     <string name="home_allow">Autoriser</string>
     <string name="home_allow_file_access">Autoriser l\'accès aux fichiers</string>
     <string name="home_back_up_saves">Sauvegarder les parties</string>
@@ -118,7 +116,6 @@
     <string name="home_pick_it_again">Le choisir à nouveau</string>
     <string name="home_pick_lossless_dll">Choisir Lossless.dll</string>
     <string name="home_pick_pack_folder">Choisir le dossier du pack</string>
-    <string name="home_pick_the_dump_folder_you">Choisissez le dossier de dump fait depuis votre console (celui qui contient base/), ou le fichier .nup ou .nsp de votre jeu.</string>
     <string name="home_pick_the_pack_folder_android">Choisissez le dossier du pack (android-pack, avec pack.tsv)</string>
     <string name="home_pick_your_dump_folder_with">Choisissez votre dossier de dump (avec base/, et updates/ s\'il y en a)</string>
     <string name="home_pick_your_game_s_nup">Choisissez le fichier .nup ou .nsp de votre jeu</string>
@@ -240,6 +237,14 @@
     <string name="game_full_vegetation">Végétation complète</string>
     <string name="game_game">Jeu</string>
     <string name="game_game_language">Langue du jeu</string>
+    <string name="game_cover_image">Image de couverture</string>
+    <string name="game_cover_own">Votre image</string>
+    <string name="game_cover_default">Celle du jeu</string>
+    <string name="game_cover_set">Choisir une image de couverture</string>
+    <string name="game_cover_reset">Rétablir la couverture</string>
+    <string name="game_cover_use">Utiliser celle-ci</string>
+    <string name="game_cover_crop_hint">Glissez pour déplacer, pincez pour zoomer. Manette : la croix ou le stick gauche déplace, L1 / R1 zoome, A valide, B annule.</string>
+    <string name="game_cover_could_not_be_read">Cette image n\'a pas pu être lue.</string>
     <string name="game_gpu_driver_takes_effect_at">Pilote GPU (pris en compte au prochain démarrage du jeu)</string>
     <string name="game_gpu_timing">Mesure du temps GPU</string>
     <string name="game_hidden_layers_off">Couches cachées désactivées</string>
@@ -840,6 +845,7 @@
     <string name="ready_a_graphics_and_compute_queue">Une file graphique et de calcul : tout est soumis à une telle file</string>
     <string name="ready_vulkan_1_3_gpu_driver">Pilote GPU Vulkan 1.3 : le rejeu graphique est écrit pour Vulkan 1.3</string>
     <string name="ready_vulkan_1_3_loader_the">Loader Vulkan 1.3 : le rejeu graphique est écrit pour Vulkan 1.3</string>
+    <string name="ready_android_12_or_newer_the">Android 12 ou plus récent (expérimental) : l\'app est conçue pour lui</string>
     <string name="ready_android_13_or_newer_the">Android 13 ou plus récent : l\'app est conçue pour lui</string>
     <string name="ready_start_failed">échec du démarrage</string>
     <string name="ready_a_dependency_ended">une dépendance s\'est terminée</string>
@@ -1284,4 +1290,56 @@
     <string name="home_tile_details">Détails ›</string>
     <string name="home_move_left">Déplacer à gauche</string>
     <string name="home_move_right">Déplacer à droite</string>
+    <string name="home_delete_game_menu">Retirer le jeu…</string>
+    <string name="home_delete_game">Retirer le jeu…</string>
+    <string name="home_delete_game_hint">Retire le jeu de la liste et supprime son pack, ses shaders et ses fichiers de travail dans l\'appli (et la copie du jeu, si l\'appli l\'a faite). Votre dossier de dump et vos sauvegardes restent.</string>
+    <string name="settings_home_layout">Disposition de l\'accueil</string>
+    <string name="game_delete_prepare_running">%1$s est en cours de préparation : arrêtez ou terminez d\'abord cela.</string>
+    <string name="game_delete_list_only">Seule l\'entrée de la liste disparaît : l\'appli n\'a ni pack ni fichiers de travail pour ce jeu.</string>
+    <string name="game_delete_what">Retiré de la liste, et supprimé du stockage de l\'appli :</string>
+    <string name="game_delete_copy_line">La copie du jeu dans l\'appli (%1$s)</string>
+    <string name="game_delete_copy_kept">La copie du jeu est conservée : un dossier de sauvegarde s\'y trouve.</string>
+    <string name="game_delete_not_touched">Votre dossier de dump et vos sauvegardes ne sont pas touchés. Ajouter un jeu le ramène.</string>
+    <string name="game_delete_title">Retirer %1$s ?</string>
+    <string name="game_delete_done">%1$s retiré.</string>
+    <string-array name="arr_home_layout">
+        <item>Rangée de tuiles</item>
+        <item>Grille avec noms</item>
+        <item>Liste</item>
+    </string-array>
+    <string name="home_move_game">Déplacer</string>
+    <string name="hint_open">Ouvrir</string>
+    <string name="hint_options_hold">Options (maintenir)</string>
+    <string name="hint_hold_for_options">Maintenez un jeu pour les options</string>
+    <string name="hint_move">Déplacer</string>
+    <string name="hint_place">Poser</string>
+    <string name="hint_cancel">Annuler</string>
+    <string name="hint_select">Choisir</string>
+    <string name="hint_back">Retour</string>
+    <string name="hint_tap_move">Touchez une place pour y déplacer le jeu, touchez le jeu pour le poser</string>
+    <string name="home_add_a_game_to_start">Ajoutez un jeu pour commencer</string>
+    <string name="game_host_a_world">Héberger un monde</string>
+    <string name="game_host_world_same_wi">Héberger un monde - même Wi-Fi</string>
+    <string name="game_host_world_internet">Héberger un monde - Internet / Tailscale</string>
+    <string name="game_host_world_intro">Les autres joueurs rejoignent un monde hébergé sur ce téléphone. Laisse le jeu ouvert pendant qu\'ils jouent.</string>
+    <string name="game_host_world_address">Adresse de ce téléphone :\n%1$s</string>
+    <string name="game_host_world_no_address">Aucune adresse Wi-Fi trouvée. Connecte-toi d\'abord au Wi-Fi.</string>
+    <string name="game_host_world_code">Code de salle : %1$s</string>
+    <string name="game_host_world_new_code">Nouveau code</string>
+    <string name="game_host_world_note">Les joueurs sur le même Wi-Fi rejoignent avec l\'adresse. Par Internet ou Tailscale, ils ont aussi besoin du code de salle. Le trafic n\'est pas chiffré. S\'applique au prochain démarrage du jeu. Expérimental : pas encore testé avec deux téléphones.</string>
+    <string name="game_mods">Mods</string>
+    <string name="game_mods_none">Aucun</string>
+    <string name="game_mods_on_of">%1$d sur %2$d activés</string>
+    <string name="game_mods_on">Activé</string>
+    <string name="game_mods_note">Fichiers de remplacement posés sur les données du jeu au prochain démarrage, comme un mod de texte ou de textures ou une traduction. Le dump du jeu n\'est pas modifié. Un mod qui remplace des fichiers de shaders n\'est pas encore pris en charge.</string>
+    <string name="game_mods_title">Mods · %1$s</string>
+    <string name="game_mods_import">Importer un mod (.zip)…</string>
+    <string name="game_mods_files">%1$d fichiers</string>
+    <string name="game_mods_turn_on">Activer</string>
+    <string name="game_mods_turn_off">Désactiver</string>
+    <string name="game_mods_remove">Supprimer</string>
+    <string name="game_mods_remove_q">Supprimer %1$s ?</string>
+    <string name="game_mods_remove_note">Les fichiers du mod sont supprimés de ce téléphone. Les fichiers du jeu restent.</string>
+    <string name="game_mods_imported">%1$s importé (%2$d fichiers). S\'applique au prochain démarrage.</string>
+    <string name="game_mods_refused">Non importé : %1$s</string>
 </resources>

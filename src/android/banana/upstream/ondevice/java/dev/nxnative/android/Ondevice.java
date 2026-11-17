@@ -1096,7 +1096,7 @@ final class Ondevice {
         void startService(Job j) {
             if (userAsked) { userAsked = false; if (!sheetShowing()) h.post(() -> sheet(a)); }
             // Android 13+: the progress notification needs the user's yes; the job runs either way (without it the notification shows only in the task manager)
-            if (a.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            if (android.os.Build.VERSION.SDK_INT >= 33 && a.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                 a.requestPermissions(new String[] {Manifest.permission.POST_NOTIFICATIONS}, ASK_NOTIFY);
             a.startForegroundService(new Intent(a, PackService.class).setAction(PackService.ACTION_START).putExtra(PackService.EXTRA_JOB, j.file.getPath()));
             if (!bound) bound = a.bindService(new Intent(a, PackService.class), this, 0);

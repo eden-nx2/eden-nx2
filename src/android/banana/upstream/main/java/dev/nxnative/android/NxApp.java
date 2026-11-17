@@ -22,6 +22,8 @@ public final class NxApp extends Application {
         };
         PickedNup.install(this);
         ShaderLibs.appFiles = getExternalFilesDir(null);   // where the games' temporary folders are: the shader layer's fallback (ShaderLibs.layerWritable)
+        Readiness.minSdk = BuildConfig.NX_MIN_SDK;
+        UpdateCheck.android12 = BuildConfig.NX_MIN_SDK < 33;
         applyTheme(this);
     }
 

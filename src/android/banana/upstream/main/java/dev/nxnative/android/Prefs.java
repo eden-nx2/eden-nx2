@@ -24,6 +24,9 @@ final class Prefs {
     /** Home's tile order the player chose (GameOrder: game ids, one per line); empty: the order the games were added in */
     static java.util.List<String> gameOrder(Context c) { return GameOrder.decode(of(c).getString("game_order", "")); }
     static void gameOrder(Context c, java.util.List<String> ids) { of(c).edit().putString("game_order", GameOrder.encode(ids)).commit(); }
+    /** Home's layout (HomeLayout): 0 the sideways row of tiles (default), 1 a grid with the names, 2 a list */
+    static int homeLayout(Context c) { return of(c).getInt("home_layout", 0); }
+    static void homeLayout(Context c, int v) { of(c).edit().putInt("home_layout", v).commit(); }
 
     /** The bananas popped on the launcher's background (BananaBackgroundView), all time; shown in Settings › About */
     static long bananasPopped(Context c) { return of(c).getLong("bananas_popped", 0); }
@@ -484,6 +487,13 @@ final class Prefs {
     static void skipLayers(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("vk_skip_layers", titleId), on).commit(); }
     /** Game settings › Cheats (Experimental), for a game whose profile has cheat files (Profile.cheats): off by default; while off the launcher passes no DM_CHEATS and the
      *  in-game panel has no Cheats section (Cheats.env, Cheats.panel). Reset to defaults turns it off; the toggles below stay */
+    /** The mods the player turned off for a game (Mods.encodeOff); a mod not listed is on */
+    static java.util.Set<String> modsOff(Context c, String titleId) { return Mods.decodeOff(of(c).getString(gameKey("mods_off", titleId), "")); }
+    static void modOff(Context c, String titleId, String name, boolean off) {
+        java.util.Set<String> s = modsOff(c, titleId);
+        if (off) s.add(name); else s.remove(name);
+        of(c).edit().putString(gameKey("mods_off", titleId), Mods.encodeOff(s)).commit();
+    }
     static boolean cheatsGame(String titleId) { Profile p = Profile.of(titleId); return p != null && p.cheats; }
     static boolean cheats(Context c, String titleId) { return cheatsGame(titleId) && of(c).getBoolean(gameKey("cheats", titleId), false); }
     static void cheats(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("cheats", titleId), on).commit(); }

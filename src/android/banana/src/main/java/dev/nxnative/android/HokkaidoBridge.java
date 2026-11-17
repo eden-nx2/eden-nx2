@@ -48,6 +48,8 @@ public final class HokkaidoBridge {
         };
         PickedNup.install(context);
         ShaderLibs.appFiles = app.getExternalFilesDir(null);
+        Readiness.minSdk = BuildConfig.NX_MIN_SDK;
+        UpdateCheck.android12 = BuildConfig.NX_MIN_SDK < 33;
     }
 
     /**

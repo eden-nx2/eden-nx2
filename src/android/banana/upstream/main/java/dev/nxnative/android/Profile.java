@@ -39,6 +39,7 @@ final class Profile {
     String skipLayers = "";   // game.tsv skip_layers (build.gradle skipLayersOf): pixel shader keys whose draws the Speedhack setting drops (Prefs.skipLayersGame), "" = not offered
     String presetFrom = "";   // game.tsv res_preset_from rows (build.gradle presetFromOf): "<old id>=<id>", ';' between them; a stored Resolution that the profile no longer has takes the id it maps to (ResPresets.mapStored)
     boolean cheats;   // game.tsv has cheats rows (build.gradle; Prepare puts the files into the pack): Game settings › Cheats and the in-game panel's Cheats section (Cheats.java)
+    boolean mods;   // game.tsv mods 1: Game settings › Mods, folders of replacement files laid over the RomFS (Mods, ModsUi)
     boolean timeOfDay;   // game.tsv time_of_day 1: a day/night cycle that follows the user clock; the Game tab gets the Time of day row (TimeOfDay)
     boolean linkPlay;   // game.tsv link_play 1: offer the opt-in phone-to-PC join settings (LinkPlay); absent means no row.
     String cameraAspects = "";   // game.tsv aspect rows (build.gradle aspectsOf): "21:9,4:3", ',' between them; picture shapes the host's own 3D camera patch follows, with no module variant (Game settings › Aspect ratio)
@@ -81,14 +82,20 @@ final class Profile {
         public final String label;
         public final String description;
         public final boolean live;   // false = restart, true = live
+        public final boolean settingsOnly;   // "settings": a restart option listed only in the launcher's Game options, not in the in-game panel's Next start
         public final String implies; // env var of option implied by this option, or ""
         public final String needs;   // fixup marker required by this option (e.g. "OOT_PATCHES"), or ""
 
         public Option(String env, String label, String description, boolean live, String implies, String needs) {
+            this(env, label, description, live, implies, needs, false);
+        }
+
+        public Option(String env, String label, String description, boolean live, String implies, String needs, boolean settingsOnly) {
             this.env = env != null ? env : "";
             this.label = label != null ? label : "";
             this.description = description != null ? description : "";
             this.live = live;
+            this.settingsOnly = settingsOnly && !live;
             this.implies = implies != null ? implies : "";
             this.needs = needs != null ? needs : "";
         }
@@ -111,22 +118,22 @@ final class Profile {
             if (this == o) return true;
             if (!(o instanceof Option)) return false;
             Option that = (Option) o;
-            return live == that.live && env.equals(that.env) && label.equals(that.label)
+            return live == that.live && settingsOnly == that.settingsOnly && env.equals(that.env) && label.equals(that.label)
                     && description.equals(that.description) && implies.equals(that.implies)
                     && needs.equals(that.needs);
         }
 
         @Override public int hashCode() {
-            return java.util.Objects.hash(env, label, description, live, implies, needs);
+            return java.util.Objects.hash(env, label, description, live, settingsOnly, implies, needs);
         }
 
         @Override public String toString() {
-            return env + "|" + label + "|" + description + "|" + (live ? "live" : "restart")
+            return env + "|" + label + "|" + description + "|" + (live ? "live" : settingsOnly ? "settings" : "restart")
                     + (hasImplies() ? "|implies=" + implies : "") + (hasNeeds() ? "|needs=" + needs : "");
         }
     }
 
-    /** Parse option rows encoded as "<env>|<label>|<description>|<restart|live>[|<implies>[|<needs>]]", ';' between them */
+    /** Parse option rows encoded as "<env>|<label>|<description>|<restart|live|settings>[|<implies>[|<needs>]]", ';' between them */
     static List<Option> parseOptions(String text) {
         if (text == null || text.trim().isEmpty()) return Collections.emptyList();
         List<Option> out = new ArrayList<>();
@@ -136,9 +143,10 @@ final class Profile {
             String[] f = r.split("\\|", -1);
             if (f.length >= 3 && !f[0].trim().isEmpty()) {
                 boolean live = f.length > 3 && "live".equalsIgnoreCase(f[3].trim());
+                boolean settingsOnly = f.length > 3 && "settings".equalsIgnoreCase(f[3].trim());
                 String implies = f.length > 4 ? f[4].trim() : "";
                 String needs = f.length > 5 ? f[5].trim() : "";
-                out.add(new Option(f[0].trim(), f[1].trim(), f[2].trim(), live, implies, needs));
+                out.add(new Option(f[0].trim(), f[1].trim(), f[2].trim(), live, implies, needs, settingsOnly));
             }
         }
         return Collections.unmodifiableList(out);
@@ -513,6 +521,7 @@ final class Profile {
             p.cameraAspects = c.length > 28 ? c[28] : "";
             p.timeOfDay = c.length > 29 && c[29].equals("1");
             p.cheats = c.length > 30 && c[30].equals("1");
+            p.mods = c.length > 31 && c[31].equals("1");
             out.add(p);
         }
         return Collections.unmodifiableList(out);

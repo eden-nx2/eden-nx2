@@ -854,7 +854,7 @@ final class SidePanel extends FrameLayout {
         Profile prof = Profile.of(game());
         if (prof != null && !prof.options.isEmpty()) {
             for (Profile.Option opt : prof.options) {
-                if (opt.live) continue;
+                if (opt.live || opt.settingsOnly) continue;   // a settings-only option is the launcher's Game options alone
                 android.widget.CheckBox cb = new android.widget.CheckBox(act);
                 cb.setText(opt.label);
                 Profile.Option source = Profile.findImpliedBy(prof.options, opt, env -> Prefs.gameOption(act, game(), env));

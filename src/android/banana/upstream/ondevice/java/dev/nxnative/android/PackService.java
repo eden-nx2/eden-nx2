@@ -105,7 +105,8 @@ public final class PackService extends Service {
         wake = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "nxnative:pack");
         wake.setReferenceCounted(false);
         engine = PackEngine.create(this);
-        battery(registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED), Context.RECEIVER_NOT_EXPORTED));
+        battery(android.os.Build.VERSION.SDK_INT >= 33 ? registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED), Context.RECEIVER_NOT_EXPORTED)
+                : registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)));
         thermal = pm.getCurrentThermalStatus();
         pm.addThermalStatusListener(getMainExecutor(), thermalListener);
         policy();

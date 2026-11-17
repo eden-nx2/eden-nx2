@@ -87,6 +87,28 @@ final class LinkPlayConfig {
         return addressError(address, internet) == null && (!internet || room(room) != null);
     }
 
+    /** A new random room code (16 Crockford base32 characters, no separators); the host shows it grouped by {@link #group}. */
+    static String newRoom(java.util.Random rnd) {
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < 16; i++) out.append(B32.charAt(rnd.nextInt(32)));
+        return out.toString();
+    }
+
+    /** XXXX-XXXX-XXXX-XXXX for a valid code; anything else unchanged */
+    static String group(String code) {
+        String c = room(code);
+        return c == null ? code : c.substring(0, 4) + "-" + c.substring(4, 8) + "-" + c.substring(8, 12) + "-" + c.substring(12);
+    }
+
+    /**
+     * Hosting a world on this phone: the module listens on PORT (host:<port>). Over the internet or Tailscale a room code is required, as when joining; a
+     * missing or invalid one turns it off, like the join side.
+     */
+    static List<String> hostEnv(boolean internet, String room) {
+        if (internet && room(room) == null) return Arrays.asList("DM_COOP=off", "DM_COOP_INTERNET=0", "DM_COOP_ROOM=");
+        return Arrays.asList("DM_COOP=host:" + PORT, "DM_COOP_INTERNET=" + (internet ? "1" : "0"), "DM_COOP_ROOM=" + (internet ? room(room) : ""));
+    }
+
     /** Off or invalid choices clear earlier global settings. The game's later typed environment lines can still override this choice. */
     static List<String> env(boolean enabled, String address, boolean internet, String room) {
         if (!enabled || !valid(address, internet, room))

@@ -183,12 +183,18 @@ final class UpdateCheck {
         return HEX.matcher(hex).matches() ? hex.toLowerCase(Locale.ROOT) : BAD_DIGEST;
     }
 
-    /** A release's APK: the first asset whose name ends in .apk with an https download link on its source's asset hosts and a usable digest; null when it has none */
+    /** The experimental Android 12 build (BuildConfig.NX_MIN_SDK below 33, set by NxApp): it takes only the release's asset named ...android12....apk, every other app never that one */
+    static boolean android12 = false;
+    static final String ANDROID12_MARK = "android12";
+
+    /** A release's APK: the first asset whose name ends in .apk with an https download link on its source's asset hosts and a usable digest; null when it has none.
+     *  An asset with "android12" in its name is the experimental Android 12 build's (a minSdk 31 APK): only that build takes it, and it takes no other */
     static Asset apk(Release r) {
         if (r.assets == null) return null;
         for (Asset a : r.assets) {
             if (a == null || a.name == null || a.url == null) continue;
             if (!a.name.toLowerCase(Locale.ROOT).endsWith(".apk") || !allowedAsset(a.url, r.source)) continue;
+            if (a.name.toLowerCase(Locale.ROOT).contains(ANDROID12_MARK) != android12) continue;
             if (BAD_DIGEST.equals(sha256(a.digest))) continue;
             return a;
         }
