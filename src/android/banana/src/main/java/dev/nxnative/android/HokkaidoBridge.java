@@ -245,11 +245,14 @@ public final class HokkaidoBridge {
             Prefs.of(c).edit().putString(given, window).commit();
         }
         startingSettings(c, id);
+        String driverName = null;
         if (driverZip == null || driverZip.isEmpty()) {
             GpuDriver.choice(c, id, GpuDriver.SYSTEM);
         } else {
-            GpuDriver.choice(c, id, installedDriver(c, new File(driverZip)).dir.getName());
+            driverName = installedDriver(c, new File(driverZip)).dir.getName();
+            GpuDriver.choice(c, id, driverName);
         }
+        meshThroughCompute(c, id, driverName);
         if (saveDir == null || saveDir.isEmpty()) return;
         File shared = new File(saveDir);
         if (!shared.isDirectory() && !shared.mkdirs()) throw new IOException("cannot create the save folder " + shared);
@@ -261,7 +264,7 @@ public final class HokkaidoBridge {
     }
 
     /** The starting settings' version (startingSettings): raised when they change, so a game takes the new ones once. */
-    private static final int STARTING_SETTINGS = 1;
+    private static final int STARTING_SETTINGS = 2;
     private static final String OCARINA_OF_TIME = "0400486024DEC000";
 
     /**
@@ -273,13 +276,41 @@ public final class HokkaidoBridge {
      */
     private static void startingSettings(Context c, String id) {
         String key = "hokkaido_settings_" + id;
-        if (Prefs.of(c).getInt(key, 0) >= STARTING_SETTINGS) return;
+        int had = Prefs.of(c).getInt(key, 0);
+        if (had >= STARTING_SETTINGS) return;
         if (id.equals(OCARINA_OF_TIME)) {
-            Prefs.ramSaver(c, id, false);
-            Prefs.hold60(c, id, true);
-            Prefs.fullVegetation(c, id, false);
+            if (had < 1) {
+                Prefs.ramSaver(c, id, false);
+                Prefs.hold60(c, id, true);
+                Prefs.fullVegetation(c, id, false);
+            }
+            // A phone of 12 GB or less: soft textures and pools placed by parts (its Advanced rows), as
+            // Hokkaido's own build of Banana Native has them in the game's profile
+            if (had < 2 && Prefs.lowRam(c)) {
+                AdvancedSettings.set(c, "DM_VK_TEX_SOFT", id, "1");
+                AdvancedSettings.set(c, "DM_VK_PLACE_PART_MB", id, "256");
+            }
         }
         Prefs.of(c).edit().putInt(key, STARTING_SETTINGS).commit();
+    }
+
+    /**
+     * Mesh draws through compute (the game's Advanced row DM_VK_MESH=0) while it runs on a RADV driver on Samsung's
+     * Xclipse GPU (an Exynos phone): there Ocarina of Time's task and mesh draws ran for seconds a frame and then hung
+     * the GPU (Galaxy S26). Back to Auto when the driver changes. Hokkaido's own build of Banana Native makes it the
+     * default for that driver too.
+     */
+    private static void meshThroughCompute(Context c, String id, String driverName) {
+        boolean radvXclipse = "Samsung".equalsIgnoreCase(android.os.Build.SOC_MANUFACTURER)
+                && driverName != null && driverName.toLowerCase(Locale.ROOT).contains("radv");
+        String mark = "hokkaido_mesh_" + id;
+        if (radvXclipse) {
+            AdvancedSettings.set(c, "DM_VK_MESH", id, "0");
+            Prefs.of(c).edit().putBoolean(mark, true).commit();
+        } else if (Prefs.of(c).getBoolean(mark, false)) {
+            AdvancedSettings.set(c, "DM_VK_MESH", id, null);
+            Prefs.of(c).edit().remove(mark).commit();
+        }
     }
 
     /** The driver unpacked from a zip, unpacked again only when the zip changed since (by its size and time). */

@@ -97,6 +97,7 @@ val extractBananaRelease = tasks.register("extractBananaRelease") {
     val url = upstream.getValue("apk_url")
     val expected = upstream.getValue("apk_sha256")
     inputs.property("apk_sha256", expected)
+    inputs.property("native_libs", nativeLibs.orElse(""))   // (a build without them extracts the release's again)
     nativeLibs.orNull?.let { inputs.files(fileTree(it) { include("*.so") }) }
     outputs.dir(generatedDir)
     doLast {
