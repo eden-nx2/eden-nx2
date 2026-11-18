@@ -666,8 +666,10 @@ public final class HokkaidoBridge {
         }
         // A missing or older shader library blocks only a game the shader layer does not cover (FrontendLaunch.ready)
         if (PackCheck.blocking(c, p, game) != null || Pack.libraryBlock(packDir, id, Prefs.layerEnv(c, id)) != null) return null;
-        if (card != null) return card;
-        Game g = new Game(id, p.name.isEmpty() ? id : p.name, game.getPath(), packDir.getPath());
-        return Game.put(c, g);
+        if (card != null && GameList.samePath(card.gameDir, game.getPath())) return card;
+        // A card of the same title and build at another path (another copy of the dump) is moved to the dump Hokkaido starts:
+        // the game would otherwise read the other copy's files (an incomplete copy: a black screen)
+        String name = card != null ? card.name : p.name.isEmpty() ? id : p.name;
+        return Game.put(c, new Game(id, name, game.getPath(), packDir.getPath()));
     }
 }
