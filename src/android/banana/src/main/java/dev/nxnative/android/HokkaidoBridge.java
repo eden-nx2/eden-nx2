@@ -149,8 +149,20 @@ public final class HokkaidoBridge {
         String missing = Profile.missing(id, "This game");
         if (missing != null) return Plan.problem("Not supported by Banana Native", missing, null);
 
-        Game ready = ready(c, dump, id);
+        Game ready = ready(c, dump, id, tryAnyway);
         if (ready != null) return new Plan(Plan.READY, ready.name, "", null, false, dump.getPath(), ready, null, null, null, false, false);
+        // A finished pack of a build this app has not tested (made with Try anyway) starts after a warning, as MainActivity's Play anyway:
+        // preparing it again only makes the same pack
+        if (!tryAnyway) {
+            Found f = found(c, dump, id);
+            BuildCheck.Result b = f == null ? null : untested(c, f.pack, dump);
+            if (b != null) {
+                Profile p = Profile.of(id);
+                String warning = b.kind == BuildCheck.Kind.UNSUPPORTED ? PrepareText.UNSUPPORTED_WARNING() : PrepareText.ANYWAY_WARNING();
+                return new Plan(Plan.PROBLEM, "Untested version" + (p != null ? " of " + p.name : ""), b.message + "\n\n" + warning, b.detail,
+                                true, dump.getPath(), null, null, null, null, false, false);
+            }
+        }
 
         // A job for this dump: running, or one to resume (Ondevice.Panel.checked).
         File existing = null;
@@ -649,27 +661,57 @@ public final class HokkaidoBridge {
         if (picked != null && !picked.equals(g.packDir)) Folders.pickedPack(c, g.titleId, g.packDir);
     }
 
-    /** FrontendLaunch.ready: the game's card when it can start now, else null. */
-    private static Game ready(Context c, File game, String id) {
+    /** The card and pack a start of this game uses (FrontendLaunch.ready) */
+    private static final class Found {
+        final Game card;
+        final File packDir;
+        final Pack pack;
+
+        Found(Game card, File packDir, Pack pack) {
+            this.card = card;
+            this.packDir = packDir;
+            this.pack = pack;
+        }
+    }
+
+    /** This game's card (null when it has none) and the pack that fits it, null when no pack does */
+    private static Found found(Context c, File game, String id) {
         List<Game> list = Game.load(c);
         List<Integer> same = GameList.matches(list, id, game.getPath(), Game.key(game.getPath(), id), Game::key);
         Game card = same.isEmpty() ? null : list.get(same.get(0));
         File packDir = card != null ? new File(card.packDir) : Folders.packFor(c, game, id);
-        if (packDir == null || SaveUi.busy(id)) return null;
-        Pack p;
+        if (packDir == null) return null;
         try {
-            p = Pack.read(packDir);
+            Pack p = Pack.read(packDir);
             if (!p.titleId.equalsIgnoreCase(id)) return null;
             if (Nup.isNup(game) ? p.romfsPath(game) == null : p.romfs(game) == null) return null;
+            return new Found(card, packDir, p);
         } catch (IOException e) {
             return null;
         }
+    }
+
+    /**
+     * Why a finished pack starts only after a warning (MainActivity's Play anyway: a build this app does not support, or another version's RomFS), null when it
+     * starts without one or not at all
+     */
+    private static BuildCheck.Result untested(Context c, Pack p, File game) {
+        if (p.unfinishedModule() != null || PackCheck.rewriting(c, p.dir, game, p.titleId) != null) return null;
+        BuildCheck.Result b = BuildCheck.build(p, game);
+        return b.kind == BuildCheck.Kind.UNSUPPORTED || b.kind == BuildCheck.Kind.ROMFS ? b : null;
+    }
+
+    /** FrontendLaunch.ready: the game's card when it can start now, else null. anyway: an untested pack starts too (the player said Try anyway) */
+    private static Game ready(Context c, File game, String id, boolean anyway) {
+        Found f = SaveUi.busy(id) ? null : found(c, game, id);
+        if (f == null) return null;
+        if (PackCheck.blocking(c, f.pack, game) != null && !(anyway && untested(c, f.pack, game) != null)) return null;
         // A missing or older shader library blocks only a game the shader layer does not cover (FrontendLaunch.ready)
-        if (PackCheck.blocking(c, p, game) != null || Pack.libraryBlock(packDir, id, Prefs.layerEnv(c, id)) != null) return null;
-        if (card != null && GameList.samePath(card.gameDir, game.getPath())) return card;
+        if (Pack.libraryBlock(f.packDir, id, Prefs.layerEnv(c, id)) != null) return null;
+        if (f.card != null && GameList.samePath(f.card.gameDir, game.getPath())) return f.card;
         // A card of the same title and build at another path (another copy of the dump) is moved to the dump Hokkaido starts:
         // the game would otherwise read the other copy's files (an incomplete copy: a black screen)
-        String name = card != null ? card.name : p.name.isEmpty() ? id : p.name;
-        return Game.put(c, new Game(id, name, game.getPath(), packDir.getPath()));
+        String name = f.card != null ? f.card.name : f.pack.name.isEmpty() ? id : f.pack.name;
+        return Game.put(c, new Game(id, name, game.getPath(), f.packDir.getPath()));
     }
 }
