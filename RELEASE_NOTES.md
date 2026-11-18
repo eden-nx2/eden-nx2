@@ -1,4 +1,4 @@
-**First public release of Eden NX2**: an unofficial, experimental build of Eden with Switch 2 support. It is Eden NX2 (Takoroka) continued in Eglantine and [Lichii](https://github.com/zortos293/Lichii) **build 316**, with the Android work of [Hokkaido](https://github.com/pavelgajdo/Hokkaido) **0.7.0**, released under the Eden NX2 name on Windows, Linux, macOS and Android. This is not an official Eden release.
+**First public release of Eden NX2**: an unofficial, experimental build of Eden with Switch 2 support. It is Eden NX2 (Takoroka) continued in Eglantine and [Eden](https://github.com/zortos293/Lichii) **build 316**, with the Android work of [Hokkaido](https://github.com/pavelgajdo/Hokkaido) **0.7.0**, released under the Eden NX2 name on Windows, Linux, macOS and Android. This is not an official Eden release.
 
 ### Before you start
 
@@ -32,6 +32,6 @@
 
 ### Credits
 
-Takoroka and the Eden team (Eden NX2), Eglantine, zortos293 and Lichii's contributors, pavelgajdo and Hokkaido's contributors, and moceure (Banana Native, MIT). Eden NX2 is GPL-3.0. What came from where: [MIRROR_CHANGES.md](https://github.com/eden-nx2/eden-nx2/blob/nx2/docs/MIRROR_CHANGES.md).
+Takoroka and the Eden team (Eden NX2), Eglantine, zortos293 and Eden's contributors, pavelgajdo and Hokkaido's contributors, and moceure (Banana Native, MIT). Eden NX2 is GPL-3.0. What came from where: [MIRROR_CHANGES.md](https://github.com/eden-nx2/eden-nx2/blob/nx2/docs/MIRROR_CHANGES.md).
 
 Eden NX2 is not affiliated with Nintendo or the official Eden project. Report problems on this repository's [Issues](https://github.com/eden-nx2/eden-nx2/issues).

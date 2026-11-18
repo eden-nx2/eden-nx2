@@ -291,6 +291,20 @@ enum class SparseTilesMode {
     Aliased,
 };
 
+// Experiment switch (#1839): zero every new colour-renderable image, so texels the game never
+// writes (padding past a render target's used width) read zero instead of stale host memory.
+[[nodiscard]] bool ClearNewRenderTargets() {
+    static const bool enabled = [] {
+        const char* const value = std::getenv("EDEN_NX2_CLEAR_NEW_RTS");
+        const bool on = value != nullptr && value[0] != '\0' && value[0] != '0';
+        if (on) {
+            LOG_INFO(Render_Vulkan, "EDEN_NX2_CLEAR_NEW_RTS: new colour-renderable images are cleared");
+        }
+        return on;
+    }();
+    return enabled;
+}
+
 [[nodiscard]] SparseTilesMode SparseTilesModeOf(const Device& device) {
     static const char force_aliased = [] {
         const char* value = std::getenv("EDEN_NX2_SPARSE_ALIASED");
@@ -3323,10 +3337,16 @@ Image::Image(TextureCacheRuntime& runtime_, const ImageInfo& info_, GPUVAddr gpu
         flags |= VideoCommon::ImageFlagBits::Converted;
         flags |= VideoCommon::ImageFlagBits::CostlyLoad;
     }
-    if (runtime->device.HasDebuggingToolAttached()) {
+    if (runtime->device.NamesObjects()) {
         original_image.SetObjectNameEXT(VideoCommon::Name(*this).c_str());
     }
     current_image = &Image::original_image;
+    if (ClearNewRenderTargets() && aspect_mask == VK_IMAGE_ASPECT_COLOR_BIT &&
+        False(flags & (VideoCommon::ImageFlagBits::Unbacked | VideoCommon::ImageFlagBits::Converted)) &&
+        MaxwellToVK::SurfaceFormat(runtime->device, FormatType::Optimal, false, info.format)
+            .attachable) {
+        ClearTiles();
+    }
     const s32 host_levels =
         static_cast<s32>(HostMipCount(info)) - static_cast<s32>(host_level_offset);
     storage_image_views.resize(host_levels);
@@ -3774,6 +3794,39 @@ void Image::DownloadMemory(const StagingBufferRef& map, std::span<const BufferIm
 
 u32 Image::HostMipLevels() const noexcept {
     return HostMipCount(info) - host_level_offset;
+}
+
+PixelFormat Image::HostFormat() const {
+    if (False(flags & ImageFlagBits::Converted)) {
+        return info.format;
+    }
+    const bool srgb = IsPixelFormatSRGB(info.format);
+    switch (AstcHostFormat(runtime->device, info)
+                .value_or(MaxwellToVK::SurfaceFormat(runtime->device, FormatType::Optimal, false,
+                                                     info.format)
+                              .format)) {
+    case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
+    case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:
+        return srgb ? PixelFormat::BC1_RGBA_SRGB : PixelFormat::BC1_RGBA_UNORM;
+    case VK_FORMAT_BC3_UNORM_BLOCK:
+    case VK_FORMAT_BC3_SRGB_BLOCK:
+        return srgb ? PixelFormat::BC3_SRGB : PixelFormat::BC3_UNORM;
+    case VK_FORMAT_A8B8G8R8_UNORM_PACK32:
+    case VK_FORMAT_A8B8G8R8_SRGB_PACK32:
+        return srgb ? PixelFormat::A8B8G8R8_SRGB : PixelFormat::A8B8G8R8_UNORM;
+    case VK_FORMAT_R8_UNORM:
+        return PixelFormat::R8_UNORM;
+    case VK_FORMAT_R8_SNORM:
+        return PixelFormat::R8_SNORM;
+    case VK_FORMAT_R8G8_UNORM:
+        return PixelFormat::R8G8_UNORM;
+    case VK_FORMAT_R8G8_SNORM:
+        return PixelFormat::R8G8_SNORM;
+    case VK_FORMAT_R16G16B16A16_SFLOAT:
+        return PixelFormat::R16G16B16A16_FLOAT;
+    default:
+        return PixelFormat::Invalid;
+    }
 }
 
 VkImageView Image::StorageImageView(s32 level) noexcept {
