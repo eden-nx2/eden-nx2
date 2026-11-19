@@ -49,4 +49,18 @@ interface NativeEngineUi {
         window: String,
         emulate: () -> Unit
     )
+
+    /**
+     * Translates every shader of a game Banana Native has prepared, so its scenes don't wait for shaders while it
+     * plays. The arguments are [launch]'s, for the start offered when it is done.
+     */
+    fun prepareShaders(
+        activity: FragmentActivity,
+        gamePath: String,
+        title: String,
+        driverZip: String,
+        saveDir: String,
+        window: String,
+        emulate: () -> Unit
+    )
 }

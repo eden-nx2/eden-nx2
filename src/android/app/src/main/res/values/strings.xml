@@ -1956,4 +1956,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <string name="banana_running_description">Banana Native runs one game at a time. Close %2$s and start %1$s? Anything %2$s has not saved is lost.</string>
     <string name="banana_close_and_start">Close and start</string>
     <string name="banana_another_game">Another game</string>
+    <string name="banana_shaders_build">Build all shaders now</string>
+    <string name="banana_shaders_build_description">Banana Native translates every shader of the game ahead of play, so new scenes don\'t show up white or with parts missing while their shaders are built. Takes a while; best on the charger.</string>
 </resources>

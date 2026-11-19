@@ -70,6 +70,25 @@ class BananaLauncher : NativeEngineUi {
         emulate: () -> Unit
     ) = check(Start(activity, gamePath, title, driverZip, saveDir, window, emulate), false)
 
+    override fun prepareShaders(
+        activity: FragmentActivity,
+        gamePath: String,
+        title: String,
+        driverZip: String,
+        saveDir: String,
+        window: String,
+        emulate: () -> Unit
+    ) {
+        val start = Start(activity, gamePath, title, driverZip, saveDir, window, emulate)
+        activity.lifecycleScope.launch {
+            val plan = withContext(Dispatchers.IO) {
+                runCatching { HokkaidoBridge.shadersPlan(activity, gamePath) }
+            }
+            plan.onSuccess { show(start, it) }
+                .onFailure { problem(start, title, it.message ?: it.toString()) }
+        }
+    }
+
     private fun check(start: Start, tryAnyway: Boolean) {
         val activity = start.activity
         val (box, _, _) = progressView(activity, true)

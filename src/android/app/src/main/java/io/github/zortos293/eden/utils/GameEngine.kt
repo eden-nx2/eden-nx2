@@ -190,6 +190,18 @@ object GameEngine {
     }
 
     /**
+     * Translates every shader of the game for Banana Native now (Game properties), with the game's own settings for
+     * the start offered after. False when this build has no Banana Native or the game has no path it reads.
+     */
+    fun prepareNativeShaders(activity: FragmentActivity, game: Game, emulate: () -> Unit): Boolean {
+        val engine = ui ?: return false
+        val path = filePath(game) ?: return false
+        val (driver, window) = gameSettings(game, true)
+        engine.prepareShaders(activity, path, game.title, driver, game.saveDir, window, emulate)
+        return true
+    }
+
+    /**
      * Starts a game in its engine (Game properties › Engine): every way of starting a game comes here.
      * [useCustom] is the game's own settings rather than the global ones (Start › Global or Custom);
      * [emulate] starts it in Hokkaido.

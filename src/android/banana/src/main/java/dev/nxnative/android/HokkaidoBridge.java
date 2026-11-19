@@ -235,6 +235,51 @@ public final class HokkaidoBridge {
     }
 
     /**
+     * The plan that translates every shader of a prepared game now, its code kept (Job.adopt with the shaders; the job a game the shader layer covers
+     * leaves to the player): its scenes no longer draw late or wrongly while their shaders are built. The layer stays on for shaders the set lacks.
+     * Reads files: call it off the main thread.
+     */
+    public static Plan shadersPlan(Context c, String dumpPath) {
+        File dump = new File(Frontend.normal(dumpPath));
+        String id;
+        try {
+            id = Pack.playableIdOf(dump);
+        } catch (IOException e) {
+            return Plan.problem("Cannot read the game", e.getMessage(), null);
+        }
+        Profile prof = Profile.of(id);
+        if (prof == null) return Plan.problem("Not supported by Banana Native", Profile.missing(id, "This game"), null);
+        boolean any = false;
+        try {
+            File jf = Job.fileOf(DumpCheck.workOf(dump, Pack.titleIdOf(dump)));
+            if (jf.isFile()) {
+                Job j = Job.read(jf);
+                any = j.tryAnyway();
+                if ("running".equals(j.state()) && PackServiceWatch.alive(c)) {
+                    return new Plan(Plan.RUNNING, prof.name, j.statusText(true), null, false, dump.getPath(), null, null, j, null, false, false);
+                }
+            }
+        } catch (IOException e) {
+            // no job of this format: the new one replaces it
+        }
+        DumpCheck.Result r = DumpCheck.check(dump, false, any);
+        if (!r.ok()) return Plan.problem("Cannot prepare this game", r.error, r.detail);
+        File packDir = Folders.packFor(c, r.dump, r.titleId);
+        Pack p = null;
+        try {
+            p = packDir == null ? null : Pack.read(packDir);
+        } catch (IOException e) {
+            // no pack: the game is prepared first
+        }
+        if (p == null || p.simulated || !p.titleId.equals(r.titleId)) {
+            return Plan.problem(prof.name, "Start the game once on Banana Native first: its code is prepared then.", null);
+        }
+        String text = "Translates all of the game's shaders now, so new scenes no longer show up white or with parts missing while their shaders are built. "
+                + "It takes a while and uses the CPU hard: best on the charger. Shaders the set lacks are still built while you play.";
+        return new Plan(Plan.PREPARE, prof.name, text, null, false, dump.getPath(), null, r, null, packDir, false, true);
+    }
+
+    /**
      * Starts preparing: a new job, one that redoes what an existing pack lacks, or the stopped job resumed. False
      * when nothing needed redoing (a pack that fits is adopted at once): plan again, it is ready.
      */

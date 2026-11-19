@@ -364,6 +364,21 @@ class GamePropertiesFragment : Fragment() {
                             action = { importBananaPack.launch(arrayOf("application/zip", "application/octet-stream")) }
                         )
                     )
+                    add(
+                        SubmenuProperty(
+                            R.string.banana_shaders_build,
+                            R.string.banana_shaders_build_description,
+                            R.drawable.ic_build,
+                            action = {
+                                val navController = binding.root.findNavController()
+                                GameEngine.prepareNativeShaders(requireActivity(), args.game) {
+                                    navController.navigate(
+                                        HomeNavigationDirections.actionGlobalEmulationActivity(args.game, true)
+                                    )
+                                }
+                            }
+                        )
+                    )
                 }
             }
 
