@@ -751,8 +751,11 @@ public final class HokkaidoBridge {
         Found f = SaveUi.busy(id) ? null : found(c, game, id);
         if (f == null) return null;
         if (PackCheck.blocking(c, f.pack, game) != null && !(anyway && untested(c, f.pack, game) != null)) return null;
-        // A missing or older shader library blocks only a game the shader layer does not cover (FrontendLaunch.ready)
-        if (Pack.libraryBlock(f.packDir, id, Prefs.layerEnv(c, id)) != null) return null;
+        // A missing or older shader library blocks only a game the shader layer does not cover (FrontendLaunch.ready), and, as on Banana
+        // Native's own Home (MainActivity), not one whose older library still plays: its shader update is optional (Build all shaders now).
+        // Without this, every new shader chain sent the game to a Prepare that translated all its shaders again.
+        if (Pack.libraryBlock(f.packDir, id, Prefs.layerEnv(c, id)) != null
+                && Pack.playableLibrary(f.packDir, id) == null && Pack.legacyLibrary(f.packDir, id) == null) return null;
         if (f.card != null && GameList.samePath(f.card.gameDir, game.getPath())) return f.card;
         // A card of the same title and build at another path (another copy of the dump) is moved to the dump Hokkaido starts:
         // the game would otherwise read the other copy's files (an incomplete copy: a black screen)
