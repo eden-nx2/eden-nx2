@@ -415,6 +415,34 @@ public final class HokkaidoBridge {
     }
 
     /**
+     * The game options Banana Native shows on its own Game settings page, for Hokkaido's Game properties. They take
+     * effect at the game's next start. Soft textures is the game's Advanced row DM_VK_TEX_SOFT.
+     */
+    public static final int OPTION_FULL_VEGETATION = 0, OPTION_RAM_SAVER = 1, OPTION_SOFT_TEXTURES = 2;
+
+    /** Whether the game has the option: full vegetation only where its profile has a vegetation detail */
+    public static boolean hasOption(String titleId, int option) {
+        Profile p = Profile.of(titleId);
+        return p != null && (option != OPTION_FULL_VEGETATION || p.vegetationDetail);
+    }
+
+    public static boolean option(Context c, String titleId, int option) {
+        switch (option) {
+            case OPTION_FULL_VEGETATION: return Prefs.fullVegetation(c, titleId);
+            case OPTION_RAM_SAVER: return Prefs.ramSaver(c, titleId);
+            default: return "1".equals(AdvancedSettings.effective(c, "DM_VK_TEX_SOFT", titleId));
+        }
+    }
+
+    public static void setOption(Context c, String titleId, int option, boolean on) {
+        switch (option) {
+            case OPTION_FULL_VEGETATION: Prefs.fullVegetation(c, titleId, on); break;
+            case OPTION_RAM_SAVER: Prefs.ramSaver(c, titleId, on); break;
+            default: AdvancedSettings.set(c, "DM_VK_TEX_SOFT", titleId, on ? "1" : "0");
+        }
+    }
+
+    /**
      * Banana Native's Import pack (PackUi.importRun) for Hokkaido: a pack that Banana Native's own app exported (its
      * game's Manage › Export pack…, banana-pack-&lt;title ID&gt;-&lt;version&gt;.zip) or a pack folder, checked against the game
      * in dumpPath and put into this app's packs/&lt;title ID&gt;, which the game's next start finds first. Null when it is

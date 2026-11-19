@@ -52,6 +52,14 @@ class BananaLauncher : NativeEngineUi {
     override fun importPack(context: Context, source: java.io.File, titleId: String, dumpPath: String?): String? =
         HokkaidoBridge.importPack(context, source, titleId, dumpPath)
 
+    override fun hasOption(titleId: String, option: Int): Boolean = HokkaidoBridge.hasOption(titleId, option)
+
+    override fun option(context: Context, titleId: String, option: Int): Boolean =
+        HokkaidoBridge.option(context, titleId, option)
+
+    override fun setOption(context: Context, titleId: String, option: Int, on: Boolean) =
+        HokkaidoBridge.setOption(context, titleId, option, on)
+
     override fun launch(
         activity: FragmentActivity,
         gamePath: String,

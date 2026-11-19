@@ -26,6 +26,14 @@ interface NativeEngineUi {
      */
     fun importPack(context: Context, source: java.io.File, titleId: String, dumpPath: String?): String?
 
+    /** Whether the game has one of Banana Native's game options ([option]: a GameEngine.GameOption's ordinal). */
+    fun hasOption(titleId: String, option: Int): Boolean
+
+    fun option(context: Context, titleId: String, option: Int): Boolean
+
+    /** Sets a game option; it takes effect at the game's next start. */
+    fun setOption(context: Context, titleId: String, option: Int, on: Boolean)
+
     /**
      * Starts the game in Banana Native, preparing it first when it needs that, with Hokkaido's GPU driver for it
      * ([driverZip]: a driver zip, empty for the system's), Hokkaido's save folder ([saveDir], shared by both

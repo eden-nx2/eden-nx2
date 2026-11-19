@@ -344,6 +344,17 @@ class GamePropertiesFragment : Fragment() {
                         action = { showEngineDialog() }
                     )
                 )
+                if (GameEngine.gameOptions(args.game).isNotEmpty()) {
+                    add(
+                        SubmenuProperty(
+                            R.string.banana_options,
+                            R.string.banana_options_description,
+                            R.drawable.ic_settings,
+                            details = { describeGameOptions() },
+                            action = { showGameOptionsDialog() }
+                        )
+                    )
+                }
                 if (GameEngine.isBananaAvailable) {
                     add(
                         SubmenuProperty(
@@ -836,6 +847,40 @@ class GamePropertiesFragment : Fragment() {
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
         }
+    }
+
+    private fun describeGameOptions(): String =
+        GameEngine.gameOptions(args.game).joinToString(" · ") {
+            getString(
+                if (GameEngine.gameOption(requireContext(), args.game, it)) R.string.banana_option_on
+                else R.string.banana_option_off,
+                getString(it.title)
+            )
+        }
+
+    /** Banana Native's game options (full vegetation, RAM saver, soft textures); they apply at the next start. */
+    private fun showGameOptionsDialog() {
+        val options = GameEngine.gameOptions(args.game)
+        val names = options.map { option ->
+            val title = getString(option.title)
+            android.text.SpannableString(title + "\n" + getString(option.description)).apply {
+                setSpan(
+                    android.text.style.RelativeSizeSpan(0.85f),
+                    title.length + 1,
+                    length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        }.toTypedArray<CharSequence>()
+        val checked = options.map { GameEngine.gameOption(requireContext(), args.game, it) }.toBooleanArray()
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.banana_options)
+            .setMultiChoiceItems(names, checked) { _, which, on ->
+                GameEngine.setGameOption(requireContext(), args.game, options[which], on)
+            }
+            .setPositiveButton(android.R.string.ok, null)
+            .setOnDismissListener { reloadList() }
+            .show()
     }
 
     private fun showEngineDialog() {

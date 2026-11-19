@@ -66,10 +66,33 @@ object GameEngine {
 
     /** Banana Native's status for the game ("playable", "bring-up"), null when it cannot run it. */
     private fun status(game: Game): String? =
-        runCatching { ui?.status(game.programIdHex.uppercase().padStart(16, '0')) }.getOrNull()
+        runCatching { ui?.status(titleIdOf(game)) }.getOrNull()
 
     /** Whether Banana Native has a profile for the game: only then is it a choice. */
     fun supports(game: Game): Boolean = status(game) != null
+
+    /** Banana Native's game options Hokkaido shows (HokkaidoBridge.OPTION_* order); they apply at the next start. */
+    enum class GameOption(val title: Int, val description: Int) {
+        FULL_VEGETATION(R.string.banana_option_vegetation, R.string.banana_option_vegetation_description),
+        RAM_SAVER(R.string.banana_option_ram_saver, R.string.banana_option_ram_saver_description),
+        SOFT_TEXTURES(R.string.banana_option_soft_textures, R.string.banana_option_soft_textures_description)
+    }
+
+    private fun titleIdOf(game: Game) = game.programIdHex.uppercase().padStart(16, '0')
+
+    fun gameOptions(game: Game): List<GameOption> {
+        val engine = ui ?: return emptyList()
+        return GameOption.entries.filter {
+            runCatching { engine.hasOption(titleIdOf(game), it.ordinal) }.getOrDefault(false)
+        }
+    }
+
+    fun gameOption(context: Context, game: Game, option: GameOption): Boolean =
+        runCatching { ui?.option(context, titleIdOf(game), option.ordinal) }.getOrNull() ?: false
+
+    fun setGameOption(context: Context, game: Game, option: GameOption, on: Boolean) {
+        ui?.setOption(context, titleIdOf(game), option.ordinal, on)
+    }
 
     /**
      * Imports a pack that Banana Native's own app exported (Manage › Export pack…) for this game, from the zip
@@ -77,7 +100,7 @@ object GameEngine {
      */
     fun importPack(context: Context, game: Game, zip: Uri): String? {
         val engine = ui ?: return context.getString(R.string.banana_pack_import_unavailable)
-        val titleId = game.programIdHex.uppercase().padStart(16, '0')
+        val titleId = titleIdOf(game)
         // A file on shared storage is read in place (Hokkaido has all files access for Banana Native);
         // any other document through its descriptor.
         storagePath(zip)?.let { File(it) }?.takeIf { it.isFile }?.let {

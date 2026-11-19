@@ -1139,6 +1139,16 @@
     <string name="gpu_fence_behavior_balanced">Balanced</string>
     <string name="gpu_fence_behavior_accurate">Accurate</string>
     <string name="game_engine">Engine</string>
+    <string name="banana_options">Banana Native options</string>
+    <string name="banana_options_description">Full vegetation, RAM saver and soft textures for this game. Changes take effect at its next start.</string>
+    <string name="banana_option_on">%1$s on</string>
+    <string name="banana_option_off">%1$s off</string>
+    <string name="banana_option_vegetation">Full vegetation</string>
+    <string name="banana_option_vegetation_description">All grass and foliage. Off: less of it, and less GPU work.</string>
+    <string name="banana_option_ram_saver">RAM saver</string>
+    <string name="banana_option_ram_saver_description">Keeps texture data in a file instead of in RAM, so the game needs less memory. In Ocarina of Time it can leave holes in the terrain.</string>
+    <string name="banana_option_soft_textures">Soft textures</string>
+    <string name="banana_option_soft_textures_description">Large textures at a lower resolution, so the game needs less memory. Textures look softer up close.</string>
     <string name="banana_pack_import">Import Banana Native pack</string>
     <string name="banana_pack_import_description">Use a pack this game already has in the Banana Native app, so it starts without preparing again. In Banana Native: the game\'s Manage › Export pack…</string>
     <string name="banana_pack_import_working">Copying and checking the pack. A large pack takes a few minutes; keep Eden NX2 open.</string>
