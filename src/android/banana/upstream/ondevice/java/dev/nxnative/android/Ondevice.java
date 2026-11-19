@@ -355,6 +355,9 @@ final class Ondevice {
         return true;
     }
 
+    /** Whether the background code update of this dump was started in this process already (autoCodeUpdate tries once): the card then offers a tap to retry instead of waiting for ever */
+    static boolean codeUpdateTried(File dump) { return autoTried.contains("code:" + dump.getPath()); }
+
     /**
      * Whether this app made the pack, so the launcher may update its code by itself: its pack.tsv's made_by row (written by the phone's pack step), else, for a pack
      * made before that row, the job beside the dump that says it made this pack folder (job.json own_pack). Without either, the pack is treated as other tools'.

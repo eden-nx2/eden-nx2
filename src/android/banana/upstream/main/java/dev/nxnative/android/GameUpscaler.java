@@ -83,6 +83,18 @@ final class GameUpscaler {
         push(c, titleId);
     }
 
+    // A game on the DLSS stand-in: Screen scaling, the present's scaling of the window to the screen (DlssTune.SCREEN_NAMES, DM_VK_PRESENT_SCALE), stored per game only;
+    // unset, it follows the stored Upscaler choice (DlssTune.screenOf: SGSR 1 for the default SGSR 1, else as before, with no line of its own)
+    static boolean ownScreen(Context c, String titleId) { return Prefs.of(c).contains(Prefs.gameKey("screen_scale", titleId)); }
+    static Integer storedScreen(Context c, String titleId) { return ownScreen(c, titleId) ? Prefs.of(c).getInt(Prefs.gameKey("screen_scale", titleId), -1) : null; }
+    static int screen(Context c, String titleId) { return DlssTune.screen(storedScreen(c, titleId), mode(c, titleId)); }
+    /** The row's value with the game's own choice removed: what Default means (the stored Upscaler choice's counterpart) */
+    static int screenDefault(Context c, String titleId) { return DlssTune.screenOf(mode(c, titleId)); }
+    static void screen(Context c, String titleId, Integer v) {
+        if (v == null) Prefs.of(c).edit().remove(Prefs.gameKey("screen_scale", titleId)).commit(); else Prefs.of(c).edit().putInt(Prefs.gameKey("screen_scale", titleId), v).commit();
+        push(c, titleId);
+    }
+
     /**
      * The host's switches for a run (env.txt lines come after these and win). One choice for every scaling step: the game's internal upscaler (DM_VK_NDSR) and the
      * present's scaling of the window to the screen (only when the window is smaller): FSR 1 there too with the same sharpness (DM_VK_FSR; its RCAS pass also places and turns
@@ -90,7 +102,7 @@ final class GameUpscaler {
      */
     static List<String> lines(Context c, String titleId) {
         int m = mode(c, titleId); float s = sharp(c, titleId);
-        if (Prefs.dlssGame(titleId)) return DlssTune.lines(dlssMode(c, titleId), clarity(c, titleId), dlssSharp(c, titleId), m, s);   // the stand-in's row; the stored choice: the present alone
+        if (Prefs.dlssGame(titleId)) return DlssTune.lines(dlssMode(c, titleId), clarity(c, titleId), dlssSharp(c, titleId), m, s, storedScreen(c, titleId));   // the stand-in's row; the present: Screen scaling, else the stored choice
         return java.util.Arrays.asList("DM_VK_NDSR=" + NDSR[m], "DM_VK_NDSR_SHARP=" + s, "DM_VK_FSR=" + (m == MODE_FSR ? 1 : 0), "DM_VK_FSR_SHARP=" + s,
                                        "DM_VK_PRESENT_NEAREST=" + (NDSR[m] == 3 ? 1 : 0));
     }
@@ -100,7 +112,8 @@ final class GameUpscaler {
         File ext = c.getExternalFilesDir(null);   // GameActivity's DM_CTL: <app files>/ctl.txt (only the running game reads it)
         if (ext == null) return;
         try (FileWriter w = new FileWriter(new File(ext, "ctl.txt"), true)) {
-            StringBuilder b = new StringBuilder(); for (String l : lines(c, titleId)) b.append("env ").append(l).append('\n');
+            List<String> ls = Prefs.dlssGame(titleId) ? DlssTune.ctlLines(dlssMode(c, titleId), clarity(c, titleId), dlssSharp(c, titleId), mode(c, titleId), sharp(c, titleId), storedScreen(c, titleId)) : lines(c, titleId);
+            StringBuilder b = new StringBuilder(); for (String l : ls) b.append("env ").append(l).append('\n');
             w.write(b.toString());
         } catch (IOException e) { Native.note("[RED] game upscaler: the setting could not be sent to the game (" + e.getMessage() + "); it applies at the next start"); }
     }
@@ -135,6 +148,29 @@ final class GameUpscaler {
         Runnable shown = () -> { int v = mode(c, titleId) == MODE_FSR ? android.view.View.VISIBLE : android.view.View.GONE; l.setVisibility(v); s.setVisibility(v); };
         shown.run();
         g.setOnCheckedChangeListener((gr, id) -> { mode(c, titleId, id - 3100); shown.run(); });
+    }
+
+    /**
+     * A game on the DLSS stand-in: the in-game panel's Screen scaling (its Display tab), with Screen sharpness (ndsr_sharp: RCAS of the present's FSR 1) while FSR 1 is the
+     * choice. Each applied at once; the same per-game setting as Game settings › Screen scaling
+     */
+    static void screenRows(Context c, String titleId, LinearLayout box) {
+        TextView head = new TextView(c);
+        head.setText(Tx.s(R.string.common_screen_scaling));
+        head.setPadding(0, 24, 0, 0);
+        box.addView(head);
+        RadioGroup g = new RadioGroup(c);
+        for (int i = 0; i < DlssTune.SCREEN_NAMES.length; i++) { RadioButton b = new RadioButton(c); b.setText(Tx.arr(R.array.arr_screen_scale)[i]); b.setId(3400 + i); g.addView(b); if (i == screen(c, titleId)) b.setChecked(true); }
+        box.addView(g);
+        TextView l = new TextView(c); l.setText(Tx.s(R.string.common_screen_sharpness)); box.addView(l);
+        RadioGroup s = new RadioGroup(c);
+        s.setOrientation(LinearLayout.HORIZONTAL);
+        for (int i = 0; i < SHARPS.length; i++) { RadioButton b = new RadioButton(c); b.setText(Tx.arr(R.array.arr_fsr_sharp)[i]); b.setId(3500 + i); s.addView(b); if (SHARPS[i] == sharp(c, titleId)) b.setChecked(true); }
+        s.setOnCheckedChangeListener((gr, id) -> sharp(c, titleId, SHARPS[id - 3500]));
+        box.addView(s);
+        Runnable shown = () -> { int v = DlssTune.showsScreenSharp(screen(c, titleId)) ? android.view.View.VISIBLE : android.view.View.GONE; l.setVisibility(v); s.setVisibility(v); };
+        shown.run();
+        g.setOnCheckedChangeListener((gr, id) -> { screen(c, titleId, id - 3400); shown.run(); });
     }
 
     /** A game on the DLSS stand-in: "Upscaler" (the stand-in's mode) with Motion clarity and Temporal sharpness under GSR 2, the sharpness alone ("FSR sharpness") under FSR 1. Each applied at once */

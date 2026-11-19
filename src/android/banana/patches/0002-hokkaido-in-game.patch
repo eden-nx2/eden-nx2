@@ -1,6 +1,6 @@
 --- a/main/java/dev/nxnative/android/GameActivity.java
 +++ b/main/java/dev/nxnative/android/GameActivity.java
-@@ -118,7 +118,7 @@
+@@ -126,7 +126,7 @@
          tag = overlayText(Gravity.TOP | Gravity.START, 1f);
          tag.setText(Prefs.buildTag(this));
          tag.setTypeface(Typeface.DEFAULT_BOLD);
@@ -9,7 +9,7 @@
          root.addView(tag, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.START));
          // The log block may grow at most up to the tag's bottom edge (its top margin), so a long log never runs under the tag
          tag.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-@@ -126,13 +126,14 @@
+@@ -134,13 +134,14 @@
              int top = b + ((FrameLayout.LayoutParams) tag.getLayoutParams()).topMargin;
              if (lp.topMargin != top) { lp.topMargin = top; overlay.post(overlay::requestLayout); }
          });
@@ -28,16 +28,16 @@
          stats = new Overlay(this);
          panel = new SidePanel(this, new SidePanel.Rows() {
              @Override public void controls(LinearLayout box) { controls.controlRows(GameActivity.this, box); }
-@@ -162,7 +163,7 @@
+@@ -170,7 +171,7 @@
          });
          handle.setContentDescription(Tx.s(R.string.game_open_the_in_game_panel));
          handle.setOnClickListener(v -> panel.open());   // TalkBack's double tap
 -        root.addView(handle, root.indexOfChild(panel), new FrameLayout.LayoutParams(Math.round(20 * dp), Math.round(140 * dp), Gravity.END | Gravity.TOP));
 +        if (!HokkaidoInGame.on()) root.addView(handle, root.indexOfChild(panel), new FrameLayout.LayoutParams(Math.round(20 * dp), Math.round(140 * dp), Gravity.END | Gravity.TOP));   // Hokkaido's menu opens with Back
          // Auto with a gamepad connected, or Off: the handle goes with the controls (Back or a gamepad's Home button opens the panel)
-         controls.onSwitch = v -> handle.setVisibility(v ? View.VISIBLE : View.GONE);
+         controls.onSwitch = v -> updateHandle(v);
          controls.setMode(TouchControls.mode(this, id));
-@@ -177,8 +178,9 @@
+@@ -185,8 +186,9 @@
          pausedView.setBackgroundColor(0x99000000);
          pausedView.setVisibility(View.GONE);
          pausedView.setOnClickListener(v -> unpause());
@@ -47,8 +47,8 @@
 +        if (!HokkaidoInGame.on()) panelHint(root);
          root.setOnApplyWindowInsetsListener((v, in) -> { insetOverlay(in); return in; });   // again whenever the insets change (a turn, a fold)
          setContentView(root);
-         immersive();
-@@ -214,6 +216,7 @@
+         clean(Prefs.clean(this));   // the saved clean picture applies to the controls and the panel strip too, not only to the overlay/log settings
+@@ -223,6 +225,7 @@
          t.setBackground(bg);
          t.setClickable(false);
          t.setFocusable(false);
@@ -56,7 +56,7 @@
          return t;
      }
 
-@@ -228,10 +231,15 @@
+@@ -237,10 +240,15 @@
          android.view.DisplayCutout cut = in.getDisplayCutout();
          int cl = cut == null ? 0 : cut.getSafeInsetLeft(), ct = cut == null ? 0 : cut.getSafeInsetTop(), cr = cut == null ? 0 : cut.getSafeInsetRight();
          int[] a = OverlayInset.topLeft(tl == null ? 0 : tl.getRadius(), cl, ct), b = OverlayInset.topRight(tr == null ? 0 : tr.getRadius(), cr, ct);
@@ -76,7 +76,7 @@
          int[] c = OverlayInset.topLeft(bl == null ? 0 : bl.getRadius(), cl, 0);   // the log block, bottom left: sideways by the corner, up by the same as a top one down
          FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) overlay.getLayoutParams();
          if (lp.leftMargin != c[0] || lp.bottomMargin != c[1]) { lp.leftMargin = c[0]; lp.bottomMargin = c[1]; overlay.requestLayout(); }
-@@ -358,7 +366,7 @@
+@@ -384,7 +392,7 @@
      private void fpsTick() {
          if (stopped || paused) { ui.postDelayed(this::fpsTick, 2000); return; }   // nothing to show: no readings (thermal, battery, the host's counters) while suspended
          boolean on = overlayOn();
@@ -85,7 +85,7 @@
          boolean host = tagBlock.host(g) & fpsBlock.host(t);   // both every time: a block that is off empties its corner
          fps.setVisibility(!host && t != null ? View.VISIBLE : View.GONE);
          tag.setVisibility(!host && g != null ? View.VISIBLE : View.GONE);
-@@ -1257,7 +1265,7 @@
+@@ -1290,7 +1298,7 @@
          pausedView.setVisibility(View.VISIBLE);
      }
 
@@ -94,7 +94,7 @@
          if (!paused) return;
          paused = false;
          pausedView.setVisibility(View.GONE);
-@@ -1486,4 +1494,8 @@
+@@ -1519,4 +1527,8 @@
      FrameLayout rootView() { return rootView; }
      View panelView() { return panel; }
      boolean gamepadConnected() { return !pads.isEmpty(); }
@@ -186,7 +186,7 @@
          float dp = getResources().getDisplayMetrics().density;
          int size = Prefs.panelSize(act), w = PanelLook.widthPx(size, dp, getResources().getDisplayMetrics().widthPixels);
          if (sheet.getLayoutParams().width != w) { sheet.getLayoutParams().width = w; sheet.requestLayout(); }
-@@ -616,21 +639,24 @@
+@@ -623,7 +646,7 @@
      /** General: the panel's own look, Pause, Stop and Back to the game */
      private void general() {
          note(Tx.s(R.string.game_the_game_runs_on_behind));
@@ -194,6 +194,10 @@
 +        if (hk == null) panelRows();   // Hokkaido's menu has a look of its own
          cheatRows();
          shaderRows();
+
+@@ -638,17 +661,20 @@
+         });
+         box.addView(clean);
 
 +        if (hk == null) {   // Hokkaido's menu has Pause and Exit
          Button pause = new Button(act);   // the game suspended (clock, graphics, threads, audio) until a tap on the screen, or A / Start: GameActivity.pause

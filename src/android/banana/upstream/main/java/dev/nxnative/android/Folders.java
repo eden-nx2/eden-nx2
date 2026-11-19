@@ -133,6 +133,12 @@ final class Folders {
         return Prefs.migratedFrom(a, g.titleId) == null && SaveMigrate.needed(old, app) ? old : app;
     }
 
+    /**
+     * The save of the user games start with (Settings › Users): save(a, g) for the first user, else the folder beside it the host mounts for that user (DM_SAVE_user_&lt;uid&gt;,
+     * Users.saveDir). Back up / Restore / Import act on this one; the lock that tells a running game is the one of save(a, g) (gameRunning), the game's own save folder
+     */
+    static File userSave(Context a, Game g) { return Users.activeSave(a, save(a, g)); }
+
     /** The default save folder's state in words: in app storage (and copied there from where), or still beside the game until the next start copies it */
     static String saveState(Context a, Game g, File save) {
         File app = AppStorage.save(a, g.titleId);

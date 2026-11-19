@@ -115,6 +115,9 @@ final class Users {
         return uid.equals(FIRST) ? save : new java.io.File(save.getParentFile(), save.getName() + "_user_" + uid);
     }
 
+    /** The save folder of the user games start with (Back up / Restore / Import work on it: the host mounts it for that user), for a game whose own save folder is save */
+    static java.io.File activeSave(Context c, java.io.File save) { return save == null ? null : saveDir(save, defaultUid(c)); }
+
     /** The host's lines: DM_USERS (uid:name, the name percent-encoded) and DM_USER. Nothing for one user named Player: the host's own default, as before */
     static List<String> env(Context c) { return env(list(c), defaultUid(c)); }
 

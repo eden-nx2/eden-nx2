@@ -240,7 +240,7 @@ final class Updater {
             int[] cur = UpdateCheck.appVersion(version(app));
             if (cur == null) { Log.i(TAG, "check skipped: version " + version(app) + " is not X.Y.Z"); return; }
             UpdateCheck.Update u;
-            try { u = UpdateCheck.pickAll(releases(app), cur); }
+            try { u = UpdateCheck.pickAll(releases(app), cur, !Prefs.hotfixUpdates(app)); }   // the start's offer follows Settings > Updates > small fix updates; Check for updates (checkNow) shows the newest of any kind
             catch (Throwable e) {   // silent: a log line only
                 Log.w(TAG, "update check failed: " + why(e, "the release sources"));
                 return;

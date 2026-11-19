@@ -30,6 +30,10 @@ final class Languages {
         new Lang("fr", R.string.lang_fr),
         new Lang("ar", R.string.lang_ar),
         new Lang("pl", R.string.lang_pl),
+        new Lang("ko", R.string.lang_ko),
+        new Lang("uk", R.string.lang_uk),
+        new Lang("de", R.string.lang_de),
+        new Lang("it", R.string.lang_it),
     };
 
     /** The language the player picked, or null for System default */

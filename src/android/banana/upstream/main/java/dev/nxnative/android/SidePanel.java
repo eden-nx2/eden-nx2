@@ -434,7 +434,7 @@ final class SidePanel extends FrameLayout {
     /** The running game's title ID (GameActivity's intent): the panel's settings are that game's own */
     private String game() { return String.valueOf(act.getIntent().getStringExtra("title_id")); }
 
-    /** The tab's rows (TAB_NAMES); Performance's here: the frame rate cap, the Upscaler, the dynamic resolution and frame generation */
+    /** The tab's rows (TAB_NAMES); Performance's here: the frame rate cap, the Upscaler (with a render_cfg game's Upscaling quality and Graphics quality), the dynamic resolution and frame generation */
     private void build() {
         tabBar();
         fpsNow = lsfgNow = layerNow = null;
@@ -499,6 +499,8 @@ final class SidePanel extends FrameLayout {
             note(act instanceof GameActivity && ((GameActivity) act).live() ? Tx.s(R.string.game_applies_from_the_next_frame)
                     : Tx.s(R.string.game_applies_at_the_next_start));
         }
+        Profile rp = Profile.of(game());
+        if (rp != null && rp.renderCfg()) renderQuality(rp);   // a render_cfg game: Upscaling quality and Graphics quality under the Upscaler (Resolution is on Display)
         if (Prefs.drsGame(game()) && !simple) {
             TextView drsHead = head(Tx.s(R.string.common_dynamic_resolution));   // the render size's range (Prefs.DRS), applied at each step; the heading shows it
             box.addView(DrsSlider.view(act, Prefs.drs(act, game()), drsHead::setText, i -> { Prefs.drs(act, game(), i); Native.drsSet(Prefs.DRS[i][0], Prefs.DRS[i][1]); }));
@@ -560,9 +562,14 @@ final class SidePanel extends FrameLayout {
         } catch (java.io.IOException e) { Native.note("[RED] game option " + env + ": the setting could not be sent to the game (" + e.getMessage() + "); it applies at the next start"); }
     }
 
-    /** Display: the picture (Fit / Stretch, size, position) and the overlay's items */
+    /** Display: Resolution (a render_cfg game: Resolution alone), Screen scaling for a game on the DLSS stand-in, the picture (Fit / Stretch, size, position) and the overlay's items */
     private void display() {
         resolutionRow();
+        if (!Prefs.simpleRes(act, game()) && Prefs.dlssGame(game())) {   // a game on the DLSS stand-in: Screen scaling (the window to the screen), under Resolution
+            GameUpscaler.screenRows(act, game(), box);
+            note(act instanceof GameActivity && ((GameActivity) act).live() ? Tx.s(R.string.game_applies_from_the_next_frame_2)
+                    : Tx.s(R.string.game_applies_at_the_next_start));
+        }
 
         picture();
 
@@ -643,6 +650,17 @@ final class SidePanel extends FrameLayout {
         cheatRows();
         shaderRows();
 
+        // One tap for a clean picture: host-drawn stats and tag, the log, the touch controls and the panel strip together, saved as one flag.
+        // Back / Home still opens this panel, where the same button brings everything back; the overlay and log settings themselves are untouched.
+        final boolean allHidden = Prefs.clean(act);
+        Button clean = new Button(act);
+        clean.setText(Tx.s(allHidden ? R.string.game_show_everything : R.string.game_hide_everything_clean_picture));
+        clean.setOnClickListener(v -> {
+            if (act instanceof GameActivity) ((GameActivity) act).clean(!allHidden);
+            close();
+        });
+        box.addView(clean);
+
         if (hk == null) {   // Hokkaido's menu has Pause and Exit
         Button pause = new Button(act);   // the game suspended (clock, graphics, threads, audio) until a tap on the screen, or A / Start: GameActivity.pause
         pause.setText(Tx.s(R.string.game_pause_the_game));
@@ -681,7 +699,7 @@ final class SidePanel extends FrameLayout {
      */
     private void resolutionRow() {
         Profile p = Profile.of(game());
-        if (p != null && p.renderCfg()) { renderRows(p); return; }
+        if (p != null && p.renderCfg()) { renderResolution(p); return; }
         if (p == null || !p.hasResolution()) return;
         head(Tx.s(R.string.render_res_title));
         boolean now = p.resolutionLive() && act instanceof GameActivity;
@@ -752,27 +770,41 @@ final class SidePanel extends FrameLayout {
 
     /**
      * Resolution, Upscaling quality and Graphics quality of a game whose profile has a render_cfg row: three radio groups, drawn as the Frame rate cap's, labels from the string
-     * resources (RenderLabels). A pick is the game's own setting (Prefs.render, the next start takes it). While the game runs, Resolution and Upscaling quality change at once
-     * (Native.renderSet: the host writes them at the game's next notification 31); Graphics quality changes at once the same way. A pick whose render size needs a larger render
-     * target pool than the game started with is clamped by the host until the next start, and only then one line says so (Profile.renderRestartNote)
+     * resources (RenderLabels); Resolution on the Display tab (renderResolution), the other two on Performance under the Upscaler (renderQuality). A pick is the game's own
+     * setting (Prefs.render, the next start takes it). While the game runs, Resolution and Upscaling quality change at once (Native.renderSet: the host writes them at the
+     * game's next notification 31); Graphics quality changes at once the same way. A pick whose render size needs a larger render target pool than the game started with is
+     * clamped by the host until the next start, and only then one line says so under each part (Profile.renderRestartNote)
      */
-    private void renderRows(Profile p) {
+    private java.util.function.BiConsumer<Profile.Render, Integer> renderPick(Profile p, Profile.Render cur) {
         boolean now = act instanceof GameActivity;
-        Profile.Render cur = Prefs.render(act, p, game()), start = now ? ((GameActivity) act).startRender() : null;
-        RenderLabels l = new RenderLabels(act);
-        String[] outs = p.renderOutputs();
-        java.util.function.BiConsumer<Profile.Render, Integer> pick = (r, focus) -> {
+        return (r, focus) -> {
             Prefs.render(act, game(), r);
             int[] live = p.renderLive(cur, r);
             if (now && live != null && !Native.renderSet(live[0], live[1], live[2])) Native.note("Resolution: this host cannot change it live; it applies at the next start");
             restyle(focus);
         };
+    }
+    private void renderNote(Profile p, Profile.Render cur, RenderLabels l) {
+        Profile.Render start = act instanceof GameActivity ? ((GameActivity) act).startRender() : null;
+        if (start != null && p.renderRestartNote(cur, start, null, Prefs.lowRam(act))) note(l.restartNote);
+    }
+    private void renderResolution(Profile p) {
+        Profile.Render cur = Prefs.render(act, p, game());
+        RenderLabels l = new RenderLabels(act);
+        String[] outs = p.renderOutputs();
+        java.util.function.BiConsumer<Profile.Render, Integer> pick = renderPick(p, cur);
         head(l.resTitle);
         RadioGroup ro = new RadioGroup(act);
         for (int i = 0; i < outs.length; i++) { RadioButton b = new RadioButton(act); b.setId(ID_RES + 1 + i); b.setText(l.out(p, outs[i])); ro.addView(b); }
         ro.check(ID_RES + 1 + Math.max(0, java.util.Arrays.asList(outs).indexOf(cur.out)));
         ro.setOnCheckedChangeListener((gr, id) -> pick.accept(new Profile.Render(outs[id - ID_RES - 1], cur.pct, cur.quality), id));
         box.addView(ro);
+        renderNote(p, cur, l);
+    }
+    private void renderQuality(Profile p) {
+        Profile.Render cur = Prefs.render(act, p, game());
+        RenderLabels l = new RenderLabels(act);
+        java.util.function.BiConsumer<Profile.Render, Integer> pick = renderPick(p, cur);
         head(l.upscaleTitle);
         RadioGroup ru = new RadioGroup(act);
         for (int i = 0; i < Profile.RENDER_PCTS.length; i++) { RadioButton b = new RadioButton(act); b.setId(ID_RES + 20 + i); b.setText(l.pct(Profile.RENDER_PCTS[i])); ru.addView(b); }
@@ -785,7 +817,7 @@ final class SidePanel extends FrameLayout {
         rg.check(ID_RES + 40 + (cur.quality ? 0 : 1));
         rg.setOnCheckedChangeListener((gr, id) -> pick.accept(new Profile.Render(cur.out, cur.pct, id == ID_RES + 40), id));
         box.addView(rg);
-        if (start != null && p.renderRestartNote(cur, start, null, Prefs.lowRam(act))) note(l.restartNote);
+        renderNote(p, cur, l);
     }
 
     /** Picture: Fit / Stretch and the size (GameActivity.picture: live through DM_CTL, kept for this game), then the position on this screen (TouchControls) */

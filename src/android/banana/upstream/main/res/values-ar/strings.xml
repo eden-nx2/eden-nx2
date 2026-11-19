@@ -71,6 +71,8 @@
     <string name="common_resolution">الدقة</string>
     <string name="common_rumble">الاهتزاز</string>
     <string name="common_screen_rotation">تدوير الشاشة</string>
+    <string name="common_screen_scaling">تحجيم الشاشة</string>
+    <string name="common_screen_sharpness">حدة الشاشة</string>
     <string name="common_share_log">مشاركة السجل</string>
     <string name="common_stop">إيقاف</string>
     <string name="common_system">النظام</string>
@@ -125,6 +127,7 @@
     <string name="home_ready">جاهز</string>
     <string name="home_ready_game_code_update_paused">جاهز · تحديث رمز اللعبة متوقف مؤقتًا</string>
     <string name="home_ready_game_code_update_waits">جاهز · تحديث رمز اللعبة في الانتظار</string>
+    <string name="home_ready_game_code_update_stopped">جاهز · توقف تحديث رمز اللعبة، المس للمحاولة مجددًا</string>
     <string name="home_ready_shaders_need_one_update">جاهز · المُظلِّلات تحتاج إلى تحديث واحد</string>
     <string name="home_ready_update">جاهز · تحديث</string>
     <string name="home_ready_updating_game_code">جاهز · جارٍ تحديث رمز اللعبة</string>
@@ -175,6 +178,8 @@
     <string name="settings_on_the_controller_or_the">على ذراع التحكم، أو على الهاتف بدونها</string>
     <string name="settings_overlay">الطبقة العلوية</string>
     <string name="settings_picture_from_the_release_notes">صورة من ملاحظات الإصدار</string>
+    <string name="settings_small_fix_updates">تحديثات الإصلاحات الصغيرة</string>
+    <string name="settings_small_fix_updates_help">اعرض إصدارات الإصلاحات الصغيرة عند بدء التطبيق. عند الإيقاف: تُعرض التحديثات الكبيرة فقط؛ ويظل «التحقق من التحديثات» يعرض الأحدث. التحديث الكبير التالي يتضمن كل الإصلاحات.</string>
     <string name="settings_player_wiki">ويكي اللاعبين</string>
     <string name="settings_remove_leftovers_and_old_files">إزالة البقايا والملفات القديمة؛ لا يحذف الحفظ أبدًا</string>
     <string name="settings_sample_games">ألعاب تجريبية</string>
@@ -298,6 +303,8 @@
     <string name="game_open_the_in_game_panel">فتح لوحة اللعبة</string>
     <string name="game_pause_on_return">إيقاف مؤقت عند العودة</string>
     <string name="game_pause_the_game">إيقاف اللعبة مؤقتًا</string>
+    <string name="game_hide_everything_clean_picture">إخفاء كل شيء (صورة نظيفة)</string>
+    <string name="game_show_everything">إظهار كل شيء</string>
     <string name="game_pause_when_the_game_comes">إيقاف مؤقت عندما تعود اللعبة من الخلفية</string>
     <string name="game_paused_n_ntap_to_continue">"متوقفة مؤقتًا\n\nالمس للمتابعة  (A أو Start على ذراع التحكم)"</string>
     <string name="game_per_segment">لكل مقطع</string>
@@ -309,6 +316,9 @@
     <string name="game_position_this_screen">الموضع (هذه الشاشة)</string>
     <string name="game_press_l_r">اضغط L + R</string>
     <string name="game_ram_saver">توفير الذاكرة</string>
+    <string name="game_ram_saver_strong">توفير الذاكرة: قوي</string>
+    <string name="game_ram_saver_strong_off">مثل توفير الذاكرة</string>
+    <string name="game_ram_saver_strong_on">ذاكرة أقل: تُحذف أدق مستويين للخامات (تحتفظ الخامة بجزء من ستة عشر)، وذاكرة خامات بسدس الذاكرة، وخط معالجة واحد في الخلفية في كل مرة. يشمل توفير الذاكرة؛ ولا يُفعَّل توليد الإطارات تلقائياً</string>
     <string name="game_recommended_for_this_phone">موصى به لهذا الهاتف</string>
     <string name="game_remove_picked">إزالة المحدد…</string>
     <string name="game_remove_ticked">إزالة المعلَّم</string>
@@ -336,7 +346,7 @@
     <string name="game_stop_the_game_2">إيقاف اللعبة؟</string>
     <string name="game_switch_2_edition">Switch 2 Edition</string>
     <string name="game_target_frame_rate">معدل الإطارات المستهدف</string>
-    <string name="game_texture_data_in_a_file">بيانات الخامات في ملف: تحتاج إلى عدة غيغابايت فارغة</string>
+    <string name="game_texture_data_in_a_file">بيانات الخامات في ملف (تحتاج إلى عدة غيغابايت فارغة)، ذاكرة خامات أصغر، وخامات قريبة أقل حدة قليلاً</string>
     <string name="game_texture_data_in_compressed_ram">بيانات الخامات في ذاكرة مضغوطة</string>
     <string name="game_the_game_ends_unsaved_progress">تنتهي اللعبة؛ ويضيع التقدم غير المحفوظ. يبقى السجل لـ «مشاركة السجل».</string>
     <string name="game_the_game_s_own">ملف اللعبة نفسها</string>
@@ -707,6 +717,14 @@
         <item>ثنائي الخطية (الأسرع، الأنعم)</item>
         <item>FSR 3.1 (حاد، مستقر)</item>
     </string-array>
+    <string-array name="arr_screen_scale">
+        <item>أقرب جار</item>
+        <item>ثنائي الخطية</item>
+        <item>ثنائي التكعيب</item>
+        <item>FSR 1</item>
+        <item>SGSR 1</item>
+        <item>الجهاز (توفير الطاقة)</item>
+    </string-array>
     <string-array name="arr_panel_look">
         <item>صغير</item>
         <item>عادي</item>
@@ -759,6 +777,7 @@
     <string name="home_shaders_need_one_update">المُظلِّلات تحتاج إلى تحديث واحد</string>
     <string name="home_nup">" (.nup)"</string>
     <string name="game_applies_from_the_next_frame">يسري من الإطار التالي ويُحفظ لهذه اللعبة (هو نفس إعداد إعدادات اللعبة › مكبّر الدقة).</string>
+    <string name="game_applies_from_the_next_frame_2">يسري من الإطار التالي ويُحفظ لهذه اللعبة (هو نفس إعداد إعدادات اللعبة › تحجيم الشاشة).</string>
     <string name="game_applies_at_the_next_start">يسري عند البدء التالي (هذا التشغيل لا يقبل تغييرات مباشرة: DM_CTL متوقف).</string>
     <string name="game_applies_at_once_kept_for">يسري فورًا ويُحفظ لهذه اللعبة (هو نفس إعداد إعدادات اللعبة › متقدم).</string>
     <string name="game_shaders_the_game_lacks_are_3">المُظلِّلات التي تنقص اللعبة تُبنى أثناء تشغيلها. المفتاح في صفحة اللعبة › متقدم › المُظلِّلات أثناء اللعب (مفعّل افتراضيًا؛ ويسري التغيير عند البدء التالي).</string>
@@ -845,6 +864,7 @@
     <string name="ready_this_device_lacks_it_this">"ينقص هذا الجهاز؛ وتحتاج إليه هذه اللعبة. "</string>
     <string name="ready_not_reported">غير مُبلَّغ عنه</string>
     <string name="ready_guest_address_memory_is_available">ذاكرة عناوين الضيف متاحة عبر اسم بديل مُصدَّر للذاكرة تم اختباره (memory.fdAlias=1).</string>
+    <string name="ready_placed_remap_test_failed">يُبلغ برنامج التشغيل عن خرائط ذاكرة موضوعة، لكن اختبار إعادة تعيين مخزن الضيف فشل: %1$s</string>
     <string name="ready_gpu_features">ميزات GPU</string>
     <string name="ready_texture_tables_runtime_arrays_the">جداول القوام (مصفوفات وقت التشغيل): تعيش فيها مجمّعات قوام اللعبة</string>
     <string name="ready_texture_tables_partially_bound_the">جداول القوام (مرتبطة جزئيًا): تعيش فيها مجمّعات قوام اللعبة</string>
@@ -1363,4 +1383,7 @@
     <string name="game_mods_remove_note">تُحذف ملفات التعديل من هذا الهاتف. تبقى ملفات اللعبة.</string>
     <string name="game_mods_imported">تم استيراد %1$s (%2$d ملفات). يسري عند التشغيل التالي.</string>
     <string name="game_mods_refused">لم يتم الاستيراد: %1$s</string>
+    <string name="game_fast_fp16_shader_math">حسابات تظليل FP16 سريعة</string>
+    <string name="game_fp16_on_turnip_faster">نصف دقة 16 بت على Turnip: تظليل أسرع وحرارة أقل</string>
+    <string name="game_fp16_default_precision">الدقة الافتراضية</string>
 </resources>

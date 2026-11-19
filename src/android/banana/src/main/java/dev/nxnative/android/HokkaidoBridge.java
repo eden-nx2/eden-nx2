@@ -418,7 +418,7 @@ public final class HokkaidoBridge {
      * The game options Banana Native shows on its own Game settings page, for Hokkaido's Game properties. They take
      * effect at the game's next start. Soft textures is the game's Advanced row DM_VK_TEX_SOFT.
      */
-    public static final int OPTION_FULL_VEGETATION = 0, OPTION_RAM_SAVER = 1, OPTION_SOFT_TEXTURES = 2;
+    public static final int OPTION_FULL_VEGETATION = 0, OPTION_RAM_SAVER = 1, OPTION_SOFT_TEXTURES = 2, OPTION_RAM_SAVER_STRONG = 3;
 
     /** Whether the game has the option: full vegetation only where its profile has a vegetation detail */
     public static boolean hasOption(String titleId, int option) {
@@ -430,6 +430,7 @@ public final class HokkaidoBridge {
         switch (option) {
             case OPTION_FULL_VEGETATION: return Prefs.fullVegetation(c, titleId);
             case OPTION_RAM_SAVER: return Prefs.ramSaver(c, titleId);
+            case OPTION_RAM_SAVER_STRONG: return Prefs.ramSaverStrong(c, titleId);
             default: return "1".equals(AdvancedSettings.effective(c, "DM_VK_TEX_SOFT", titleId));
         }
     }
@@ -437,7 +438,9 @@ public final class HokkaidoBridge {
     public static void setOption(Context c, String titleId, int option, boolean on) {
         switch (option) {
             case OPTION_FULL_VEGETATION: Prefs.fullVegetation(c, titleId, on); break;
-            case OPTION_RAM_SAVER: Prefs.ramSaver(c, titleId, on); break;
+            // Strong includes the RAM saver, as on Banana Native's Game settings page
+            case OPTION_RAM_SAVER: Prefs.ramSaver(c, titleId, on); if (!on) Prefs.ramSaverStrong(c, titleId, false); break;
+            case OPTION_RAM_SAVER_STRONG: Prefs.ramSaverStrong(c, titleId, on); if (on) Prefs.ramSaver(c, titleId, true); break;
             default: AdvancedSettings.set(c, "DM_VK_TEX_SOFT", titleId, on ? "1" : "0");
         }
     }

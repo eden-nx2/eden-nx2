@@ -71,6 +71,8 @@
     <string name="common_resolution">Resolución</string>
     <string name="common_rumble">Vibración</string>
     <string name="common_screen_rotation">Rotación de pantalla</string>
+    <string name="common_screen_scaling">Escalado de pantalla</string>
+    <string name="common_screen_sharpness">Nitidez de pantalla</string>
     <string name="common_share_log">Compartir registro</string>
     <string name="common_stop">Detener</string>
     <string name="common_system">Sistema</string>
@@ -125,6 +127,7 @@
     <string name="home_ready">Listo</string>
     <string name="home_ready_game_code_update_paused">Listo · actualización del código del juego en pausa</string>
     <string name="home_ready_game_code_update_waits">Listo · actualización del código del juego en espera</string>
+    <string name="home_ready_game_code_update_stopped">Listo · actualización del código del juego detenida, toca para reintentar</string>
     <string name="home_ready_shaders_need_one_update">Listo · los shaders necesitan una actualización</string>
     <string name="home_ready_update">Listo · actualización</string>
     <string name="home_ready_updating_game_code">Listo · actualizando el código del juego</string>
@@ -175,6 +178,8 @@
     <string name="settings_on_the_controller_or_the">En el mando, o en el teléfono si no hay mando</string>
     <string name="settings_overlay">Superposición</string>
     <string name="settings_picture_from_the_release_notes">Imagen de las notas de la versión</string>
+    <string name="settings_small_fix_updates">Actualizaciones de correcciones pequeñas</string>
+    <string name="settings_small_fix_updates_help">Ofrece las versiones de correcciones pequeñas al iniciar la app. Desactivado: solo se ofrecen las actualizaciones grandes; Buscar actualizaciones sigue mostrando la más reciente. La próxima actualización grande incluye todas las correcciones.</string>
     <string name="settings_player_wiki">Wiki para jugadores</string>
     <string name="settings_remove_leftovers_and_old_files">Quita sobras y archivos antiguos; nunca partidas</string>
     <string name="settings_sample_games">Juegos de ejemplo</string>
@@ -298,6 +303,8 @@
     <string name="game_open_the_in_game_panel">Abrir el panel del juego</string>
     <string name="game_pause_on_return">Pausar al volver</string>
     <string name="game_pause_the_game">Pausar el juego</string>
+    <string name="game_hide_everything_clean_picture">Ocultar todo (imagen limpia)</string>
+    <string name="game_show_everything">Mostrar todo</string>
     <string name="game_pause_when_the_game_comes">Pausar cuando el juego vuelve del segundo plano</string>
     <string name="game_paused_n_ntap_to_continue">"En pausa\n\nToca para continuar  (A o Start en un mando)"</string>
     <string name="game_per_segment">Por segmento</string>
@@ -309,6 +316,9 @@
     <string name="game_position_this_screen">Posición (esta pantalla)</string>
     <string name="game_press_l_r">Pulsa L + R</string>
     <string name="game_ram_saver">Ahorro de RAM</string>
+    <string name="game_ram_saver_strong">Ahorro de RAM: fuerte</string>
+    <string name="game_ram_saver_strong_off">Igual que el ahorro de RAM</string>
+    <string name="game_ram_saver_strong_on">Aún menos RAM: se omiten los dos niveles más finos de textura (una textura conserva una dieciseisava parte), caché de texturas de una sexta parte de la RAM, una canalización en segundo plano a la vez. Incluye el ahorro de RAM; la generación de fotogramas no se activa sola</string>
     <string name="game_recommended_for_this_phone">Recomendado para este teléfono</string>
     <string name="game_remove_picked">Quitar lo elegido…</string>
     <string name="game_remove_ticked">Quitar lo marcado</string>
@@ -336,7 +346,7 @@
     <string name="game_stop_the_game_2">¿Detener el juego?</string>
     <string name="game_switch_2_edition">Switch 2 Edition</string>
     <string name="game_target_frame_rate">Fotogramas por segundo objetivo</string>
-    <string name="game_texture_data_in_a_file">Datos de texturas en un archivo: necesita GB libres</string>
+    <string name="game_texture_data_in_a_file">Datos de texturas en un archivo (necesita GB libres), caché de texturas más pequeña, texturas de cerca algo menos nítidas</string>
     <string name="game_texture_data_in_compressed_ram">Datos de texturas en RAM comprimida</string>
     <string name="game_the_game_ends_unsaved_progress">El juego termina; se pierde el progreso sin guardar. El registro se conserva para Compartir registro.</string>
     <string name="game_the_game_s_own">El propio del juego</string>
@@ -698,6 +708,14 @@
         <item>Bilineal (el más rápido, el más suave)</item>
         <item>FSR 3.1 (nítido, estable)</item>
     </string-array>
+    <string-array name="arr_screen_scale">
+        <item>Vecino más cercano</item>
+        <item>Bilineal</item>
+        <item>Bicúbico</item>
+        <item>FSR 1</item>
+        <item>SGSR 1</item>
+        <item>Dispositivo (ahorro de energía)</item>
+    </string-array>
     <string-array name="arr_panel_look">
         <item>Pequeño</item>
         <item>Normal</item>
@@ -747,6 +765,7 @@
     <string name="home_shaders_need_one_update">Los shaders necesitan una actualización</string>
     <string name="home_nup">" (.nup)"</string>
     <string name="game_applies_from_the_next_frame">Se aplica desde el siguiente fotograma y se guarda para este juego (el mismo ajuste que Ajustes del juego › Escalador).</string>
+    <string name="game_applies_from_the_next_frame_2">Se aplica desde el siguiente fotograma y se guarda para este juego (el mismo ajuste que Ajustes del juego › Escalado de pantalla).</string>
     <string name="game_applies_at_the_next_start">Se aplica al próximo inicio (esta ejecución no admite cambios en vivo: DM_CTL está desactivado).</string>
     <string name="game_applies_at_once_kept_for">Se aplica al instante y se guarda para este juego (el mismo ajuste que Ajustes del juego › Avanzado).</string>
     <string name="game_shaders_the_game_lacks_are_3">Los shaders que le faltan al juego se crean mientras se ejecuta. El interruptor está en la página del juego › Avanzado › Shaders mientras juegas (activado por defecto; un cambio se aplica al próximo inicio).</string>
@@ -833,6 +852,7 @@
     <string name="ready_this_device_lacks_it_this">"Este dispositivo no lo tiene; este juego lo necesita. "</string>
     <string name="ready_not_reported">no informado</string>
     <string name="ready_guest_address_memory_is_available">La memoria de direcciones del invitado está disponible mediante un alias de memoria exportada probado (memory.fdAlias=1).</string>
+    <string name="ready_placed_remap_test_failed">El controlador indica mapas de memoria colocados, pero su prueba de reasignación del búfer invitado falló: %1$s</string>
     <string name="ready_gpu_features">Funciones de la GPU</string>
     <string name="ready_texture_tables_runtime_arrays_the">Tablas de texturas (arrays en tiempo de ejecución): los grupos de texturas del juego viven en ellas</string>
     <string name="ready_texture_tables_partially_bound_the">Tablas de texturas (parcialmente enlazadas): los grupos de texturas del juego viven en ellas</string>
@@ -1342,4 +1362,7 @@
     <string name="game_mods_remove_note">Los archivos del mod se borran de este teléfono. Los archivos del juego se conservan.</string>
     <string name="game_mods_imported">Importado %1$s (%2$d archivos). Se aplica en el próximo inicio.</string>
     <string name="game_mods_refused">No importado: %1$s</string>
+    <string name="game_fast_fp16_shader_math">Matemáticas de sombreado FP16 rápidas</string>
+    <string name="game_fp16_on_turnip_faster">Media precisión de 16 bits en Turnip: sombreado más rápido y menos calor</string>
+    <string name="game_fp16_default_precision">Precisión predeterminada</string>
 </resources>

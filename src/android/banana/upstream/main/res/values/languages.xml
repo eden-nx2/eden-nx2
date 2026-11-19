@@ -8,4 +8,8 @@
     <string name="lang_fr" translatable="false">Français</string>
     <string name="lang_ar" translatable="false">العربية</string>
     <string name="lang_pl" translatable="false">Polski</string>
+    <string name="lang_ko" translatable="false">한국어</string>
+    <string name="lang_uk" translatable="false">Українська</string>
+    <string name="lang_de" translatable="false">Deutsch</string>
+    <string name="lang_it" translatable="false">Italiano</string>
 </resources>

@@ -82,6 +82,8 @@
     <string name="common_resolution">Resolution</string>
     <string name="common_rumble">Rumble</string>
     <string name="common_screen_rotation">Screen rotation</string>
+    <string name="common_screen_scaling">Screen scaling</string>
+    <string name="common_screen_sharpness">Screen sharpness</string>
     <string name="common_share_log">Share log</string>
     <string name="common_stop">Stop</string>
     <string name="common_system">System</string>
@@ -138,6 +140,7 @@
     <string name="home_ready">Ready</string>
     <string name="home_ready_game_code_update_paused">Ready · game code update paused</string>
     <string name="home_ready_game_code_update_waits">Ready · game code update waits</string>
+    <string name="home_ready_game_code_update_stopped">Ready · game code update stopped, tap to retry</string>
     <string name="home_ready_shaders_need_one_update">Ready · shaders need one update</string>
     <string name="home_ready_update">Ready · update</string>
     <string name="home_ready_updating_game_code">Ready · updating game code</string>
@@ -190,6 +193,8 @@
     <string name="settings_on_the_controller_or_the">On the controller, or the phone without one</string>
     <string name="settings_overlay">Overlay</string>
     <string name="settings_picture_from_the_release_notes">Picture from the release notes</string>
+    <string name="settings_small_fix_updates">Small fix updates</string>
+    <string name="settings_small_fix_updates_help">Offer small fix releases when the app starts. Off: only big updates are offered; Check for updates still shows the newest. The next big update carries every fix.</string>
     <string name="settings_player_wiki">Player wiki</string>
     <string name="settings_remove_leftovers_and_old_files">Remove leftovers and old files; never saves</string>
     <string name="settings_sample_games">Sample games</string>
@@ -315,6 +320,8 @@
     <string name="game_open_the_in_game_panel">Open the in-game panel</string>
     <string name="game_pause_on_return">Pause on return</string>
     <string name="game_pause_the_game">Pause the game</string>
+    <string name="game_hide_everything_clean_picture">Hide everything (clean picture)</string>
+    <string name="game_show_everything">Show everything</string>
     <string name="game_pause_when_the_game_comes">Pause when the game comes back from the background</string>
     <string name="game_paused_n_ntap_to_continue">"Paused\n\nTap to continue  (A or Start on a gamepad)"</string>
     <string name="game_per_segment">Per segment</string>
@@ -326,6 +333,9 @@
     <string name="game_position_this_screen">Position (this screen)</string>
     <string name="game_press_l_r">Press L + R</string>
     <string name="game_ram_saver">RAM saver</string>
+    <string name="game_ram_saver_strong">RAM saver: Strong</string>
+    <string name="game_ram_saver_strong_off">Same as RAM saver</string>
+    <string name="game_ram_saver_strong_on">Even less RAM: the two finest texture levels left out (a texture keeps a sixteenth), a texture cache of a sixth of RAM, one background pipeline at a time. Includes RAM saver; frame generation is not turned on for you</string>
     <string name="game_recommended_for_this_phone">Recommended for this phone</string>
     <string name="game_remove_picked">Remove picked…</string>
     <string name="game_remove_ticked">Remove ticked</string>
@@ -353,7 +363,7 @@
     <string name="game_stop_the_game_2">Stop the game?</string>
     <string name="game_switch_2_edition">Switch 2 Edition</string>
     <string name="game_target_frame_rate">Target frame rate</string>
-    <string name="game_texture_data_in_a_file">Texture data in a file: needs GBs free</string>
+    <string name="game_texture_data_in_a_file">Texture data in a file (needs GBs free), a smaller texture cache, close-up textures a little softer</string>
     <string name="game_texture_data_in_compressed_ram">Texture data in compressed RAM</string>
     <string name="game_the_game_ends_unsaved_progress">The game ends; unsaved progress is lost. The log stays for Share log.</string>
     <string name="game_the_game_s_own">The game\'s own</string>
@@ -549,7 +559,7 @@
     <string name="home_pick_a_pack_folder_hint">%1$s\n\nIf you have a pack folder made for exactly this %2$s (with pack.tsv), you can pick it.</string>
     <string name="home_remove_entry_message">Only the list entry goes. Your dump, its pack and your saves stay on the phone; Add game brings it back.</string>
     <string name="home_remove_entry_message_save">Only the list entry goes. Your dump, its pack and your saves (%1$s) stay on the phone; Add game brings it back.</string>
-    <string name="home_edition_needs_pack">%1$s needs its own pack (its own code and shaders). Prepare it on a computer with scripts/pack_android.py --program 1 and put it in the app\'s packs/%2$s, or switch the edition back on the game\'s page.</string>
+    <string name="home_edition_needs_pack">%1$s needs its own pack (its own code and shaders), and the phone cannot make that one yet: Prepare makes the pack of the game itself only. To play the Switch version, turn the Switch 2 Edition switch off on the game\'s page. To play the Edition, make its pack on a computer with scripts/pack_android.py --program 1 and put it in the app\'s packs/%2$s.</string>
 
     <!-- titles of the game dialogs: "Setting · Game" -->
     <string name="game_title_for">%1$s · %2$s</string>
@@ -743,6 +753,14 @@
         <item>Bilinear (fastest, softest)</item>
         <item>FSR 3.1 (sharp, steady)</item>
     </string-array>
+    <string-array name="arr_screen_scale">
+        <item>Nearest neighbor</item>
+        <item>Bilinear</item>
+        <item>Bicubic</item>
+        <item>FSR 1</item>
+        <item>SGSR 1</item>
+        <item>Device (power saving)</item>
+    </string-array>
     <string-array name="arr_panel_look">
         <item>Small</item>
         <item>Normal</item>
@@ -795,6 +813,7 @@
     <string name="home_shaders_need_one_update">Shaders need one update</string>
     <string name="home_nup">" (.nup)"</string>
     <string name="game_applies_from_the_next_frame">Applies from the next frame, kept for this game (the same setting as Game settings › Upscaler).</string>
+    <string name="game_applies_from_the_next_frame_2">Applies from the next frame, kept for this game (the same setting as Game settings › Screen scaling).</string>
     <string name="game_applies_at_the_next_start">Applies at the next start (this run takes no live changes: DM_CTL is off).</string>
     <string name="game_applies_at_once_kept_for">Applies at once, kept for this game (the same setting as Game settings › Advanced).</string>
     <string name="game_shaders_the_game_lacks_are_3">Shaders the game lacks are built as it runs. The switch is under the game page › Advanced › Shaders while playing (on by default; a change applies at the next start).</string>
@@ -883,6 +902,7 @@
     <string name="ready_this_device_lacks_it_this">"This device lacks it; this game needs it. "</string>
     <string name="ready_not_reported">not reported</string>
     <string name="ready_guest_address_memory_is_available">Guest-address memory is available through a tested exported-memory alias (memory.fdAlias=1).</string>
+    <string name="ready_placed_remap_test_failed">The driver reports placed memory maps, but its guest-buffer remap test failed: %1$s</string>
     <string name="ready_gpu_features">GPU features</string>
     <string name="ready_texture_tables_runtime_arrays_the">Texture tables (runtime arrays): the game\'s texture pools live in them</string>
     <string name="ready_texture_tables_partially_bound_the">Texture tables (partially bound): the game\'s texture pools live in them</string>
@@ -1418,4 +1438,7 @@
     <string name="game_mods_remove_note">The mod\'s files are deleted from this phone. The game\'s own files stay.</string>
     <string name="game_mods_imported">Imported %1$s (%2$d files). Applies at the next start.</string>
     <string name="game_mods_refused">Not imported: %1$s</string>
+    <string name="game_fast_fp16_shader_math">Fast FP16 shader math</string>
+    <string name="game_fp16_on_turnip_faster">16-bit half precision on Turnip: faster shader math, lower heat</string>
+    <string name="game_fp16_default_precision">Default precision</string>
 </resources>

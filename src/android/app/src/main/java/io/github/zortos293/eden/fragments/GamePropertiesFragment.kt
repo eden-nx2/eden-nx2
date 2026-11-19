@@ -875,8 +875,13 @@ class GamePropertiesFragment : Fragment() {
         val checked = options.map { GameEngine.gameOption(requireContext(), args.game, it) }.toBooleanArray()
         com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.banana_options)
-            .setMultiChoiceItems(names, checked) { _, which, on ->
+            .setMultiChoiceItems(names, checked) { dialog, which, on ->
                 GameEngine.setGameOption(requireContext(), args.game, options[which], on)
+                // One switch can change another (Strong includes the RAM saver)
+                val list = (dialog as androidx.appcompat.app.AlertDialog).listView
+                options.forEachIndexed { index, option ->
+                    list.setItemChecked(index, GameEngine.gameOption(requireContext(), args.game, option))
+                }
             }
             .setPositiveButton(android.R.string.ok, null)
             .setOnDismissListener { reloadList() }

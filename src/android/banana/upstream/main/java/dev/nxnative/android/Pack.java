@@ -485,6 +485,32 @@ final class Pack {
             if (target != null) out.put(e.getKey() + (target.getName().endsWith(Nup.EXT_NSP) ? Nup.EXT_NSP : Nup.EXT), target.getPath());
             else if (skipped != null) skipped.add("add-on " + e.getKey() + " (pack.tsv aoc row " + e.getValue() + ") is in neither " + game.getName() + " nor the .nup the row names: the game runs without it");
         }
+        if (nup) addedAfter(game, out);
         return out;
+    }
+
+    /**
+     * The add-ons the game's .nup or the .nup / NSP files beside it hold that pack.tsv has no aoc row for (Prepare writes the rows from what it finds, once: a DLC put
+     * beside the game after Prepare had a Storage entry, and no link, so the game saw no DLC until Prepare ran again, Forgejo #410). Linked as the rows' are (the game's
+     * own .nup first, else the first companion that holds the index); an index with a row is left to its row. Add-ons of this game only (title ID = the game's + 0x1000 + index)
+     */
+    private void addedAfter(File game, Map<String, String> out) {
+        long app;
+        try { app = Long.parseUnsignedLong(Nup.open(game).programId(), 16); } catch (IOException | RuntimeException e) { return; }
+        List<File> files = new ArrayList<>();
+        files.add(game.getAbsoluteFile());
+        for (Nup c : Nup.companions(game)) files.add(c.file.getAbsoluteFile());
+        for (File f : files) {
+            try {
+                for (Nup.Pkg p : Nup.open(f).of(Nup.ADDON)) {
+                    long idx = p.titleId - app - 0x1000;
+                    if (idx <= 0 || idx > 2000 || p.romfsDir == Nup.NONE || aoc.containsKey((int) idx)) continue;
+                    String key = idx + (f.getName().endsWith(Nup.EXT_NSP) ? Nup.EXT_NSP : Nup.EXT);
+                    if (!out.containsKey(idx + Nup.EXT) && !out.containsKey(idx + Nup.EXT_NSP)) out.put(key, f.getPath());
+                }
+            } catch (IOException | RuntimeException e) {
+                // unreadable: not this game's add-on
+            }
+        }
     }
 }

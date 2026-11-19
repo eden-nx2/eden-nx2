@@ -24,8 +24,9 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * A game's Back up saves / Restore saves… / Import save… (its Manage sheet), over SaveStore. The save folder is the one the game's next start uses (Folders.save:
- * the app's saves/&lt;id&gt;, the old default beside the game until it is copied in, or the picked one). Each refuses while a game runs (the :game process is
+ * A game's Back up saves / Restore saves… / Import save… (its Manage sheet), over SaveStore. The save folder is the one the game's next start uses for the user
+ * games start with (Folders.userSave: the game's save folder (Folders.save: the app's saves/&lt;id&gt;, the old default beside the game until it is copied in, or the picked one)
+ * for the first user, else the &lt;save&gt;_user_&lt;uid&gt; folder beside it, Settings › Users). The running-game lock is the game's own save folder's. Each refuses while a game runs (the :game process is
  * alive): the host may be writing the save. While one works, Play waits for it (busy). Nothing here deletes a backup.
  * <ul>
  * <li><b>Back up</b>: to &lt;Switch2&gt;/save-backups/&lt;id&gt;/ on shared storage when the app may write there (All files access), so backups outlive an uninstall.
@@ -113,7 +114,7 @@ final class SaveUi {
 
     static void backup(MainActivity a, Game g) {
         if (!ready(a, g, Tx.s(R.string.game_back_up))) return;
-        File save = Folders.save(a, g);
+        File save = Folders.userSave(a, g);
         if (!hasSave(save)) { a.error(Tx.s(R.string.err_no_save_yet, g.name)); return; }
         if (exports(a, g)) {   // the picker first: the backup is made when the user has said where its zip goes
             pendingFor = g;
@@ -134,7 +135,7 @@ final class SaveUi {
     /** The backup made in app storage, then written as a zip to the picked document, read back and checked */
     private static void exportTo(MainActivity a, Game g, Uri doc) {
         if (!ready(a, g, Tx.s(R.string.game_back_up))) return;
-        File save = Folders.save(a, g);
+        File save = Folders.userSave(a, g);
         ContentResolver cr = a.getContentResolver();
         run(a, g, Tx.s(R.string.game_backing_up_save, g.name), () -> {
             SaveStore.Backup b = SaveStore.backup(save, appBackups(a, g), stamp());
@@ -273,7 +274,7 @@ final class SaveUi {
     }
 
     private static void confirm(MainActivity a, Game g, File from, String what, Runnable after) {
-        File save = Folders.save(a, g);
+        File save = Folders.userSave(a, g);
         String why = SaveStore.refuseSource(from, save);
         if (why != null) { if (after != null) after.run(); a.error(Tx.s(R.string.err_not_restored, why)); return; }
         String st = stamp();

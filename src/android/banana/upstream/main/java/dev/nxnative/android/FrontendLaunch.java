@@ -146,6 +146,7 @@ public final class FrontendLaunch extends Activity {
     private void play(Game g) {
         startActivity(new Intent(this, GameActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra("title_id", g.titleId).putExtra("name", g.name).putExtra("game", g.gameDir).putExtra("pack", g.packDir).putExtra("frontend", true));
+        GameReturn.remember(this, g.titleId, g.name, g.gameDir, g.packDir);   // the app's icon goes back to this game while it runs
         finish();
     }
 

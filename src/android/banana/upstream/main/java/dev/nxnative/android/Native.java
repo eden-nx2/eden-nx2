@@ -128,6 +128,8 @@ final class Native {
 
     /** nxhost_vk_selftest(window, frames): blocks for about frames / 60 s. 0 = passed, -1 = not in this host. */
     static native int selftest(Surface surface, int frames);
+    /** The environment the selftest's Vulkan device is made under (KEY=VALUE: the picked GPU driver), set and logged before {@link #selftest} */
+    static native void selftestEnv(String[] env);
 
     /** The player a gamepad drives (0..7), -1 when it has none (yet). */
     static native int devicePlayer(int device);

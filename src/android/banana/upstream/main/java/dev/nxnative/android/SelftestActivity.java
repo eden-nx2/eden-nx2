@@ -60,6 +60,12 @@ public final class SelftestActivity extends Activity implements SurfaceHolder.Ca
         running = true;
         status.setText(Tx.s(R.string.ready_selftest_running, FRAMES, FRAMES / 60));
         Thread t = new Thread(null, () -> {
+            // The selftest runs on the GPU driver picked on the main screen, as a game does (GpuDriver.env at a game's start). This process is its own and
+            // inherits nothing from the launcher, so without this it always tested the system's driver: a phone whose own driver is Vulkan 1.1 failed here
+            // with a working custom driver picked (GitHub #15: Adreno 650 with Turnip)
+            GpuDriver.Info drv = GpuDriver.selected(SelftestActivity.this);
+            Native.note("graphics selftest: GPU driver: " + (drv == null ? "system" : drv.label() + " (" + drv.dir + ")"));
+            Native.selftestEnv(drv == null ? new String[0] : new String[] {"DM_VK_DRIVER=" + drv.dir.getPath()});
             int rc = Native.selftest(h.getSurface(), FRAMES);
             ui.post(() -> {
                 status.setTextColor(rc == 0 ? Color.GREEN : Color.RED);

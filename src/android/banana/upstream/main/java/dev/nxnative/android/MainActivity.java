@@ -87,7 +87,7 @@ public final class MainActivity extends Activity {
         });   // a controller or keyboard moves the focus
         PadFocus.watch(getWindow());   // a controller: the focus frame (PadFocus)
         build();
-        if (saved == null) { setIntent(gated(getIntent())); fromIntent(getIntent()); }   // start() reads no_pause from getIntent() too
+        if (saved == null) { setIntent(gated(getIntent())); fromIntent(getIntent()); GameReturn.back(this, getIntent()); }   // start() reads no_pause from getIntent() too; GameReturn: Home made anew by the app's icon while a game runs
         GpuGl.probe(this, () -> { if (!isFinishing() && settingsGame != null) gameSettingsAgain(); });   // the GPU's name and, before any readiness check, the system driver's facts for the recommendations
         Updater.onStart(this);   // the release app: a newer release on GitHub opens the update popup (once per process start: not on a resume or a rotation)
     }
@@ -706,6 +706,9 @@ public final class MainActivity extends Activity {
         LinearLayout upd = settingsCard(content);
         updateRow = new Ui.Setting(this, "🔄", Tx.s(R.string.common_check_for_updates), v -> Updater.checkNow(this)).chevron(this);
         upd.addView(updateRow.view);
+        upd.addView(new Ui.Setting(this, "🩹", Tx.s(R.string.settings_small_fix_updates), null)
+                .toggle(this, Prefs.hotfixUpdates(this), (b, on) -> Prefs.hotfixUpdates(this, on))
+                .value(Tx.s(R.string.settings_small_fix_updates_help)).view);
         upd.addView(new Ui.Setting(this, "📖", Tx.s(R.string.settings_player_wiki), v -> openLink(WIKI_URL)).chevron(this)
                 .value(Tx.s(R.string.settings_guides_what_every_setting_does)).view);
 
@@ -936,6 +939,7 @@ public final class MainActivity extends Activity {
 
     @Override protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
+        if (GameReturn.back(this, i)) return;   // the app's icon while a game runs: back to the game, not Home (the launcher's start closed the game's screen above this singleTask root)
         fromIntent(i);
     }
 
@@ -1685,7 +1689,12 @@ public final class MainActivity extends Activity {
                     if (Ondevice.autoCodeUpdate(this, new File(g.gameDir), new File(g.packDir))) {
                         state(st, Tx.s(R.string.home_ready_updating_game_code), R.color.bn_leaf, ST_SOFT | ST_WORKING);
                         updating.put(st, g); updateTick();
-                    } else state(st, Tx.s(R.string.home_ready_game_code_update_waits), R.color.bn_leaf, ST_SOFT);   // a game or another job runs (or it was tried this run): the next check starts it
+                    } else {
+                        boolean stopped = Ondevice.codeUpdateTried(new File(g.gameDir)) && !Ondevice.busy(this);   // started this run and the code is still not new (stopped, failed): nothing starts it again by itself
+                        state(st, Tx.s(stopped ? R.string.home_ready_game_code_update_stopped : R.string.home_ready_game_code_update_waits), stopped ? R.color.bn_accent : R.color.bn_leaf, ST_SOFT);
+                        // a tap runs Prepare again either way (it asks first): the chip may wait for a game or a job that is stuck, and a chip that does nothing when tapped is the report this answers
+                        st.setOnClickListener(v -> { if (!needAccess(new File(g.gameDir))) Ondevice.prepare(this, new File(g.gameDir), true); });
+                    }
                     return;
                 }
                 // A pack whose code other tools made shows no chip: it usually runs; the game page offers Prepare again
@@ -1718,7 +1727,7 @@ public final class MainActivity extends Activity {
             saves.addView(new Ui.Setting(this, "💾", Tx.s(R.string.home_back_up_saves), v -> SaveUi.backup(this, g)).value(SaveUi.backupLine(this, g)).chevron(this).view);
             saves.addView(new Ui.Setting(this, "♻️", Tx.s(R.string.home_restore_saves), v -> SaveUi.restoreList(this, g)).value(Tx.s(R.string.home_from_a_backup_the_current)).chevron(this).view);
             saves.addView(new Ui.Setting(this, "📥", Tx.s(R.string.home_import_save), v -> SaveUi.importPick(this, g)).value(Tx.s(R.string.home_a_zip_or_a_save)).chevron(this).view);
-            File save = Folders.save(this, g);
+            File save = Folders.userSave(this, g);   // the save of the user games start with (Back up / Restore / Import act on it)
             TextView where = Ui.add(content, Ui.small(this, Tx.s(R.string.home_the_save_at, save != null ? save.getPath() : Tx.s(R.string.home_not_set))), 6);
             where.setTextSize(12);
             where.setTextIsSelectable(true);
@@ -2351,6 +2360,7 @@ public final class MainActivity extends Activity {
         Game.touch(this, g);   // the entry played last is the one kept if the list ever holds this game twice
         Intent intent = new Intent(this, GameActivity.class).putExtra("title_id", g.titleId).putExtra("name", g.name).putExtra("game", g.gameDir).putExtra("pack", g.packDir);
         if (getIntent().getBooleanExtra("no_pause", false)) intent.putExtra("no_pause", true);
+        GameReturn.remember(this, g.titleId, g.name, g.gameDir, g.packDir);   // the app's icon goes back to this game while it runs
         startActivity(intent);
     }
 

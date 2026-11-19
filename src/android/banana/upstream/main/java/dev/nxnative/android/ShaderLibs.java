@@ -676,18 +676,84 @@ final class ShaderLibs {
         return keys;
     }
 
+    /** A table's rows without its comment lines ("#"): the header prose is the tool's wording at the time, not the dump's (shader_split.py's changed to "no PC shader
+     *  pairing supplied", and the profiles split before still carry the older line), so two maps of the same shaders differ only there */
+    static List<String> tableRows(File f) throws IOException {
+        List<String> out = new ArrayList<>();
+        for (String l : Files.readAllLines(f.toPath(), StandardCharsets.UTF_8)) if (!l.startsWith("#")) out.add(l);
+        return out;
+    }
+
+    /** Whether a split's shader_map.tsv lists the shaders of the profile's: the same rows in the same order, comment lines left out ({@link #tableRows}) */
+    static boolean sameMap(File profileMap, File splitMap) throws IOException { return tableRows(profileMap).equals(tableRows(splitMap)); }
+
     /**
      * The keys of the profile's shader_map.tsv that a split's map (splitMap) lacks, sorted, when the split is the profile's but for keys its {@link #OPTIONAL} names
      * (a registered build of the game without a few of its shaders: Mario Kart World's 1.8.0 as an update, docs/reference/packing.md "A game with several registered
-     * builds"); null when the split has a key the profile's map does not, lacks one that is not optional, or lacks none. The shaders step then builds the map's other keys.
+     * builds", or another of the versions its shader_versions lists: {@link #otherVersionKeys}); null when the split has a key the profile's map does not, lacks one that is
+     * not optional, or lacks none. The shaders step then builds the map's other keys.
      */
-    static List<String> absentOptional(File profile, File splitMap) throws IOException {
+    static List<String> absentOptional(File profile, File splitMap) throws IOException { return absentOptional(profile, splitMap, -1); }
+
+    // A profile whose shader tables are the union of several versions of the game (game.tsv shader_versions), prepared from a dump of one of them. shader_split.py
+    // prefixes the source of a shader that first appears in a later version with that version (/v1507328/Common/..., main@v1507328; the first version's rows carry
+    // none), so a dump of one listed version may lack exactly the rows tagged with the other listed versions: they count as optional (absentOptional below), with no
+    // failure and no Try anyway. Mario Kart 8 Deluxe's tables are 4.0.0's and 4.0.1's: 135 of 29,785 rows are 4.0.1's own, and a dump of 4.0.0 was refused for them.
+    // The tags do not say which untagged rows a later version dropped: such a dump is refused as before, unless shader_optional.tsv names them.
+    // scripts/pack_android.py may_lack is the same rule on the PC
+    /** game.tsv's shader_versions ("v0", "v327680"): the versions the profile's shader tables are the union of; empty when it names none or cannot be read */
+    static List<String> shaderVersions(File profile) {
+        List<String> out = new ArrayList<>();
+        try {
+            for (String l : Files.readAllLines(new File(profile, "game.tsv").toPath(), StandardCharsets.UTF_8)) {
+                String[] c = l.split("\t", 2);
+                if (c.length == 2 && c[0].trim().equals("shader_versions")) for (String v : c[1].trim().split("\\s+")) if (v.matches("v[0-9]+")) out.add(v);
+            }
+        } catch (IOException e) {
+            out.clear();
+        }
+        return out;
+    }
+
+    /** The listed versions other than the dump's, when the dump's version is listed; else none (a single-version profile, a version the tables were not made from) */
+    static List<String> otherVersions(File profile, long version) {
+        List<String> listed = shaderVersions(profile);
+        if (!listed.contains("v" + version)) return new ArrayList<>();
+        listed.removeIf(v -> v.equals("v" + version));
+        return listed;
+    }
+
+    /** The keys of the profile's map whose source is tagged with a listed version other than the dump's: shaders only those versions have */
+    static Set<String> otherVersionKeys(File profile, long version) throws IOException {
+        Set<String> keys = new HashSet<>();
+        List<String> others = otherVersions(profile, version);
+        if (others.isEmpty()) return keys;
+        for (String l : Files.readAllLines(new File(profile, "shader_map.tsv").toPath(), StandardCharsets.UTF_8)) {
+            String[] c = l.split("\t", 6);
+            if (c.length <= 4 || !c[0].endsWith(".bin")) continue;
+            for (String v : others) {
+                int at = c[4].indexOf("@" + v), end = at + v.length() + 1;
+                if (c[4].startsWith("/" + v + "/") || at >= 0 && (end >= c[4].length() || !Character.isDigit(c[4].charAt(end)))) { keys.add(c[3]); break; }
+            }
+        }
+        return keys;
+    }
+
+    /** The one line for the log when a dump lacks only what other listed versions have (PackService), as scripts/pack_android.py prints it */
+    static String otherVersionsLine(int theirs, int total, List<String> others, long version) {
+        return String.format(Locale.US, "%,d of %,d shaders in this app's table belong to other versions of the game (%s): not needed for v%d", theirs, total,
+                String.join(", ", others), version);
+    }
+
+    /** version: the dump's (-1: not given); the keys only another listed version has (otherVersionKeys) may be lacking too, with or without the optional file */
+    static List<String> absentOptional(File profile, File splitMap, long version) throws IOException {
         File opt = new File(profile, OPTIONAL);
-        if (!opt.isFile()) return null;
+        Set<String> optional = otherVersionKeys(profile, version);
+        if (!opt.isFile() && optional.isEmpty()) return null;
         Set<String> want = mapKeys(new File(profile, "shader_map.tsv")), have = mapKeys(splitMap);
         if (!want.containsAll(have)) return null;
-        Set<String> optional = new HashSet<>();
-        for (String l : Files.readAllLines(opt.toPath(), StandardCharsets.UTF_8)) if (!l.isEmpty() && !l.startsWith("#")) optional.add(l.split("\t", 2)[0]);
+        if (opt.isFile())
+            for (String l : Files.readAllLines(opt.toPath(), StandardCharsets.UTF_8)) if (!l.isEmpty() && !l.startsWith("#")) optional.add(l.split("\t", 2)[0]);
         TreeSet<String> absent = new TreeSet<>(want);
         absent.removeAll(have);
         return !absent.isEmpty() && optional.containsAll(absent) ? new ArrayList<>(absent) : null;

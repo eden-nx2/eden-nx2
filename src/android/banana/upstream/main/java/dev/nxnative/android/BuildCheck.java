@@ -203,10 +203,13 @@ final class BuildCheck {
                         + prof.supportedShort() + ").", (row == null ? "pack version " + p.version + ", app supports " + s : bad.toString()) + "\n" + prof.supported());
             }
         }
-        // its RomFS is the data of that version (RomfsCheck: game.tsv romfs_check), else the game takes another version's data and may crash
+        // its RomFS is the data of that version (RomfsCheck: game.tsv romfs_check), else the game takes another version's data and may crash. The version the message
+        // names is the build's own (its profile row's), not the folder it was found in: a base/ that holds an update's code needs that update's RomFS (Forgejo #417)
         String romfs;
         try { romfs = p.romfsPath(game); } catch (IOException e) { romfs = null; }
-        String bad = RomfsCheck.check(prof, romfs, want.get("main"), parse(gv));
+        long codeVersion = parse(gv);
+        for (Map.Entry<Long, Map<String, String>> row : sup.entrySet()) if (sameBuild(row.getValue(), want)) { codeVersion = row.getKey(); break; }
+        String bad = RomfsCheck.check(prof, romfs, want.get("main"), codeVersion);
         if (bad != null) {
             int a = bad.indexOf('('), b = bad.lastIndexOf(").");
             return new Result(Kind.ROMFS, bad, a >= 0 && b > a ? bad.substring(a + 1, b) : bad);

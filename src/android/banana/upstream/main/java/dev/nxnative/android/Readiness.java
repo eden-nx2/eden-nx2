@@ -153,6 +153,12 @@ final class Readiness {
                 out.add(new Check(r.title, Status.PASS, Words.s("ready_guest_address_memory_is_available", "Guest-address memory is available through a tested exported-memory alias (memory.fdAlias=1)."), null));
                 continue;
             }
+            // Placed maps the driver reports, but whose remap of a guest buffer failed (the host's probe, vka_remap_probe.h: PanVK on Mali refuses every one): unusable
+            if (r.fact.equals("feature.memoryMapPlaced") && "0".equals(facts.get("memory.placedUsable"))) {
+                out.add(new Check(r.title, Status.FAIL, Words.s("ready_placed_remap_test_failed", "The driver reports placed memory maps, but its guest-buffer remap test failed: %1$s", String.valueOf(facts.get("memory.placedProbe"))), "driver", r.fact));
+                failed.add(r.fact); failed.add("title " + r.title);
+                continue;
+            }
             boolean ok = have != null && compare(have, r.min) >= 0;
             String shown = have == null ? Words.s("ready_not_reported", "not reported") : "reports " + have;
             if (ok) out.add(new Check(r.title, Status.PASS, "Present (" + label(r.fact) + " " + have + ", needs " + r.min + ").", null));

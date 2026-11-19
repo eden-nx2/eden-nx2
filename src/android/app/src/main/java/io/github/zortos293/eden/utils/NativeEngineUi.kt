@@ -26,7 +26,7 @@ interface NativeEngineUi {
      */
     fun importPack(context: Context, source: java.io.File, titleId: String, dumpPath: String?): String?
 
-    /** Whether the game has one of Banana Native's game options ([option]: a GameEngine.GameOption's ordinal). */
+    /** Whether the game has one of Banana Native's game options ([option]: a GameEngine.GameOption's id). */
     fun hasOption(titleId: String, option: Int): Boolean
 
     fun option(context: Context, titleId: String, option: Int): Boolean

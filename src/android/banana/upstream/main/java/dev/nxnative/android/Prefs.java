@@ -18,6 +18,10 @@ final class Prefs {
     static SharedPreferences of(Context c) { return open(c, "launcher"); }
 
     /** The overlay over the game (master switch: the frame rate and the other items top right, Overlay; the build tag top left is always shown); on by default. DM_OVERLAY=0 / 1 in env.txt overrides it for a run. */
+    /** Whether the check at start also offers a small fix release ("Update type: hotfix" in its notes); off: only major and critical releases (UpdateCheck.kind). Default on */
+    static boolean hotfixUpdates(Context c) { return of(c).getBoolean("hotfix_updates", true); }
+    static void hotfixUpdates(Context c, boolean on) { of(c).edit().putBoolean("hotfix_updates", on).commit(); }
+
     static boolean overlay(Context c) { return of(c).getBoolean("overlay", true); }
     static void overlay(Context c, boolean on) { of(c).edit().putBoolean("overlay", on).commit(); }
 
@@ -31,6 +35,10 @@ final class Prefs {
     /** The bananas popped on the launcher's background (BananaBackgroundView), all time; shown in Settings › About */
     static long bananasPopped(Context c) { return of(c).getLong("bananas_popped", 0); }
     static long addBananaPopped(Context c) { long n = bananasPopped(c) + 1; of(c).edit().putLong("bananas_popped", n).commit(); return n; }
+    /** The in-game clean picture: stats, log, build tag, on-screen controls and the panel arrow hidden together. One saved flag, so hiding survives a
+     *  restart as a whole; the overlay and log settings themselves are not changed, and showing everything returns to them. */
+    static boolean clean(Context c) { return of(c).getBoolean("clean", false); }
+    static void clean(Context c, boolean on) { of(c).edit().putBoolean("clean", on).commit(); }
 
     /** One item of the overlay (Overlay.ITEMS); all on by default, shown only while the overlay is on */
     static boolean overlayItem(Context c, String key) { return of(c).getBoolean("overlay_" + key, true); }
@@ -191,7 +199,7 @@ final class Prefs {
     /** The recommended frame rate cap as the launcher stores it (Recommend.cap), null for none */
     static Integer recCap(Context c, String titleId) { return Recommend.cap(rec(c, titleId, Recommend.FPS_CAP), limited(titleId)); }
     /** Game settings › Reset to defaults: every choice of the game's own back to the main screen's default (Extra environment's lines stay) */
-    static final String[] GAME_SETTINGS = {"window", "render_pct", "gfx_quality", "fps_cap", "gpu_driver", "gpu_ts", "pause_return", "ndsr_choice2", "ndsr_sharp", "drs2", "ram_saver", "decouple", "hold60", "full_vegetation", "gsr2_clarity", "dlss_sharp", "dlss_mode", "scene_res", "res_preset", "aspect", "cheats"};
+    static final String[] GAME_SETTINGS = {"window", "render_pct", "gfx_quality", "fps_cap", "gpu_driver", "gpu_ts", "pause_return", "ndsr_choice2", "ndsr_sharp", "drs2", "ram_saver", "ram_saver_strong", "decouple", "hold60", "full_vegetation", "gsr2_clarity", "dlss_sharp", "dlss_mode", "scene_res", "res_preset", "aspect", "cheats", "screen_scale"};
     static void resetGame(Context c, String titleId) {
         SharedPreferences.Editor e = of(c).edit();
         for (String k : GAME_SETTINGS) e.remove(gameKey(k, titleId));
@@ -519,9 +527,16 @@ final class Prefs {
      */
     static boolean ramSaver(Context c, String titleId) { return of(c).getBoolean(gameKey("ram_saver", titleId), false); }
     static void ramSaver(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("ram_saver", titleId), on).commit(); }
+    /** RAM saver Strong (a second switch beside RAM saver; the stored "ram_saver" stays a boolean, so old true = level 1): off 0, saver 1, strong 2. Strong includes the saver */
+    static boolean ramSaverStrong(Context c, String titleId) { return of(c).getBoolean(gameKey("ram_saver_strong", titleId), false); }
+    static void ramSaverStrong(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("ram_saver_strong", titleId), on).commit(); }
+    static int ramSaverLevel(Context c, String titleId) { return ramSaverStrong(c, titleId) ? 2 : ramSaver(c, titleId) ? 1 : 0; }
     /** Game settings › Classic render passes (DM_VK_CLASSIC_RP): VkRenderPasses with imageless framebuffers instead of dynamic rendering. Off by default (a GPU loss on Adreno 830 with Turnip, open) */
     static boolean classicPasses(Context c, String titleId) { return of(c).getBoolean(gameKey("vk_classic_rp", titleId), false); }
     static void classicPasses(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("vk_classic_rp", titleId), on).commit(); }
+    /** Game settings › Fast FP16 shader math (TU_DEBUG=fp16, FD_MESA_DEBUG=fp16: Mesa reads them, the host reads no DM_ switch): native 16-bit half-precision ALU instructions on Turnip. Off by default */
+    static boolean fp16(Context c, String titleId) { return of(c).getBoolean(gameKey("vk_fp16", titleId), false); }
+    static void fp16(Context c, String titleId, boolean on) { of(c).edit().putBoolean(gameKey("vk_fp16", titleId), on).commit(); }
 
     /**
      * The game's own environment lines (KEY=VALUE, one a line; its Game settings), given to the host after the launcher's settings and env.txt, so they win for

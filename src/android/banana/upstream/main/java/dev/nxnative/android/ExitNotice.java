@@ -53,6 +53,14 @@ final class ExitNotice {
         return st != null && !st.equals("stopped") && !"1".equals(rec.get("shown"));
     }
 
+    /** The pid of the game the record says runs now when it is title (the game the launcher started last), else -1: another title, a run that was stopped or
+     *  ended, no pid (GameReturn: the app's icon goes back only to the game that was started) */
+    static int runningPid(Map<String, String> rec, String title) {
+        if (title == null || !title.equalsIgnoreCase(rec.get("title")) || !"running".equals(rec.get("state"))) return -1;
+        try { int pid = Integer.parseInt(rec.getOrDefault("pid", "")); return pid > 0 ? pid : -1; }
+        catch (NumberFormatException e) { return -1; }
+    }
+
     /** Whether the record's own state says enough without Android's exit reason (a crash the app saw itself) */
     static boolean selfExplained(Map<String, String> rec) {
         String st = rec.get("state");

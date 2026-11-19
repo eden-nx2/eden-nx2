@@ -71,11 +71,12 @@ object GameEngine {
     /** Whether Banana Native has a profile for the game: only then is it a choice. */
     fun supports(game: Game): Boolean = status(game) != null
 
-    /** Banana Native's game options Hokkaido shows (HokkaidoBridge.OPTION_* order); they apply at the next start. */
-    enum class GameOption(val title: Int, val description: Int) {
-        FULL_VEGETATION(R.string.banana_option_vegetation, R.string.banana_option_vegetation_description),
-        RAM_SAVER(R.string.banana_option_ram_saver, R.string.banana_option_ram_saver_description),
-        SOFT_TEXTURES(R.string.banana_option_soft_textures, R.string.banana_option_soft_textures_description)
+    /** Banana Native's game options Hokkaido shows ([id]: HokkaidoBridge.OPTION_*); they apply at the next start. */
+    enum class GameOption(val id: Int, val title: Int, val description: Int) {
+        FULL_VEGETATION(0, R.string.banana_option_vegetation, R.string.banana_option_vegetation_description),
+        RAM_SAVER(1, R.string.banana_option_ram_saver, R.string.banana_option_ram_saver_description),
+        RAM_SAVER_STRONG(3, R.string.banana_option_ram_saver_strong, R.string.banana_option_ram_saver_strong_description),
+        SOFT_TEXTURES(2, R.string.banana_option_soft_textures, R.string.banana_option_soft_textures_description)
     }
 
     private fun titleIdOf(game: Game) = game.programIdHex.uppercase().padStart(16, '0')
@@ -83,15 +84,15 @@ object GameEngine {
     fun gameOptions(game: Game): List<GameOption> {
         val engine = ui ?: return emptyList()
         return GameOption.entries.filter {
-            runCatching { engine.hasOption(titleIdOf(game), it.ordinal) }.getOrDefault(false)
+            runCatching { engine.hasOption(titleIdOf(game), it.id) }.getOrDefault(false)
         }
     }
 
     fun gameOption(context: Context, game: Game, option: GameOption): Boolean =
-        runCatching { ui?.option(context, titleIdOf(game), option.ordinal) }.getOrNull() ?: false
+        runCatching { ui?.option(context, titleIdOf(game), option.id) }.getOrNull() ?: false
 
     fun setGameOption(context: Context, game: Game, option: GameOption, on: Boolean) {
-        ui?.setOption(context, titleIdOf(game), option.ordinal, on)
+        ui?.setOption(context, titleIdOf(game), option.id, on)
     }
 
     /**

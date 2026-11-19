@@ -385,6 +385,11 @@ final class GameSettings {
                 picture.add(new Ui.Setting(a, "🌀", Tx.s(R.string.game_motion_clarity), v -> clarity(a, g, again)).value(dflt(GameUpscaler.ownClarity(a, id), DlssTune.clarityName(GameUpscaler.clarity(a, id)))).chevron(a).sub());
             if (DlssTune.showsSharp(dm))
                 picture.add(new Ui.Setting(a, "✨", DlssTune.sharpTitle(dm), v -> dlssSharp(a, g, again)).value(dflt(GameUpscaler.ownDlssSharp(a, id), DlssTune.sharpName(GameUpscaler.dlssSharp(a, id)))).chevron(a).sub());
+            // Screen scaling: the present's scaling of the window to the screen (GameUpscaler.screen, DlssTune.SCREEN_NAMES), with Screen sharpness under FSR 1; the in-game panel changes it live
+            int sc = GameUpscaler.screen(a, id);
+            picture.add(new Ui.Setting(a, "📐", Tx.s(R.string.common_screen_scaling), v -> screenScale(a, g, again)).value(shortName(Tx.arr(R.array.arr_screen_scale)[sc])).chevron(a));
+            if (DlssTune.showsScreenSharp(sc))
+                picture.add(new Ui.Setting(a, "✨", Tx.s(R.string.common_screen_sharpness), v -> screenSharp(a, g, again)).value(dflt(GameUpscaler.ownSharp(a, id), GameUpscaler.sharpName(a, id))).chevron(a).sub());
         } else {
             picture.add(track(recRows, Recommend.UPSCALER, new Ui.Setting(a, "🔍", Tx.s(R.string.common_upscaler), v -> upscaler(a, g, again)).value(shortName(Tx.arr(R.array.arr_upscaler_modes)[GameUpscaler.mode(a, id)])).chevron(a)));
             if (GameUpscaler.mode(a, id) == GameUpscaler.MODE_FSR)   // only with FSR 1 chosen
@@ -508,11 +513,16 @@ final class GameSettings {
                 .says(Tx.s(R.string.game_repeated_meshes_drawn_as_one), Tx.s(R.string.game_one_draw_per_mesh)));
         advanced.add(new Ui.Setting(a, "🧱", Tx.s(R.string.game_classic_render_passes), null).toggle(a, Prefs.classicPasses(a, id), (b, on) -> Prefs.classicPasses(a, id, on))
                 .says(Tx.s(R.string.game_less_cpu_a_pass_on), Tx.s(R.string.game_dynamic_rendering)));
+        advanced.add(new Ui.Setting(a, "⚡", Tx.s(R.string.game_fast_fp16_shader_math), null).toggle(a, Prefs.fp16(a, id), (b, on) -> Prefs.fp16(a, id, on))
+                .says(Tx.s(R.string.game_fp16_on_turnip_faster), Tx.s(R.string.game_fp16_default_precision)));
         advanced.add(new Ui.Setting(a, "🧵", Tx.s(R.string.game_background_pipelines), null).toggle(a, Prefs.psoAsync(a, id), (b, on) -> Prefs.psoAsync(a, id, on))
                 .says(Tx.s(R.string.game_a_short_pop_in_not), Tx.s(R.string.game_made_when_first_drawn_may)));
         if (ShaderLibs.layerCovers(id, null)) advanced.add(layerSwitch(a, g, again));   // (a Switch 2 title: the layer serves NVN2 programs only)
-        advanced.add(new Ui.Setting(a, "💾", Tx.s(R.string.game_ram_saver), null).toggle(a, Prefs.ramSaver(a, id), (b, on) -> Prefs.ramSaver(a, id, on))
+        advanced.add(new Ui.Setting(a, "💾", Tx.s(R.string.game_ram_saver), null).toggle(a, Prefs.ramSaver(a, id), (b, on) -> { Prefs.ramSaver(a, id, on); if (!on) Prefs.ramSaverStrong(a, id, false); })
                 .says(Tx.s(R.string.game_texture_data_in_a_file), Tx.s(R.string.game_texture_data_in_compressed_ram)));
+        // The second level: the host reads DM_VK_RAM_SAVER=2 (GameActivity). It includes the first, so turning it on turns RAM saver on (the stored "ram_saver" stays a plain boolean)
+        advanced.add(new Ui.Setting(a, "🗜️", Tx.s(R.string.game_ram_saver_strong), null).toggle(a, Prefs.ramSaverStrong(a, id), (b, on) -> { Prefs.ramSaverStrong(a, id, on); if (on) Prefs.ramSaver(a, id, true); })
+                .says(Tx.s(R.string.game_ram_saver_strong_on), Tx.s(R.string.game_ram_saver_strong_off)));
         advanced.add(new Ui.Setting(a, "⚡", Tx.s(R.string.common_use_fast_cores), null).toggle(a, Prefs.pinThreads(a, id), (b, on) -> Prefs.pinThreads(a, id, on))
                 .says(Tx.s(R.string.game_busy_threads_off_the_small), Tx.s(R.string.game_android_places_the_threads)));
         advanced.add(new Ui.Setting(a, "⏸️", Tx.s(R.string.game_pause_on_return), null).toggle(a, Prefs.pauseOnReturn(a, id), (b, on) -> Prefs.pauseOnReturn(a, id, on))
@@ -1073,6 +1083,17 @@ final class GameSettings {
 
     private static void sharpness(MainActivity a, Game g, Runnable done) {   // FSR's RCAS sharpening (GameUpscaler, DM_VK_NDSR_SHARP)
         choose(a, Tx.s(R.string.game_title_for, Tx.s(R.string.common_fsr_sharpness), g.name), Tx.arr(R.array.arr_fsr_sharp), firstLabel(null, GameUpscaler.sharpName(GameUpscaler.sharp(a))), GameUpscaler.ownSharp(a, g.titleId),
+               GameUpscaler.sharpIndex(GameUpscaler.sharp(a, g.titleId)), v -> GameUpscaler.sharp(a, g.titleId, v == null ? null : GameUpscaler.SHARPS[v]), done);
+    }
+
+    private static void screenScale(MainActivity a, Game g, Runnable done) {   // a game on the DLSS stand-in: the present's scaling (GameUpscaler.screen, DM_VK_PRESENT_SCALE); the in-game panel changes it live
+        choose(a, Tx.s(R.string.game_title_for, Tx.s(R.string.common_screen_scaling), g.name), Tx.arr(R.array.arr_screen_scale),
+               Tx.s(R.string.game_default_value, Tx.arr(R.array.arr_screen_scale)[GameUpscaler.screenDefault(a, g.titleId)]), GameUpscaler.ownScreen(a, g.titleId),
+               GameUpscaler.screen(a, g.titleId), v -> GameUpscaler.screen(a, g.titleId, v), done);
+    }
+
+    private static void screenSharp(MainActivity a, Game g, Runnable done) {   // the present's FSR 1 RCAS under Screen scaling (the same ndsr_sharp as FSR sharpness, DM_VK_FSR_SHARP)
+        choose(a, Tx.s(R.string.game_title_for, Tx.s(R.string.common_screen_sharpness), g.name), Tx.arr(R.array.arr_fsr_sharp), firstLabel(null, GameUpscaler.sharpName(GameUpscaler.sharp(a))), GameUpscaler.ownSharp(a, g.titleId),
                GameUpscaler.sharpIndex(GameUpscaler.sharp(a, g.titleId)), v -> GameUpscaler.sharp(a, g.titleId, v == null ? null : GameUpscaler.SHARPS[v]), done);
     }
 

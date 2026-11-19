@@ -394,7 +394,7 @@ final class DumpLayout {
         }
         // the RomFS is this version's data (game.tsv romfs_check: a file line that differs between versions, where romfs_marker cannot tell)
         // (Try anyway: not checked, the rows are of the builds the profile lists)
-        return f.untested ? null : RomfsCheck.check(prof, path(dump, v, "romfs"), f.buildIds.get("main"), v);
+        return f.untested ? null : RomfsCheck.check(prof, path(dump, v, "romfs"), f.buildIds.get("main"), f.build >= 0 ? f.build : v);   // named by the build's own version (BuildCheck.build)
     }
 
     /**

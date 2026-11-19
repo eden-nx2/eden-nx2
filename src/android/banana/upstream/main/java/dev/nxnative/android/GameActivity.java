@@ -65,6 +65,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     private static Boolean overlayEnv;   // DM_OVERLAY in env.txt: overrides the setting for this run (static: a screen created again keeps it)
     private TouchControls controls;
     private SidePanel panel;
+    private View handle;   // the panel's strip along the right edge (clean mode hides it too; Back still opens the panel)
     private final HashSet<Integer> pads = new HashSet<>();   // the gamepads with a player: the on-screen controls hide while there is one
     private PadOrder order;   // which gamepad gets a player, and which is player 1 (hostSetup)
     // The in-game panel with a controller (PadPanel): the open / close combination; the pad keys the host holds down (released when the panel opens: releaseGameInput),
@@ -78,10 +79,17 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
     private PadMotion padMotion;   // a gamepad's own gyroscope and accelerometer as its player's six-axis sensor (PadMotion), the phone's own sensors stay the host's
     private volatile Rumble rumble;   // the game's vibration on the controller's or the phone's vibrator
     private boolean input, started;
+    private boolean clean;   // the saved clean picture: stats, log, tag, controls and the panel strip hidden together
     private InputManager inputManager;
     private AudioManager audio;
     private AudioFocusRequest focus;
     private final AudioFocus focusState = new AudioFocus();
+    /** The focus listener (AudioFocus): a loss for good while the game is on screen leaves the sound on, and the log says so once per loss */
+    private void focusChanged(int f) {
+        boolean intr = focusState.changed(f, !stopped);
+        if (f == AudioManager.AUDIOFOCUS_LOSS && !intr) Native.note("audio focus lost for good with the game on screen: its sound goes on");
+        Native.audioInterrupt(intr);
+    }
     private boolean requestFocus() { boolean g = audio.requestAudioFocus(focus) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED; focusState.requested(g); return g; }
     private volatile AudioDeviceCallback route;
     private boolean routeReady;
@@ -152,7 +160,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         // on a swipe in from the edge (a tap goes nowhere: a stray touch near the edge does not open it). Under gesture navigation the system's own Back swipe from that
         // edge opens it too (onBackPressed). The one-time hint (panelHint) says so; TalkBack reads it as a button
         float dp = getResources().getDisplayMetrics().density;
-        View handle = new View(this);
+        handle = new View(this);
         float[] downX = {-1};
         handle.setOnTouchListener((v, e) -> {
             int a = e.getActionMasked();
@@ -165,7 +173,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         handle.setOnClickListener(v -> panel.open());   // TalkBack's double tap
         if (!HokkaidoInGame.on()) root.addView(handle, root.indexOfChild(panel), new FrameLayout.LayoutParams(Math.round(20 * dp), Math.round(140 * dp), Gravity.END | Gravity.TOP));   // Hokkaido's menu opens with Back
         // Auto with a gamepad connected, or Off: the handle goes with the controls (Back or a gamepad's Home button opens the panel)
-        controls.onSwitch = v -> handle.setVisibility(v ? View.VISIBLE : View.GONE);
+        controls.onSwitch = v -> updateHandle(v);
         controls.setMode(TouchControls.mode(this, id));
         root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> handle.setTranslationY((b - t) * 0.3f - 70 * dp));
         // Paused (pause(): the in-game panel's Pause, or the screen coming back with pause-on-return on): the game is suspended until a tap, or A / Start on a gamepad.
@@ -183,6 +191,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         if (!HokkaidoInGame.on()) panelHint(root);
         root.setOnApplyWindowInsetsListener((v, in) -> { insetOverlay(in); return in; });   // again whenever the insets change (a turn, a fold)
         setContentView(root);
+        clean(Prefs.clean(this));   // the saved clean picture applies to the controls and the panel strip too, not only to the overlay/log settings
         immersive();
         TextInput.screen(this);
         CtrlScreen.screen(this);   // the controller applet's join screen shows on this screen (again, when the game was waiting on it as the screen was recreated)
@@ -251,7 +260,24 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         v.requestLayout();
     }
 
-    private boolean overlayOn() { return overlayEnv != null ? overlayEnv : Prefs.overlay(this); }
+    private boolean overlayOn() { return !clean && (overlayEnv != null ? overlayEnv : Prefs.overlay(this)); }
+
+    /** The panel's one-tap clean picture: stats, tag, log, touch controls and the panel arrow, saved as one flag. The overlay and log settings are left
+     *  alone (the host's present stops drawing because overlayOn() is false); Back / Home still opens the panel, where the same button restores them. */
+    void clean(boolean hidden) {
+        clean = hidden;
+        Prefs.clean(this, hidden);
+        if (fps != null) fps.setVisibility(hidden || !overlayOn() ? View.GONE : View.VISIBLE);
+        if (tag != null) tag.setVisibility(hidden || !overlayOn() || !Prefs.overlayItem(this, "tag") ? View.GONE : View.VISIBLE);
+        if (overlay != null) overlay.setVisibility(!hidden && TouchControls.showLog(this) ? View.VISIBLE : View.GONE);
+        if (controls != null) controls.setClean(hidden);
+        updateHandle(controls == null || controls.normalVisible());
+    }
+
+    /** The panel arrow follows the clean picture and the controls' own rule (Auto with a gamepad, On, Off). */
+    private void updateHandle(boolean controlsVisible) {
+        if (handle != null) handle.setVisibility(!clean && controlsVisible ? View.VISIBLE : View.GONE);
+    }
 
     /** Thread placement (Native.pinThreads): every 5 s, for threads the game and the replay start later; stops when the phone reports no clocks */
     private final Runnable pinRun = this::pinTick;
@@ -528,8 +554,10 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         if (Prefs.classicPasses(this, id)) env.add("DM_VK_CLASSIC_RP=1");   // Game settings › Classic render passes
         if (!Prefs.layerBuild(this, id)) env.add("DM_VK_LAYER=0");   // Game settings › Shaders while playing off: no run-time shader layer (the game then needs a library, as before)
         if (Prefs.skipLayersGame(id) && Prefs.skipLayers(this, id)) env.add("DM_VK_SKIP_FS=" + Prefs.skipLayersKeys(id));   // Game settings › Speedhack: Turn off hidden layers
+        if (Prefs.fp16(this, id)) { env.add("TU_DEBUG=fp16"); env.add("FD_MESA_DEBUG=fp16"); }   // Game settings › Fast FP16 shader math
         env.add("DM_VK_PSO_ASYNC=" + (Prefs.psoAsync(this, id) ? 2 : 0));   // Game settings › Background pipelines (an env.txt line of the player's comes later and wins)
-        if (Prefs.ramSaver(this, id)) { env.add("DM_MEM_FILEBACK=1"); env.add("DM_MEM_FILEBACK_KINDS=shader,texture"); }   // Game settings › RAM saver: texture pools in a file in TMPDIR, the cache folder (vka_mem.c "File-backed pools"); lines of env.txt or the game's own come later and win
+        int ramLevel = Prefs.ramSaverLevel(this, id);   // 0 off, 1 RAM saver, 2 Strong (the host reads DM_VK_RAM_SAVER=2 for the finest two texture levels left out, a sixth of RAM for the texture cache, one background compile at a time)
+        if (ramLevel > 0) { env.add("DM_MEM_FILEBACK=1"); env.add("DM_MEM_FILEBACK_KINDS=shader,texture"); env.add("DM_VK_RAM_SAVER=" + ramLevel); }   // Game settings › RAM saver: texture pools in a file in TMPDIR, the cache folder (vka_mem.c "File-backed pools"); lines of env.txt or the game's own come later and win
         String padMap = Prefs.padMap(this, id);   // Button mapping (Game settings, Settings): wins over the label swap's A/B for the buttons it names
         if (!padMap.isEmpty()) env.add("DM_PAD_MAP=" + padMap);
         env.add("DM_MOTION_SENS=" + Prefs.motionFactor(this, id));   // Game settings › Controls › Motion sensitivity (the phone's gyro, 50 % unless the player chose; env.txt lines come later and win)
@@ -543,11 +571,14 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         } else if (variant != null) {   // Game settings › Aspect ratio: the pack's native-aspect modules (<pack>/<variant>/, loader.c) and the picture shown at that aspect
             env.add("DM_PATCH_VARIANT=" + variant);
             env.add("DM_VK_PICTURE_ASPECT=" + aspect);
-        } else if (aspect != null && Profile.of(id) != null && Arrays.asList(Profile.of(id).cameraAspects.split(",")).contains(aspect)) {   // a shape the host's camera patch follows (game.tsv aspect rows): the picture at that shape, no variant
+        } else if (aspect != null && aspect.matches("[0-9]+:[0-9]+") && Profile.of(id) != null && Arrays.asList(Profile.of(id).cameraAspects.split(",")).contains(aspect)) {   // a shape the host's camera patch follows (game.tsv aspect rows): the picture at that shape, no variant
             env.add("DM_VK_PICTURE_ASPECT=" + aspect);
         } else if (ScreenShape.CHOICE.equals(aspect) && Profile.of(id) != null && !Profile.of(id).cameraAspects.isEmpty()) {   // Screen shape: the window's own shape (ScreenShape), read now, once; a 16:9-ish window passes nothing
             android.graphics.Rect b = getWindowManager().getCurrentWindowMetrics().getBounds();
             String shape = ScreenShape.ratio(b.width(), b.height(), orientationFixed());
+            boolean tallOnly = true;   // a host that follows taller shapes only (every aspect row narrower than 16:9, Pokopia): a wider window keeps 16:9, as a variant's does
+            for (String r : Profile.of(id).cameraAspects.split(",")) if (r.trim().matches("[0-9]+:[0-9]+") && ScreenShape.tall(r.trim()) == null) tallOnly = false;   // "screen" (Screen shape only) is not a ratio
+            if (tallOnly) shape = ScreenShape.tall(shape);
             if (shape != null) env.add("DM_VK_PICTURE_ASPECT=" + shape);
             shapeNote = ("[nxlaunch] aspect ratio: screen shape, window " + b.width() + "x" + b.height() + (orientationFixed() ? " (landscape)" : "") + (shape == null ? ": about 16:9, nothing passed" : " -> " + shape));
         }
@@ -883,6 +914,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             }
             if (testSave != null) Native.note("[nxlaunch] test app: DM_SAVE from env-" + id + ".txt: " + testSave);
             Native.note("frame generation: " + (Lsfg.on(this) ? "on" : "off") + "; " + Lsfg.note);
+            if (Prefs.ramSaverLevel(this, id) == 2) Native.note("RAM saver: Strong (DM_VK_RAM_SAVER=2); frame generation " + (Lsfg.on(this) ? "on" : "off"));
             Native.note(gpuNote + " (picked in the launcher; a DM_VK_DRIVER line in env.txt wins, the host's [vk] driver line says which ran)");
             Native.note(Recommend.logLine(Prefs.recStates(this, id)));   // each recommended setting with its value and source (yours / recommended / default); env.txt lines come later and win
             if (resNote != null) Native.note(resNote);
@@ -1156,7 +1188,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
             String text = new String(b, StandardCharsets.UTF_8);
             if (text.contains("[nvn] frame ") || text.contains("[longframe]") || text.contains("window frame rate")) drawing = true;   // the host logs these once frames are presented
             if (text.contains("CRASH sig=") || text.contains("FATAL")) failed = true;
-            overlay.setVisibility(!drawing || failed || TouchControls.showLog(this) ? View.VISIBLE : View.GONE);
+            overlay.setVisibility(!clean && (!drawing || failed || TouchControls.showLog(this)) ? View.VISIBLE : View.GONE);
             String[] lines = text.split("\n");
             StringBuilder s = new StringBuilder();
             for (int i = Math.max(from > 0 ? 1 : 0, lines.length - 8); i < lines.length; i++) s.append(lines[i]).append('\n');
@@ -1188,7 +1220,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         focus = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN).build())
-                .setOnAudioFocusChangeListener(f -> Native.audioInterrupt(focusState.changed(f)), ui)
+                .setOnAudioFocusChangeListener(this::focusChanged, ui)
                 .build();
         // Granted at once calls no listener: an interruption the screen that went saw (a call while in the background) is over for this one
         if (requestFocus()) Native.audioInterrupt(false);

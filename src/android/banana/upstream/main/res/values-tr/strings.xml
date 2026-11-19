@@ -71,6 +71,8 @@
     <string name="common_resolution">Çözünürlük</string>
     <string name="common_rumble">Titreşim</string>
     <string name="common_screen_rotation">Ekran yönü</string>
+    <string name="common_screen_scaling">Ekran ölçekleme</string>
+    <string name="common_screen_sharpness">Ekran keskinliği</string>
     <string name="common_share_log">Günlüğü paylaş</string>
     <string name="common_stop">Durdur</string>
     <string name="common_system">Sistem</string>
@@ -125,6 +127,7 @@
     <string name="home_ready">Hazır</string>
     <string name="home_ready_game_code_update_paused">Hazır · oyun kodu güncellemesi duraklatıldı</string>
     <string name="home_ready_game_code_update_waits">Hazır · oyun kodu güncellemesi bekliyor</string>
+    <string name="home_ready_game_code_update_stopped">Hazır · oyun kodu güncellemesi durdu, tekrar denemek için dokunun</string>
     <string name="home_ready_shaders_need_one_update">Hazır · gölgelendiricilerin bir güncellemeye ihtiyacı var</string>
     <string name="home_ready_update">Hazır · güncelleme</string>
     <string name="home_ready_updating_game_code">Hazır · oyun kodu güncelleniyor</string>
@@ -175,6 +178,8 @@
     <string name="settings_on_the_controller_or_the">Kumandada veya kumandasız telefonda</string>
     <string name="settings_overlay">Bindirme</string>
     <string name="settings_picture_from_the_release_notes">Sürüm notlarından resim</string>
+    <string name="settings_small_fix_updates">Küçük düzeltme güncellemeleri</string>
+    <string name="settings_small_fix_updates_help">Uygulama açılırken küçük düzeltme sürümlerini öner. Kapalıysa yalnızca büyük güncellemeler önerilir; Güncellemeleri denetle yine en yenisini gösterir. Sonraki büyük güncelleme tüm düzeltmeleri içerir.</string>
     <string name="settings_player_wiki">Oyuncu wikisi</string>
     <string name="settings_remove_leftovers_and_old_files">Artıkları ve eski dosyaları kaldırır; kayıtlara asla dokunmaz</string>
     <string name="settings_sample_games">Örnek oyunlar</string>
@@ -298,6 +303,8 @@
     <string name="game_open_the_in_game_panel">Oyun içi paneli aç</string>
     <string name="game_pause_on_return">Dönüşte duraklat</string>
     <string name="game_pause_the_game">Oyunu duraklat</string>
+    <string name="game_hide_everything_clean_picture">Her şeyi gizle (temiz görüntü)</string>
+    <string name="game_show_everything">Her şeyi göster</string>
     <string name="game_pause_when_the_game_comes">Oyun arka plandan dönünce duraklat</string>
     <string name="game_paused_n_ntap_to_continue">"Duraklatıldı\n\nDevam etmek için dokunun  (kumandada A veya Start)"</string>
     <string name="game_per_segment">Bölüm başına</string>
@@ -309,6 +316,9 @@
     <string name="game_position_this_screen">Konum (bu ekran)</string>
     <string name="game_press_l_r">L + R\'ye bas</string>
     <string name="game_ram_saver">RAM tasarrufu</string>
+    <string name="game_ram_saver_strong">RAM tasarrufu: güçlü</string>
+    <string name="game_ram_saver_strong_off">RAM tasarrufu ile aynı</string>
+    <string name="game_ram_saver_strong_on">Daha da az RAM: en ince iki doku düzeyi atlanır (bir doku on altıda birini tutar), RAM\'in altıda biri kadar doku önbelleği, aynı anda tek arka plan işlem hattı. RAM tasarrufunu içerir; kare üretimi kendiliğinden açılmaz</string>
     <string name="game_recommended_for_this_phone">Bu telefon için önerilen</string>
     <string name="game_remove_picked">Seçileni kaldır…</string>
     <string name="game_remove_ticked">İşaretlileri kaldır</string>
@@ -336,7 +346,7 @@
     <string name="game_stop_the_game_2">Oyun durdurulsun mu?</string>
     <string name="game_switch_2_edition">Switch 2 Edition</string>
     <string name="game_target_frame_rate">Hedef kare hızı</string>
-    <string name="game_texture_data_in_a_file">Doku verisi dosyada: GB\'larca boş yer gerekir</string>
+    <string name="game_texture_data_in_a_file">Doku verisi dosyada (GB\'larca boş yer gerekir), daha küçük doku önbelleği, yakın dokular biraz daha yumuşak</string>
     <string name="game_texture_data_in_compressed_ram">Doku verisi sıkıştırılmış RAM\'de</string>
     <string name="game_the_game_ends_unsaved_progress">Oyun kapanır; kaydedilmemiş ilerleme kaybolur. Günlük, Günlüğü paylaş için kalır.</string>
     <string name="game_the_game_s_own">Oyunun kendi dosyası</string>
@@ -695,6 +705,14 @@
         <item>Bilinear (en hızlı, en yumuşak)</item>
         <item>FSR 3.1 (keskin, dengeli)</item>
     </string-array>
+    <string-array name="arr_screen_scale">
+        <item>En yakın komşu</item>
+        <item>Bilinear</item>
+        <item>Bikübik</item>
+        <item>FSR 1</item>
+        <item>SGSR 1</item>
+        <item>Cihaz (güç tasarrufu)</item>
+    </string-array>
     <string-array name="arr_panel_look">
         <item>Küçük</item>
         <item>Normal</item>
@@ -743,6 +761,7 @@
     <string name="home_shaders_need_one_update">Gölgelendiricilerin bir güncellemeye ihtiyacı var</string>
     <string name="home_nup">" (.nup)"</string>
     <string name="game_applies_from_the_next_frame">Bir sonraki kareden itibaren uygulanır, bu oyun için saklanır (Oyun ayarları › Yükseltici ile aynı ayar).</string>
+    <string name="game_applies_from_the_next_frame_2">Bir sonraki kareden itibaren uygulanır, bu oyun için saklanır (Oyun ayarları › Ekran ölçekleme ile aynı ayar).</string>
     <string name="game_applies_at_the_next_start">Bir sonraki başlatmada uygulanır (bu çalıştırma canlı değişiklik almaz: DM_CTL kapalı).</string>
     <string name="game_applies_at_once_kept_for">Hemen uygulanır, bu oyun için saklanır (Oyun ayarları › Gelişmiş ile aynı ayar).</string>
     <string name="game_shaders_the_game_lacks_are_3">Oyunda eksik olan gölgelendiriciler oyun çalışırken oluşturulur. Anahtar, oynarken oyun sayfası › Gelişmiş › Gölgelendiriciler altındadır (varsayılan olarak açık; değişiklik bir sonraki başlatmada uygulanır).</string>
@@ -829,6 +848,7 @@
     <string name="ready_this_device_lacks_it_this">"Bu cihazda yok; bu oyun buna ihtiyaç duyar. "</string>
     <string name="ready_not_reported">bildirilmedi</string>
     <string name="ready_guest_address_memory_is_available">Konuk adres belleği, test edilmiş bir dışa aktarılmış bellek takma adıyla kullanılabilir (memory.fdAlias=1).</string>
+    <string name="ready_placed_remap_test_failed">Sürücü yerleştirilmiş bellek eşlemelerini bildiriyor, ancak misafir arabelleği yeniden eşleme testi başarısız oldu: %1$s</string>
     <string name="ready_gpu_features">GPU özellikleri</string>
     <string name="ready_texture_tables_runtime_arrays_the">Doku tabloları (çalışma zamanı dizileri): oyunun doku havuzları bunlarda durur</string>
     <string name="ready_texture_tables_partially_bound_the">Doku tabloları (kısmen bağlı): oyunun doku havuzları bunlarda durur</string>
@@ -1335,4 +1355,7 @@
     <string name="game_mods_remove_note">Modun dosyaları bu telefondan silinir. Oyunun kendi dosyaları kalır.</string>
     <string name="game_mods_imported">%1$s içe aktarıldı (%2$d dosya). Bir sonraki başlatmada geçerli olur.</string>
     <string name="game_mods_refused">İçe aktarılmadı: %1$s</string>
+    <string name="game_fast_fp16_shader_math">Hızlı FP16 gölgelendirici matematiği</string>
+    <string name="game_fp16_on_turnip_faster">Turnip\'te 16 bit yarım duyarlık: daha hızlı gölgelendirme, daha az ısı</string>
+    <string name="game_fp16_default_precision">Varsayılan duyarlık</string>
 </resources>

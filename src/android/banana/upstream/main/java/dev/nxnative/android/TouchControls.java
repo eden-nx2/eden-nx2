@@ -44,6 +44,7 @@ final class TouchControls extends View {
     private boolean available;     // the host takes a layout (nxhost_touch_controls_set): the controls can be drawn
     private boolean shown = true, gamepad;
     private boolean button = true;   // the show / hide button is there (toggleButton): without it the controls are never hidden by it
+    private boolean clean;         // the clean picture: nothing drawn, every touch is the game's
     private int mode = MODE_AUTO;   // the "On-screen controls" setting (setMode)
     private float opacity, scale;
     private boolean haptics;
@@ -118,7 +119,18 @@ final class TouchControls extends View {
         apply();
     }
 
-    private boolean active() { return visible() && (shown || !button) && (mode == MODE_ON || !gamepad); }
+    /** The clean picture: draw no controls and give every touch to the game. The view stays present so its touch path still runs; the user's
+     *  shown / mode / gamepad state is untouched, so showing everything returns to it. */
+    void setClean(boolean hidden) {
+        if (clean == hidden) return;
+        clean = hidden;
+        apply();
+        invalidate();
+    }
+
+    boolean normalVisible() { return mode == MODE_ON || mode == MODE_AUTO && !gamepad; }
+
+    private boolean active() { return visible() && (shown || !button) && !clean && (mode == MODE_ON || !gamepad); }
 
     static final int MODE_AUTO = 0, MODE_ON = 1, MODE_OFF = 2;
     static final String[] MODE_NAMES = {"Auto", "On", "Off"};
@@ -152,7 +164,7 @@ final class TouchControls extends View {
     private boolean visible() { return available && (mode == MODE_ON || mode == MODE_AUTO && !gamepad); }
     java.util.function.Consumer<Boolean> onSwitch;
     private boolean told = true;
-    private void tell() { boolean v = mode == MODE_ON || mode == MODE_AUTO && !gamepad; if (v != told) { told = v; if (onSwitch != null) onSwitch.accept(v); } }
+    private void tell() { boolean v = normalVisible(); if (v != told) { told = v; if (onSwitch != null) onSwitch.accept(v); } }
 
     void setMode(int m) {
         mode = m;
@@ -454,6 +466,27 @@ final class TouchControls extends View {
     @Override public boolean onTouchEvent(MotionEvent e) {
         if (editing) return editTouch(e);
         int act = e.getActionMasked();
+        if (clean) {   // nothing is drawn; every touch in the picture is the game's touchscreen
+            switch (act) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP: {
+                    int i = e.getActionIndex();
+                    send(act, e.getPointerId(i), e.getX(i), e.getY(i));
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE:
+                    for (int i = 0; i < e.getPointerCount(); i++) send(act, e.getPointerId(i), e.getX(i), e.getY(i));
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                    send(act, 0, 0, 0);
+                    break;
+                default:
+                    return true;
+            }
+            return true;
+        }
         switch (act) {
             case MotionEvent.ACTION_DOWN:
             case MotionEvent.ACTION_POINTER_DOWN: {
@@ -513,7 +546,7 @@ final class TouchControls extends View {
     private int alpha(float a) { return Math.max(0, Math.min(255, Math.round(255 * a * opacity))); }
 
     @Override protected void onDraw(Canvas c) {
-        if (!available || !visible() && !editing) return;
+        if (!available || clean || !visible() && !editing) return;
         float dp = getResources().getDisplayMetrics().density;
         line.setStrokeWidth(Math.max(1.5f, 1.6f * dp));
         if (editing) { drawControls(c); drawEditor(c, dp); return; }
@@ -678,6 +711,7 @@ final class TouchControls extends View {
 
     /** Whether GameActivity keeps the newest log lines over the picture once the game draws (off by default; the settings dialog's last box) */
     static boolean showLog(Context c) { return Prefs.open(c, "touch_controls").getBoolean("log", false); }
+    static void showLog(Context c, boolean on) { Prefs.open(c, "touch_controls").edit().putBoolean("log", on).commit(); }
 
     private void save() { prefs().edit().putFloat("opacity", opacity).putFloat("scale", scale).putBoolean("haptics", haptics).commit(); }
 }

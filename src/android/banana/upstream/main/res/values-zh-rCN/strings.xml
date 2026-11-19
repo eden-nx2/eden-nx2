@@ -71,6 +71,8 @@
     <string name="common_resolution">分辨率</string>
     <string name="common_rumble">震动</string>
     <string name="common_screen_rotation">屏幕旋转</string>
+    <string name="common_screen_scaling">屏幕缩放</string>
+    <string name="common_screen_sharpness">屏幕锐度</string>
     <string name="common_share_log">分享日志</string>
     <string name="common_stop">停止</string>
     <string name="common_system">系统</string>
@@ -125,6 +127,7 @@
     <string name="home_ready">就绪</string>
     <string name="home_ready_game_code_update_paused">就绪 · 游戏代码更新已暂停</string>
     <string name="home_ready_game_code_update_waits">就绪 · 游戏代码更新等待中</string>
+    <string name="home_ready_game_code_update_stopped">就绪 · 游戏代码更新已停止，点按重试</string>
     <string name="home_ready_shaders_need_one_update">就绪 · 着色器需要更新一次</string>
     <string name="home_ready_update">就绪 · 更新</string>
     <string name="home_ready_updating_game_code">就绪 · 正在更新游戏代码</string>
@@ -175,6 +178,8 @@
     <string name="settings_on_the_controller_or_the">使用手柄，或不带手柄时使用手机</string>
     <string name="settings_overlay">浮层</string>
     <string name="settings_picture_from_the_release_notes">来自更新说明的图片</string>
+    <string name="settings_small_fix_updates">小修复更新</string>
+    <string name="settings_small_fix_updates_help">启动时提供小修复版本。关闭后只提供大更新；“检查更新”仍会显示最新版本。下一个大更新包含所有修复。</string>
     <string name="settings_player_wiki">玩家 Wiki</string>
     <string name="settings_remove_leftovers_and_old_files">清除残留和旧文件；绝不会删除存档</string>
     <string name="settings_sample_games">示例游戏</string>
@@ -298,6 +303,8 @@
     <string name="game_open_the_in_game_panel">打开游戏内面板</string>
     <string name="game_pause_on_return">返回时暂停</string>
     <string name="game_pause_the_game">暂停游戏</string>
+    <string name="game_hide_everything_clean_picture">隐藏所有内容(纯净画面)</string>
+    <string name="game_show_everything">显示所有内容</string>
     <string name="game_pause_when_the_game_comes">游戏从后台返回时暂停</string>
     <string name="game_paused_n_ntap_to_continue">已暂停\n\n点按继续（手柄上按 A 或 Start）</string>
     <string name="game_per_segment">按分段</string>
@@ -309,6 +316,9 @@
     <string name="game_position_this_screen">位置（此屏幕）</string>
     <string name="game_press_l_r">按 L + R</string>
     <string name="game_ram_saver">内存节省</string>
+    <string name="game_ram_saver_strong">内存节省：强力</string>
+    <string name="game_ram_saver_strong_off">与内存节省相同</string>
+    <string name="game_ram_saver_strong_on">进一步减少内存：省略最精细的两级纹理（纹理只保留十六分之一）、纹理缓存为内存的六分之一、一次只在后台编译一个管线。包含内存节省；不会自动开启帧生成</string>
     <string name="game_recommended_for_this_phone">此手机推荐</string>
     <string name="game_remove_picked">移除所选…</string>
     <string name="game_remove_ticked">移除已勾选项</string>
@@ -336,7 +346,7 @@
     <string name="game_stop_the_game_2">停止游戏？</string>
     <string name="game_switch_2_edition">Switch 2 Edition</string>
     <string name="game_target_frame_rate">目标帧率</string>
-    <string name="game_texture_data_in_a_file">纹理数据存放在文件中：需要数 GB 可用空间</string>
+    <string name="game_texture_data_in_a_file">纹理数据存放在文件中（需要数 GB 可用空间）、纹理缓存更小、近处纹理略模糊</string>
     <string name="game_texture_data_in_compressed_ram">纹理数据存放在压缩内存中</string>
     <string name="game_the_game_ends_unsaved_progress">游戏将结束；未保存的进度会丢失。日志会保留，可用于“分享日志”。</string>
     <string name="game_the_game_s_own">游戏自带</string>
@@ -692,6 +702,14 @@
         <item>双线性（最快，最柔和）</item>
         <item>FSR 3.1（锐利，稳定）</item>
     </string-array>
+    <string-array name="arr_screen_scale">
+        <item>最近邻</item>
+        <item>双线性</item>
+        <item>双三次</item>
+        <item>FSR 1</item>
+        <item>SGSR 1</item>
+        <item>设备（省电）</item>
+    </string-array>
     <string-array name="arr_panel_look">
         <item>小</item>
         <item>中</item>
@@ -739,6 +757,7 @@
     <string name="home_shaders_need_one_update">着色器需要更新一次</string>
     <string name="home_nup">" (.nup)"</string>
     <string name="game_applies_from_the_next_frame">从下一帧起生效，并为此游戏保留（与游戏设置 › 放大器相同的设置）。</string>
+    <string name="game_applies_from_the_next_frame_2">从下一帧起生效，并为此游戏保留（与游戏设置 › 屏幕缩放相同的设置）。</string>
     <string name="game_applies_at_the_next_start">下次启动时生效（本次运行不接受实时更改：DM_CTL 已关闭）。</string>
     <string name="game_applies_at_once_kept_for">立即生效，并为此游戏保留（与游戏设置 › 高级相同的设置）。</string>
     <string name="game_shaders_the_game_lacks_are_3">游戏缺少的着色器会在运行时生成。开关位于游戏页面 › 高级 › 游玩时生成着色器（默认开启；更改在下次启动时生效）。</string>
@@ -825,6 +844,7 @@
     <string name="ready_this_device_lacks_it_this">"此设备缺少它；此游戏需要它。 "</string>
     <string name="ready_not_reported">未报告</string>
     <string name="ready_guest_address_memory_is_available">可通过已测试的导出内存别名使用游戏地址内存（memory.fdAlias=1）。</string>
+    <string name="ready_placed_remap_test_failed">驱动程序报告支持放置式内存映射，但其客户缓冲区重映射测试失败：%1$s</string>
     <string name="ready_gpu_features">GPU 功能</string>
     <string name="ready_texture_tables_runtime_arrays_the">纹理表（运行时数组）：游戏的纹理池存放其中</string>
     <string name="ready_texture_tables_partially_bound_the">纹理表（部分绑定）：游戏的纹理池存放其中</string>
@@ -1328,4 +1348,7 @@
     <string name="game_mods_remove_note">该模组的文件将从这部手机上删除。游戏自己的文件不受影响。</string>
     <string name="game_mods_imported">已导入 %1$s（%2$d 个文件）。下次启动时生效。</string>
     <string name="game_mods_refused">未导入：%1$s</string>
+    <string name="game_fast_fp16_shader_math">快速 FP16 着色器运算</string>
+    <string name="game_fp16_on_turnip_faster">Turnip 上的 16 位半精度：着色器更快，发热更少</string>
+    <string name="game_fp16_default_precision">默认精度</string>
 </resources>
