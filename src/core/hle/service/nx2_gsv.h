@@ -2168,8 +2168,11 @@ private:
             // were at most a frame behind, rewrote command lists Eden had not read yet (misread
             // commands, then crashes, with a slow GPU). Wait for this frame too then. Not when a
             // suspended channel brought us here: this frame can't finish before the present
-            // returns.
+            // returns. Not for Pokemon Pokopia: on a Galaxy S26 its GPU is behind here every other
+            // frame, so the two waits paired its presents (about 9 ms, then 50 ms) and walking and
+            // the camera juddered; waiting for the previous frame alone keeps its frames even.
             const bool gpu_behind = frames_ahead == 1 && m_previous_fence_id < 192 &&
+                                    app_program_id != PokemonPokopiaProgramId &&
                                     !system.Host1x().GetSyncpointManager().IsReadyGuest(
                                         m_previous_fence_id, m_previous_fence_value);
             WaitForFrame(m_previous_fence_id, m_previous_fence_value);
