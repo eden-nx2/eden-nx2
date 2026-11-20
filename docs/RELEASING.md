@@ -7,7 +7,7 @@ release, tagged `build-<run number>`:
 |---|---|
 | Windows x86_64 | `eden-windows-x86_64.zip`, `eden-windows-x86_64-pgo.zip` |
 | Linux x86_64 / aarch64 | AppImage and tar.gz, standard and PGO |
-| macOS (Apple Silicon) | `eden-macos-arm64.zip` |
+| macOS (Apple Silicon) | `eden-macos-arm64.zip`, only with **Build macOS** ticked |
 | Android arm64 | `eden-android-arm64.apk` |
 
 ## Publish a release
@@ -19,11 +19,12 @@ release, tagged `build-<run number>`:
    - **Publish the binaries as a GitHub release**: on.
    - **notes**: Markdown highlights (optional).
    - **Mark the release as a pre-release**: untick for a release users should get as "Latest".
+   - **Build macOS**: off by default. GitHub's macOS runners have rarely been available to this
+     repository, and a macOS job without one leaves the run red. Tick it to try anyway.
 4. Wait for the run (about 1–2 hours; the PGO and Android builds are the longest). The release
    appears under **Releases** when Windows, Linux and Android have built; if one of them fails,
-   nothing is published, so re-run the failed jobs. macOS is the exception: when GitHub has no
-   macOS runner free, the release goes out without it and says so. Re-run the macOS job later and
-   upload `eden-macos-arm64.zip` to the release.
+   nothing is published, so start a new run. With **Build macOS** ticked, a missing macOS build
+   doesn't stop the release: it goes out without it and says so.
 
 Releases are only published from these manual runs; pushes to `nx2` are build-checked but not released.
 

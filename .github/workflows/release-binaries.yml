@@ -15,6 +15,10 @@ on:
         description: Mark the release as a pre-release
         type: boolean
         default: true
+      macos:
+        description: Build macOS too (GitHub's macOS runners are often unavailable; without one the macOS job waits, then the release goes out without it)
+        type: boolean
+        default: false
       nsight_aftermath:
         description: Build Windows with Nsight Aftermath GPU crash dumps (test builds only, no NVIDIA files shipped)
         type: boolean
@@ -41,7 +45,38 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+    outputs:
+      matrix: ${{ steps.platforms.outputs.matrix }}
     steps:
+      # The Linux -pgo builds are the same programs compiled by clang against the repo's
+      # eglantine.profdata. Eden's profile (Eden-CI/PGO) comes from Switch 1 games: with it Mario
+      # Kart World ran at about half the speed of the normal build, with eglantine.profdata at
+      # about the same speed. Both Windows builds are clang-cl with ThinLTO; windows-x86_64-pgo
+      # adds eden-windows.profdata, an MSVC-ABI profile trained on Ocarina of Time (see
+      # docs/CI.md). MSVC still builds for development. macOS only when asked for: a macOS job
+      # GitHub has no runner for fails the whole run.
+      - name: Choose platforms
+        id: platforms
+        shell: bash
+        env:
+          WITH_MACOS: ${{ inputs.macos }}
+        run: |
+          set -euo pipefail
+          matrix='[
+            {"platform": "linux-x86_64", "runner": "ubuntu-24.04"},
+            {"platform": "linux-x86_64-pgo", "runner": "ubuntu-24.04", "pgo": true},
+            {"platform": "windows-x86_64", "runner": "windows-2022"},
+            {"platform": "windows-x86_64-pgo", "runner": "windows-2022", "pgo": true, "profile": "eden-windows.profdata"},
+            {"platform": "linux-aarch64", "runner": "ubuntu-24.04-arm"},
+            {"platform": "linux-aarch64-pgo", "runner": "ubuntu-24.04-arm", "pgo": true}'
+          if [[ "$WITH_MACOS" == true ]]; then
+            matrix+=',
+            {"platform": "macos-arm64", "runner": "macos-15"}'
+          fi
+          matrix+=']'
+          echo "matrix=$(jq -c . <<<"$matrix")" >> "$GITHUB_OUTPUT"
+          jq -r '.[].platform' <<<"$matrix"
+
       - name: Refuse to publish an Aftermath build
         if: inputs.nsight_aftermath && inputs.publish_release
         run: |
@@ -79,31 +114,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: linux-x86_64
-            runner: ubuntu-24.04
-          # The Linux -pgo builds are the same programs compiled by clang against the repo's
-          # eglantine.profdata. Eden's profile (Eden-CI/PGO) comes from Switch 1 games: with it Mario
-          # Kart World ran at about half the speed of the normal build, with eglantine.profdata at
-          # about the same speed. Both Windows builds are clang-cl with ThinLTO; windows-x86_64-pgo
-          # adds eden-windows.profdata, an MSVC-ABI profile trained on Ocarina of Time (see
-          # docs/CI.md). MSVC still builds for development.
-          - platform: linux-x86_64-pgo
-            runner: ubuntu-24.04
-            pgo: true
-          - platform: windows-x86_64
-            runner: windows-2022
-          - platform: windows-x86_64-pgo
-            runner: windows-2022
-            pgo: true
-            profile: eden-windows.profdata
-          - platform: linux-aarch64
-            runner: ubuntu-24.04-arm
-          - platform: linux-aarch64-pgo
-            runner: ubuntu-24.04-arm
-            pgo: true
-          - platform: macos-arm64
-            runner: macos-15
+        include: ${{ fromJSON(needs.prepare-release.outputs.matrix) }}
 
     steps:
       - name: Check out source
@@ -795,6 +806,8 @@ jobs:
     needs: [build, android]
     if: ${{ always() && inputs.publish_release && needs.android.result == 'success' }}
     runs-on: ubuntu-24.04
+    env:
+      WITH_MACOS: ${{ inputs.macos }}
     permissions:
       contents: write
     steps:
@@ -849,7 +862,7 @@ jobs:
             echo "::error::Not publishing, these builds are missing: ${missing[*]}"
             exit 1
           fi
-          if [[ ! -e dist/eden-macos-arm64.zip ]]; then
+          if [[ "$WITH_MACOS" == true && ! -e dist/eden-macos-arm64.zip ]]; then
             echo "::warning::Publishing without macOS: no macOS build (GitHub may have had no macOS runner). Re-run the macOS job and upload its files to the release later."
           fi
 
@@ -931,7 +944,11 @@ jobs:
           fi
 
           macos_note=""
-          if [[ ! -e dist/eden-macos-arm64.zip ]]; then
+          if [[ "$WITH_MACOS" != true ]]; then
+            macos_note="
+
+          **macOS:** not in this release."
+          elif [[ ! -e dist/eden-macos-arm64.zip ]]; then
             macos_note="
 
           **macOS:** not in this build (GitHub had no macOS runner available); it will be added to this release when it builds."
