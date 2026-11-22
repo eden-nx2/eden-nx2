@@ -258,7 +258,7 @@ struct Values {
 
     // Cpu
     // Android keeps NCE as the default (as in Hokkaido, whose NCE fixes it carries); other ARM64
-    // builds default to Dynarmic as in Lichii.
+    // builds default to Dynarmic (upstream #2246).
     SwitchableSetting<CpuBackend, true> cpu_backend{linkage,
 #if defined(HAS_NCE) && defined(__ANDROID__)
                                                     CpuBackend::Nce,

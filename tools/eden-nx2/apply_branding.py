@@ -90,6 +90,9 @@ DESKTOP_ID = ("io.github.zortos293.eden", "com.eden.eden_nx2")
 
 # Fix-ups of Lichii asset references that the generic rename would point at missing files.
 FIXUPS = [
+    # The What's New dialog names the app Eden NX2 (nx2_ui_strings); its test checks that text.
+    ("src/tests/qt_whats_new/whats_new.cpp", re.compile(r'QStringLiteral\("Eden build '),
+     'QStringLiteral("Eden NX2 build '),
     # Banana Native's LogProvider authority is the host app's ID: Hokkaido's (dev.lichii.android)
     # becomes ours, with the build types' suffixes.
     ("src/android/banana/build.gradle.kts", re.compile(r'\\"dev\.(?:lichii|eden)\.android'),

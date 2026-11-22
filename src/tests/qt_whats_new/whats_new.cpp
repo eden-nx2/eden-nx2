@@ -96,7 +96,7 @@ void WhatsNewTest::onlyShowSelectedNotes() {
     auto* const previous = preview.findChild<QToolButton*>(QStringLiteral("WhatsNewPrevious"));
     QVERIFY(previous->isEnabled());
     previous->click();
-    QVERIFY(metadata->text().startsWith(QStringLiteral("Eden build ")));
+    QVERIFY(metadata->text().startsWith(QStringLiteral("Eden NX2 build ")));
     preview.findChild<QToolButton*>(QStringLiteral("WhatsNewNext"))->click();
     QCOMPARE(metadata->text(), preview_label);
 
