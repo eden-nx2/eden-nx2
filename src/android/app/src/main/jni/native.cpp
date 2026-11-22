@@ -1029,6 +1029,14 @@ jstring Java_io_github_zortos293_eden_NativeLibrary_getCpuBackend(JNIEnv* env, j
     return Common::Android::ToJString(env, "JIT");
 }
 
+jboolean Java_io_github_zortos293_eden_NativeLibrary_isNceSupported(JNIEnv*, jclass) {
+#ifdef HAS_NCE
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
 jstring Java_io_github_zortos293_eden_NativeLibrary_getGpuDriver(JNIEnv* env, jobject jobj) {
     return Common::Android::ToJString(
         env, EmulationSession::GetInstance().System().GPU().Renderer().GetDeviceVendor());

@@ -140,7 +140,11 @@ ENUM(GpuFenceBehavior, Default, Immediate, Balanced, Accurate);
 ENUM(SceneMemoryCap, Auto, Off, On);
 ENUM(NativeComputeWriteMark, Auto, Full);
 ENUM(FramesAhead, Auto, Off, On);
+#ifdef HAS_HYPERVISOR
+ENUM(CpuBackend, Dynarmic, Nce, Hypervisor);
+#else
 ENUM(CpuBackend, Dynarmic, Nce);
+#endif
 ENUM(CpuAccuracy, Auto, Accurate, Unsafe, Paranoid, Debugging);
 ENUM(CpuClock, Normal, Boost, Overclock)
 ENUM(NativeAsyncDraws, Wait, Bounded, Skip);
@@ -171,7 +175,7 @@ ENUM(MeshShaderMode, Automatic, Native, Compute);
 ENUM(GpuLogLevel, Off, Errors, Standard, Verbose, All)
 ENUM(GameListMode, TreeView, GridView, CarouselView);
 ENUM(SpeedMode, Standard, Turbo, Slow);
-ENUM(FrameGenType, Lsfg, Fsr3, NvidiaDlssG);
+ENUM(FrameGenType, Lsfg, OpticalFlow, NvidiaDlssG);
 
 template <typename Type>
 inline std::string_view CanonicalizeEnum(Type id) {

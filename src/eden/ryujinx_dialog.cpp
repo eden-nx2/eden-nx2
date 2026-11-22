@@ -2,16 +2,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <filesystem>
-#include "qt_common/abstract/frontend.h"
 #include "qt_common/util/fs.h"
 #include "ryujinx_dialog.h"
 #include "ui_ryujinx_dialog.h"
 
-RyujinxDialog::RyujinxDialog(std::filesystem::path eden_path, std::filesystem::path ryu_path,
-                             QWidget* parent)
+RyujinxDialog::RyujinxDialog(std::filesystem::path eden_path, std::filesystem::path ryujinx_path,
+                             const QString& ryujinx_save_id, QWidget* parent)
     : QDialog(parent), ui(new Ui::RyujinxDialog), m_eden(eden_path.make_preferred()),
-      m_ryu(ryu_path.make_preferred()) {
+      m_ryu(ryujinx_path.make_preferred()) {
     ui->setupUi(this);
+    ui->label->setText(ui->label->text().arg(ryujinx_save_id));
+    std::error_code ec;
+    ui->eden->setEnabled(std::filesystem::is_directory(m_eden, ec));
 
     connect(ui->eden, &QPushButton::clicked, this, &RyujinxDialog::fromEden);
     connect(ui->ryujinx, &QPushButton::clicked, this, &RyujinxDialog::fromRyujinx);
@@ -23,26 +25,13 @@ RyujinxDialog::~RyujinxDialog() {
 }
 
 void RyujinxDialog::fromEden() {
-    accept();
-
-    // Workaround: Ryujinx deletes and re-creates its directory structure???
-    // So we just copy Eden's data to Ryujinx and then link the other way
-    namespace fs = std::filesystem;
-    try {
-        fs::remove_all(m_ryu);
-        fs::create_directories(m_ryu);
-        fs::copy(m_eden, m_ryu, fs::copy_options::recursive);
-    } catch (std::exception& e) {
-        QtCommon::Frontend::Critical(
-            tr("Failed to link save data"),
-            tr("OS returned error: %1").arg(QString::fromStdString(e.what())));
+    if (QtCommon::FS::LinkRyujinx(m_eden, m_ryu, Common::FS::RyujinxSaveOperation::FromEden)) {
+        accept();
     }
-
-    // ?ploo
-    QtCommon::FS::LinkRyujinx(m_ryu, m_eden);
 }
 
 void RyujinxDialog::fromRyujinx() {
-    accept();
-    QtCommon::FS::LinkRyujinx(m_ryu, m_eden);
+    if (QtCommon::FS::LinkRyujinx(m_eden, m_ryu, Common::FS::RyujinxSaveOperation::FromRyujinx)) {
+        accept();
+    }
 }

@@ -316,7 +316,10 @@ def check():
     # Android's libc++ has no std::atomic_ref (Lichii only builds for desktop): use
     # __atomic_load_n/__atomic_store_n and friends instead.
     for f in files:
-        if f.startswith("src/") and not f.startswith(("src/tests/", "src/dynarmic/externals/")) \
+        # Not built for Android: tests, Apple's Hypervisor backend, dynarmic's x64 backend.
+        if f.startswith("src/") and not f.startswith(
+                ("src/tests/", "src/dynarmic/externals/", "src/core/arm/hypervisor/",
+                 "src/dynarmic/src/dynarmic/backend/x64/")) \
                 and f.endswith((".cpp", ".h", ".inc")):
             for n, line in enumerate((read(f) or "").splitlines(), 1):
                 if "std::atomic_ref" in line and not line.lstrip().startswith("//"):

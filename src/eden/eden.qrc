@@ -6,4 +6,8 @@ SPDX-License-Identifier: GPL-2.0-or-later
     <qresource prefix="/img">
         <file alias="eden.ico">../../dist/eden.ico</file>
     </qresource>
+    <qresource prefix="/whats-new">
+        <file alias="releases.json">../../dist/whats-new/releases.json</file>
+        <file alias="next.json">../../dist/whats-new/next.json</file>
+    </qresource>
 </RCC>

@@ -71,6 +71,14 @@ endif()
 
 create_target_directory_groups(eden-cmd)
 
+if (HAS_HYPERVISOR)
+    add_custom_command(TARGET eden-cmd POST_BUILD
+        COMMAND /usr/bin/codesign --force --sign -
+            --entitlements "${PROJECT_SOURCE_DIR}/dist/eglantine.entitlements"
+            "$<TARGET_FILE:eden-cmd>"
+        VERBATIM)
+endif()
+
 # needed for vma
 if (NOT MSVC)
     target_compile_options(eden-cmd PRIVATE
