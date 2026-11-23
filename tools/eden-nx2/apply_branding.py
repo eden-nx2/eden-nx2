@@ -201,6 +201,9 @@ def rename_paths():
 
 
 def rebrand_text(text, path):
+    # Java class paths (JNI FindClass, signatures) contain "zortos293/lichii", which PROTECT keeps
+    # for links: rename them first, or native code looks up classes the app no longer has.
+    text = text.replace("io/github/zortos293/lichii/", "io/github/zortos293/eden/")
     for i, phrase in enumerate(PROTECT):
         text = text.replace(phrase, f"\0P{i}\0")
     for old, new in TEXT_SPECIFIC:
@@ -327,6 +330,20 @@ def check():
             for n, line in enumerate((read(f) or "").splitlines(), 1):
                 if "std::atomic_ref" in line and not line.lstrip().startswith("//"):
                     problems.append(f"{f}:{n}: std::atomic_ref does not build for Android")
+    # Java classes the native code looks up (FindClass, method signatures) must exist in the Android
+    # sources, or the app crashes when the library loads.
+    sources = {re.sub(r"^src/android/[^/]+/src/[^/]+/java/", "", f).rsplit(".", 1)[0]
+               for f in files if re.match(r"src/android/[^/]+/src/[^/]+/java/.*\.(kt|java)$", f)}
+    for f in files:
+        if not (f.startswith(("src/android/", "src/common/android/", "src/core/", "src/video_core/"))
+                and f.endswith((".cpp", ".h"))):
+            continue
+        for cls in set(re.findall(r'L?(io/github/zortos293/[A-Za-z0-9_/]+(?:\$[A-Za-z0-9_$]+)?)', read(f) or "")):
+            outer = cls.split("$")[0]
+            if outer.endswith("/") or outer.count("/") < 4:
+                continue  # a path split across string literals
+            if outer not in sources:
+                problems.append(f"{f}: native code uses Java class {cls}, which the Android sources lack")
     # Android resources: one name may be defined only once per configuration (values, values-night,
     # ...), or aapt fails ("Found item ... more than one time").
     resource = re.compile(r'<(color|string|string-array|integer-array|array|plurals|dimen|style|bool|integer)'

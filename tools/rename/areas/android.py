@@ -10,7 +10,7 @@
 ANDROID = ["src/android/*", "src/common/android/*"]
 
 PATHS = [
-    (r"/java/org/yuzu/yuzu_emu/", "/java/io/github/zortos293/lichii/", {"files": "src/android/*"}),
+    (r"/java/org/yuzu/yuzu_emu/", "/java/io/github/zortos293/eden/", {"files": "src/android/*"}),
     (r"Yuzu", "Eden", {"files": "src/android/*"}),
     (r"yuzu", "eden", {"files": "src/android/*"}),
 ]

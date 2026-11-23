@@ -1901,7 +1901,7 @@ JNIEXPORT jobject JNICALL Java_io_github_zortos293_eden_NativeLibrary_checkForUp
     // If not, something has gone wrong, but the Kotlin side can handle it.
     const auto assets = release->GetPlatformAssets();
 
-    jclass updateResultClass = env->FindClass("io/github/zortos293/lichii/NativeLibrary$UpdateResult");
+    jclass updateResultClass = env->FindClass("io/github/zortos293/eden/NativeLibrary$UpdateResult");
     if (!updateResultClass) {
         LOG_ERROR(Frontend, "Could not find UpdateResult class");
         return nullptr;

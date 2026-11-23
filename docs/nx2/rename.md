@@ -76,7 +76,7 @@ then merge nx2.
 | `src/dedicated_room/yuzu_room.{cpp,h,rc}` | `src/dedicated_room/eden_room.{cpp,h,rc}` |
 | `src/tests/yuzu_cmd/` | `src/tests/eden_cmd/` |
 | `dist/yuzu.manifest` | `dist/eden.manifest` |
-| `src/android/app/src/main/java/org/yuzu/yuzu_emu/` | `src/android/app/src/main/java/io/github/zortos293/lichii/` |
+| `src/android/app/src/main/java/org/yuzu/yuzu_emu/` | `src/android/app/src/main/java/io/github/zortos293/eden/` |
 
 ### CMake targets
 
