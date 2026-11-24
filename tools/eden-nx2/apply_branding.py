@@ -50,7 +50,8 @@ PROTECT = [
 ]
 
 # Documents that credit Lichii and Hokkaido by name.
-SKIP_TEXT = {"README.md", "docs/MIRROR_CHANGES.md", "docs/UPDATING.md", "tools/eden-nx2/apply_branding.py"}
+SKIP_TEXT = {"README.md", "RELEASE_NOTES.md", "docs/MIRROR_CHANGES.md", "docs/UPDATING.md",
+             "docs/RELEASING.md", "tools/eden-nx2/apply_branding.py"}
 
 TEXT_SPECIFIC = [
     ("qt_themes/lichii", "qt_themes/eden_dark"),
