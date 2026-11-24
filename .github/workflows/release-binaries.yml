@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to release, MAJOR.MINOR.PATCH (e.g. 1.0.0); must be higher than the last release
+        description: "Version to release, e.g. 1.0.0 (MAJOR.MINOR.PATCH, higher than the last release)"
+        required: true
         type: string
-        default: ""
       publish_release:
         description: Publish the binaries as a GitHub release
         type: boolean
