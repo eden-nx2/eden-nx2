@@ -3,6 +3,10 @@ name: release-binaries
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: Version to release, MAJOR.MINOR.PATCH (e.g. 1.0.0); must be higher than the last release
+        type: string
+        default: ""
       publish_release:
         description: Publish the binaries as a GitHub release
         type: boolean
@@ -14,7 +18,7 @@ on:
       prerelease:
         description: Mark the release as a pre-release
         type: boolean
-        default: true
+        default: false
       macos:
         description: Build macOS too (GitHub's macOS runners are often unavailable; without one the macOS job waits, then the release goes out without it)
         type: boolean
@@ -51,6 +55,8 @@ jobs:
       contents: write
     outputs:
       matrix: ${{ steps.platforms.outputs.matrix }}
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       # The Linux -pgo builds are the same programs compiled by clang against the repo's
       # eglantine.profdata. Eden's profile (Eden-CI/PGO) comes from Switch 1 games: with it Mario
@@ -87,14 +93,51 @@ jobs:
           echo "nsight_aftermath builds are test builds; run them with publish_release=false"
           exit 1
 
+      # Releases are tagged vMAJOR.MINOR.PATCH and the binaries carry that tag (EDEN_BUILD_TAG): the
+      # updater offers a release whose version is higher than the running build's, and treats the
+      # earlier build-N releases as older than any version. A run that doesn't publish gets a
+      # test-N tag, which the binaries report as a development build.
+      - name: Choose version
+        id: version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+          PUBLISH: ${{ inputs.publish_release }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION#v}"
+          version="${version//[[:space:]]/}"
+          if [[ "$PUBLISH" != true ]]; then
+            echo "tag=test-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "version=test-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ || "$version" == 0.0.0 ]]; then
+            echo "::error::Enter the version to release as MAJOR.MINOR.PATCH, for example 1.0.0 (got '${INPUT_VERSION}')"
+            exit 1
+          fi
+          tag="v${version}"
+          # Refuse a version at or below one already released: the updater would never offer it.
+          newest=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '.[].tag_name' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed 's/^v//' | sort -V | tail -n1 || true)
+          if [[ -n "$newest" && "$(printf '%s\n%s\n' "$newest" "$version" | sort -V | tail -n1)" != "$version" ]] \
+              || [[ "$newest" == "$version" ]]; then
+            echo "::error::Version $version is not higher than the last release, $newest"
+            exit 1
+          fi
+          echo "Releasing Eden NX2 $version as $tag (last release: ${newest:-none})"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Prepare release tag
         if: inputs.publish_release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          tag: ${{ steps.version.outputs.tag }}
         run: |
           set -euo pipefail
-          tag="build-${GITHUB_RUN_NUMBER}"
           if tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null); then
             if [ "$tag_sha" != "$GITHUB_SHA" ]; then
               echo "Release tag $tag points to $tag_sha instead of $GITHUB_SHA"
@@ -323,7 +366,7 @@ jobs:
             -DVulkanHeaders_FORCE_BUNDLED=ON
             -DVulkanUtilityLibraries_FORCE_BUNDLED=ON
             -DENABLE_UPDATE_CHECKER=ON
-            -DEDEN_BUILD_TAG=build-${{ github.run_number }}
+            -DEDEN_BUILD_TAG=${{ needs.prepare-release.outputs.tag }}
             -DEDEN_UPDATE_REPO=${{ github.repository }}
             "-DEDEN_USE_PENDING_RELEASE_NOTES=$EDEN_USE_PENDING_RELEASE_NOTES"
             -DEDEN_BUILD_PLATFORM=${{ matrix.platform }}
@@ -373,7 +416,7 @@ jobs:
             -DENABLE_QT_TRANSLATION=ON \
             -DEDEN_USE_BUNDLED_SDL3=ON \
             -DENABLE_UPDATE_CHECKER=ON \
-            -DEDEN_BUILD_TAG=build-${{ github.run_number }} \
+            -DEDEN_BUILD_TAG=${{ needs.prepare-release.outputs.tag }} \
             -DEDEN_UPDATE_REPO=${{ github.repository }} \
             "-DEDEN_USE_PENDING_RELEASE_NOTES=$EDEN_USE_PENDING_RELEASE_NOTES" \
             -DEDEN_BUILD_PLATFORM=${{ matrix.platform }} \
@@ -408,7 +451,7 @@ jobs:
             -DVulkanHeaders_FORCE_BUNDLED=ON \
             -DVulkanUtilityLibraries_FORCE_BUNDLED=ON \
             -DENABLE_UPDATE_CHECKER=ON \
-            -DEDEN_BUILD_TAG=build-${{ github.run_number }} \
+            -DEDEN_BUILD_TAG=${{ needs.prepare-release.outputs.tag }} \
             -DEDEN_UPDATE_REPO=${{ github.repository }} \
             "-DEDEN_USE_PENDING_RELEASE_NOTES=$EDEN_USE_PENDING_RELEASE_NOTES" \
             -DEDEN_BUILD_PLATFORM=${{ matrix.platform }} \
@@ -502,8 +545,8 @@ jobs:
           # Include Wayland platform plugins and their graphics/shell integrations.
           export EXTRA_QT_MODULES=waylandcompositor
           export EXTRA_PLATFORM_PLUGINS='libqwayland-egl.so;libqwayland-generic.so'
-          # Embedded in the AppImage metadata; matches the release tag (build-N) plus the commit.
-          export LDAI_VERSION="build-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}"
+          # Embedded in the AppImage metadata: the release's version plus the commit.
+          export LDAI_VERSION="${{ needs.prepare-release.outputs.version }}-${GITHUB_SHA::7}"
           export LDAI_OUTPUT="eden-${GITHUB_SHA}-${{ matrix.platform }}.AppImage"
           export OUTPUT="$LDAI_OUTPUT"
           export ARCH="$arch"
@@ -686,7 +729,7 @@ jobs:
           compression-level: 0
           retention-days: 7
 
-  # The Android APK, attached to the same build-N release as the desktop binaries. Signed with the
+  # The Android APK, attached to the same release as the desktop binaries. Signed with the
   # ANDROID_KEYSTORE_B64 / ANDROID_KEYSTORE_PASS / ANDROID_KEY_ALIAS secrets when they are set,
   # otherwise with the repo's public debug key.
   android:
@@ -779,7 +822,8 @@ jobs:
         env:
           CCACHE: "true"
           CPM_SOURCE_CACHE: ${{ github.workspace }}/.cache/cpm
-          GIT_TAG_NAME: build-${{ github.run_number }}
+          # The APK's versionName: the release's version.
+          GIT_TAG_NAME: ${{ needs.prepare-release.outputs.version }}
         shell: bash
         run: |
           set -o pipefail
@@ -814,7 +858,7 @@ jobs:
   # there, with or without macOS.
   release:
     name: Publish release
-    needs: [build, android]
+    needs: [prepare-release, build, android]
     if: ${{ always() && inputs.publish_release && needs.android.result == 'success' }}
     runs-on: ubuntu-24.04
     env:
@@ -822,7 +866,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      # Full history and tags, for the changelog since the previous build-N release.
+      # Full history and tags, for the changelog since the previous release.
       - name: Check out source
         uses: actions/checkout@v5
         with:
@@ -883,14 +927,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INPUT_NOTES: ${{ inputs.notes }}
           INPUT_PRERELEASE: ${{ inputs.prerelease }}
+          RELEASE_TAG: ${{ needs.prepare-release.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.prepare-release.outputs.version }}
         run: |
           set -euo pipefail
-          tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/build-${GITHUB_RUN_NUMBER}" --jq '.object.sha')
+          tag="${RELEASE_TAG}"
+          tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq '.object.sha')
           if [ "$tag_sha" != "$GITHUB_SHA" ]; then
-            echo "Release tag build-${GITHUB_RUN_NUMBER} points to $tag_sha instead of $GITHUB_SHA"
+            echo "Release tag ${tag} points to $tag_sha instead of $GITHUB_SHA"
             exit 1
           fi
-          tag="build-${GITHUB_RUN_NUMBER}"
           base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}"
 
           link() { [[ -e "dist/$2" ]] && echo "[$1](${base}/$2)" || true; }
@@ -927,10 +973,10 @@ jobs:
             highlights=$(cat src/RELEASE_NOTES.md)
           fi
 
-          # Changelog: commits since the newest earlier build-N tag that has a release (a run that
-          # failed after tagging leaves a tag without one).
+          # Changelog: commits since the newest earlier release (vX.Y.Z, or build-N before 1.0.0) in
+          # this commit's history. A run that failed after tagging leaves a tag without a release.
           prev=""
-          for candidate in $(git -C src tag --merged "${GITHUB_SHA}" --sort=-v:refname 'build-*'); do
+          for candidate in $(git -C src tag --merged "${GITHUB_SHA}" --sort=-creatordate 'v[0-9]*' 'build-*'); do
             [[ "$candidate" == "$tag" ]] && continue
             if gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${candidate}" --silent 2>/dev/null; then
               prev=$candidate
@@ -1010,22 +1056,23 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --verify-tag \
             ${prerelease_flag} \
-            --title "Eden NX2 ${GITHUB_REF_NAME} build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})" \
+            --title "Eden NX2 ${RELEASE_VERSION}" \
             --notes-file notes.md
 
-      # EDEN_BUILD_TAG is baked into every binary as build-<run number>, and the update checker
-      # compares release tags against it. A release whose tag or title names another run would be
-      # skipped or offered wrongly, so fail the run instead of leaving it published.
-      - name: Verify the release tag matches the run number
+      # EDEN_BUILD_TAG is baked into every binary as the release tag, and the update checker
+      # compares release tags against it. A release whose tag or title names another version would
+      # be skipped or offered wrongly, so fail the run instead of leaving it published.
+      - name: Verify the release tag matches the version
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          expected: ${{ needs.prepare-release.outputs.tag }}
+          version: ${{ needs.prepare-release.outputs.version }}
         run: |
           set -euo pipefail
-          expected="build-${GITHUB_RUN_NUMBER}"
           published_tag=$(gh release view "$expected" --repo "${GITHUB_REPOSITORY}" --json tagName --jq '.tagName')
           published_title=$(gh release view "$expected" --repo "${GITHUB_REPOSITORY}" --json name --jq '.name')
-          if [ "$published_tag" != "$expected" ] || [[ "$published_title" != *" build ${GITHUB_RUN_NUMBER} ("* ]]; then
-            echo "Release is tagged '$published_tag' and titled '$published_title', expected tag $expected and a title naming build ${GITHUB_RUN_NUMBER}"
+          if [ "$published_tag" != "$expected" ] || [ "$published_title" != "Eden NX2 $version" ]; then
+            echo "Release is tagged '$published_tag' and titled '$published_title', expected tag $expected and title 'Eden NX2 $version'"
             exit 1
           fi

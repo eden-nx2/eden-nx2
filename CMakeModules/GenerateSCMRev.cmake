@@ -13,7 +13,11 @@ endfunction()
 
 get_timestamp(BUILD_DATE)
 
-if (EDEN_BUILD_TAG MATCHES "^build-[0-9]+$")
+# Releases are tagged vMAJOR.MINOR.PATCH (shown without the v); earlier ones build-N.
+if (EDEN_BUILD_TAG MATCHES "^v([0-9]+\\.[0-9]+\\.[0-9]+)$")
+    set(BUILD_VERSION "${CMAKE_MATCH_1}")
+    set(IS_DEV_BUILD false)
+elseif (EDEN_BUILD_TAG MATCHES "^build-[0-9]+$")
     set(BUILD_VERSION "${EDEN_BUILD_TAG}")
     set(IS_DEV_BUILD false)
 elseif (DEFINED GIT_RELEASE)
@@ -36,7 +40,7 @@ set(GIT_DESC ${BUILD_VERSION})
 
 # Generate cpp with Git revision from template
 
-# The GitHub repository whose build-N releases the updater follows: the mirror that builds the
+# The GitHub repository whose releases the updater follows: the mirror that builds the
 # release (CI passes -DEDEN_UPDATE_REPO=${{ github.repository }}). Without one the updater finds no
 # releases, as local builds should.
 set(EDEN_UPDATE_REPO "" CACHE STRING "GitHub owner/repo whose releases the updater follows")

@@ -1,7 +1,7 @@
 # Releasing
 
 One run of the `release-binaries` workflow builds every platform and publishes them as one GitHub
-release, tagged `build-<run number>`:
+release, tagged `v<version>` and titled "Eden NX2 <version>":
 
 | Platform | Assets |
 |---|---|
@@ -16,9 +16,12 @@ release, tagged `build-<run number>`:
 2. Optional: write the highlights. Either commit them as `RELEASE_NOTES.md` at the repository
    root, or type them into the run's **notes** field (it takes priority).
 3. GitHub → **Actions** → **release-binaries** → **Run workflow**, branch `nx2`:
+   - **Version**: the new version as MAJOR.MINOR.PATCH, e.g. `1.0.0`. It must be higher than the
+     last release, or the run stops before building. See *Choosing the version* below.
    - **Publish the binaries as a GitHub release**: on.
    - **notes**: Markdown highlights (optional).
-   - **Mark the release as a pre-release**: untick for a release users should get as "Latest".
+   - **Mark the release as a pre-release**: off by default, so the release becomes "Latest". Tick
+     it for a test release users shouldn't get as the main download.
    - **Build macOS**: off by default. GitHub's macOS runners have rarely been available to this
      repository, and a macOS job without one leaves the run red. Tick it to try anyway.
 4. Wait for the run (about 1–2 hours; the PGO and Android builds are the longest). The release
@@ -28,11 +31,23 @@ release, tagged `build-<run number>`:
 
 Releases are only published from these manual runs; pushes to `nx2` are build-checked but not released.
 
+## Choosing the version
+
+Versions are MAJOR.MINOR.PATCH, starting at 1.0.0:
+
+- **PATCH** (1.0.0 → 1.0.1): fixes only, such as a crash fix.
+- **MINOR** (1.0.1 → 1.1.0): a new Lichii or Hokkaido merge, new features or game fixes.
+- **MAJOR** (1.4.2 → 2.0.0): a big change users should notice, such as dropping a platform or
+  settings that don't carry over.
+
+The number never goes down and is never reused: the updater offers only higher versions. Releases
+before 1.0.0 were tagged `build-N` and count as older than every version.
+
 ## What the notes contain
 
 - A short experimental-status line.
 - **Highlights**: the notes field or `RELEASE_NOTES.md`.
-- **Changes since build-N**: every commit since the previous `build-*` tag, with a comparison
+- **Changes since** the previous release (its `v*` or earlier `build-*` tag): every commit, with a comparison
   link. The first release links to [MIRROR_CHANGES.md](./MIRROR_CHANGES.md) instead.
 - Download tables and install notes for Android, Linux, Windows and macOS.
 
@@ -40,8 +55,12 @@ Edit the notes afterwards on the release page if needed.
 
 ## Updates inside the app
 
-Desktop builds bake in `build-<run number>` and `EDEN_UPDATE_REPO` (this repository), so the
-built-in updater offers newer `build-*` releases of this repository.
+Desktop builds bake in the release tag (`v1.0.0`) and `EDEN_UPDATE_REPO` (this repository), and
+the built-in updater offers this repository's releases with a higher version. The app shows the
+version in its title bar and About dialog; the APK's version name is the same version.
+
+Builds from before 1.0.0 (`build-5`, `build-7`) only recognize `build-N` tags, so their updater
+doesn't see 1.0.0 and later: users of those builds download 1.0.0 once by hand.
 
 ## Android signing
 

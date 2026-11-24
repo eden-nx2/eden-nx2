@@ -48,8 +48,10 @@ TEST_CASE("Eden updates compare build numbers, not tag strings", "[updater]") {
 
 TEST_CASE("Eden ignores dev builds and malformed release tags", "[updater]") {
     const std::string tag =
-        GENERATE("", "nx2", "v0.2.0", "abc123-nx2", "nx2-build-71", "build-", "build-0", "build--1",
-                 "build-+71", "build-71junk", "build- 71", "build-18446744073709551616");
+        GENERATE("", "nx2", "abc123-nx2", "nx2-build-71", "build-", "build-0", "build--1",
+                 "build-+71", "build-71junk", "build- 71", "build-18446744073709551616", "1.0.0",
+                 "v", "v1", "v1.0", "v1.0.0.0", "v1..0", "v1.0.", "v.1.0", "v1.0.x", "v0.0.0",
+                 "v-1.0.0", "v1.0.0-rc1", "V1.0.0");
     const auto releases = std::array{MakeRelease("build-71", "eden-windows-x86_64.zip")};
     CHECK_FALSE(UpdateChecker::SelectUpdate(releases, tag, "windows-x86_64"));
     auto invalid = releases;
@@ -59,9 +61,32 @@ TEST_CASE("Eden ignores dev builds and malformed release tags", "[updater]") {
     CHECK_FALSE(UpdateChecker::SelectUpdate(invalid, "build-70", "windows-x86_64"));
 }
 
+TEST_CASE("Versioned releases compare by number and come after every build-N", "[updater]") {
+    const auto releases = std::array{
+        MakeRelease("v1.9.0", "eden-windows-x86_64.zip"),
+        MakeRelease("v1.10.0", "eden-windows-x86_64.zip"),
+        MakeRelease("build-900", "eden-windows-x86_64.zip"),
+        MakeRelease("v1.2.3", "eden-windows-x86_64.zip"),
+    };
+    const auto from_build = UpdateChecker::SelectUpdate(releases, "build-7", "windows-x86_64");
+    REQUIRE(from_build);
+    CHECK(from_build->tag == "v1.10.0");
+    const auto from_version = UpdateChecker::SelectUpdate(releases, "v1.2.3", "windows-x86_64");
+    REQUIRE(from_version);
+    CHECK(from_version->tag == "v1.10.0");
+    CHECK_FALSE(UpdateChecker::SelectUpdate(releases, "v1.10.0", "windows-x86_64"));
+    CHECK_FALSE(UpdateChecker::SelectUpdate(releases, "v2.0.0", "windows-x86_64"));
+
+    const auto patch = std::array{MakeRelease("v1.0.1", "eden-windows-x86_64.zip")};
+    CHECK(UpdateChecker::SelectUpdate(patch, "v1.0.0", "windows-x86_64"));
+    CHECK_FALSE(UpdateChecker::SelectUpdate(patch, "v1.0.1", "windows-x86_64"));
+    CHECK_FALSE(UpdateChecker::SelectUpdate(patch, "v1.1.0", "windows-x86_64"));
+}
+
 TEST_CASE("Only builds with a release tag and platform compare against releases", "[updater]") {
     CHECK(UpdateChecker::IsReleaseBuild("build-71", "windows-x86_64"));
     CHECK(UpdateChecker::IsReleaseBuild("build-260", "linux-x86_64-pgo"));
+    CHECK(UpdateChecker::IsReleaseBuild("v1.0.0", "android-arm64"));
     CHECK_FALSE(UpdateChecker::IsReleaseBuild("build-71", ""));
     const std::string tag =
         GENERATE("", "nx2", "abc1234567-nx2", "build-", "build-0", "build-71junk");
