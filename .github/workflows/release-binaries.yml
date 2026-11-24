@@ -172,6 +172,7 @@ jobs:
         if: startsWith(matrix.platform, 'linux')
         shell: bash
         run: |
+          bash .ci/linux/fast-apt.sh
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             autoconf cmake g++ gcc git glslang-tools libglu1-mesa-dev \
@@ -245,6 +246,7 @@ jobs:
             sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
           echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-$PGO_LLVM_VERSION main" |
             sudo tee /etc/apt/sources.list.d/llvm.list > /dev/null
+          bash .ci/linux/fast-apt.sh
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             "clang-$PGO_LLVM_VERSION" "lld-$PGO_LLVM_VERSION"
@@ -772,6 +774,7 @@ jobs:
       - name: Install build tools
         run: |
           for attempt in 1 2 3; do
+            bash .ci/linux/fast-apt.sh
             if sudo apt-get update && sudo apt-get install -y ccache glslang-tools ninja-build; then
               exit 0
             fi

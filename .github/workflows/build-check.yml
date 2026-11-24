@@ -58,6 +58,7 @@ jobs:
 
       - name: Install Linux dependencies
         run: |
+          bash .ci/linux/fast-apt.sh
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             autoconf gcc-13 g++-13 git glslang-tools libglu1-mesa-dev \
@@ -183,6 +184,7 @@ jobs:
         run: |
           test "$(uname -m)" = aarch64
           test "$(getconf PAGESIZE)" = 4096
+          bash .ci/linux/fast-apt.sh
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             autoconf g++-13 git glslang-tools libpulse-dev libtool libudev-dev \

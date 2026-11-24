@@ -53,6 +53,7 @@ jobs:
         # Runner package mirrors fail now and then (exit code 100): retry before failing a release.
         run: |
           for attempt in 1 2 3; do
+            bash .ci/linux/fast-apt.sh
             if sudo apt-get update && sudo apt-get install -y ccache glslang-tools ninja-build; then
               exit 0
             fi
