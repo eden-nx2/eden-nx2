@@ -1,4 +1,4 @@
-**Eden NX2 1.0.0**: the first versioned release of Eden NX2, an unofficial, experimental build of Eden with Switch 2 support. It is Eden NX2 (Takoroka) continued in Eglantine and [Lichii](https://github.com/zortos293/Lichii) **build 366**, with the Android work of [Hokkaido](https://github.com/pavelgajdo/Hokkaido) **0.7.1**, for Windows, Linux and Android. This is not an official Eden release.
+**Eden NX2 1.0.0**: the first versioned release of Eden NX2, an unofficial, experimental build of Eden with Switch 2 support. It is Eden NX2 (Takoroka) continued in Eglantine and [Lichii](https://github.com/zortos293/Lichii) **build 410**, with the Android work of [Hokkaido](https://github.com/pavelgajdo/Hokkaido) **0.7.1**, for Windows, Linux and Android. This is not an official Eden release.
 
 > [!IMPORTANT]
 > **Android: the earlier APKs (build-5 and build-7) closed right after opening.** This release fixes that. Install it over build-7 as usual.
@@ -20,6 +20,11 @@
 - The CPU stays on **NCE** (native execution) by default.
 
 **All platforms**
+- **Mod store**: browse and install mods (from GameBanana) inside the app. It uses Lichii's mod store service.
+- **Super Mario Bros. Wonder – Switch 2 Edition**: a built-in 60 FPS patch.
+- Donkey Kong Bananza runs with less CPU overhead; Mario Kart World's large lightmaps fit in less memory; Kirby (Switch 2 Edition), Xenoblade Chronicles 2 and Hyrule Warriors: Age of Imprisonment render more correctly.
+- **FlyHigh** frame generation on Windows (opt-in), and an option to keep the window size when a game starts.
+- Older NVIDIA cards (Pascal and earlier) run more shaders correctly.
 - **Precompile All Shaders** for each game: build its shaders before playing, instead of stuttering through them.
 - Switch 2 Edition games boot and update more reliably.
 - Ocarina of Time FPS Unlock: physics, Deku webs, day/night speed, Epona's fence jumps and cloth are fixed.
