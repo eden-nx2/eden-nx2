@@ -6,7 +6,8 @@ release, tagged `v<version>` and titled "Eden NX2 <version>":
 | Platform | Assets |
 |---|---|
 | Windows x86_64 | `eden-windows-x86_64.zip`, `eden-windows-x86_64-pgo.zip` |
-| Linux x86_64 / aarch64 | AppImage and tar.gz, standard and PGO |
+| Linux x86_64 | AppImage and tar.gz, standard and PGO |
+| Linux aarch64 | AppImage and tar.gz (no PGO build since 1.0.0) |
 | macOS (Apple Silicon) | `eden-macos-arm64.zip`, only with **Build macOS** ticked |
 | Android arm64 | `eden-android-arm64.apk` |
 

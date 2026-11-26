@@ -49,6 +49,11 @@ PROTECT = [
     "(from Lichii #161)",
 ]
 
+# Lichii's web services keep their real addresses (lichii-api.zortos.me serves the mod store):
+# any host name with "lichii" in it is protected like the phrases above.
+LICHII_HOST = re.compile(r"\b[A-Za-z0-9-]*lichii[A-Za-z0-9-]*(?:\.[A-Za-z0-9-]+)*"
+                         r"\.(?:me|com|net|org|dev|io|app)\b", re.I)
+
 # Documents that credit Lichii and Hokkaido by name.
 SKIP_TEXT = {"README.md", "RELEASE_NOTES.md", "docs/MIRROR_CHANGES.md", "docs/UPDATING.md",
              "docs/RELEASING.md", "tools/eden-nx2/apply_branding.py"}
@@ -205,6 +210,13 @@ def rebrand_text(text, path):
     # Java class paths (JNI FindClass, signatures) contain "zortos293/lichii", which PROTECT keeps
     # for links: rename them first, or native code looks up classes the app no longer has.
     text = text.replace("io/github/zortos293/lichii/", "io/github/zortos293/eden/")
+    hosts = []
+
+    def keep_host(match):
+        hosts.append(match.group(0))
+        return f"\0H{len(hosts) - 1}\0"
+
+    text = LICHII_HOST.sub(keep_host, text)
     for i, phrase in enumerate(PROTECT):
         text = text.replace(phrase, f"\0P{i}\0")
     for old, new in TEXT_SPECIFIC:
@@ -218,6 +230,8 @@ def rebrand_text(text, path):
         text = text.replace(*DESKTOP_ID)
     for i, phrase in enumerate(PROTECT):
         text = text.replace(f"\0P{i}\0", phrase)
+    for i, host in enumerate(hosts):
+        text = text.replace(f"\0H{i}\0", host)
     return text
 
 
@@ -300,6 +314,7 @@ def check():
             continue
         for p in PROTECT:
             text = text.replace(p, "")
+        text = LICHII_HOST.sub("", text)
         for n, line in enumerate(text.splitlines(), 1):
             if re.search(r"lichii", line, re.I):
                 problems.append(f"{f}:{n}: {line.strip()[:120]}")
