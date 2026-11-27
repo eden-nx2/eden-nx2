@@ -150,8 +150,15 @@ jobs:
           set -euo pipefail
           if tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null); then
             if [ "$tag_sha" != "$GITHUB_SHA" ]; then
-              echo "Release tag $tag points to $tag_sha instead of $GITHUB_SHA"
-              exit 1
+              # A tag without a release is what a failed run leaves behind: move it to this commit.
+              # A released version's tag is never moved.
+              if gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$tag" >/dev/null 2>&1; then
+                echo "::error::$tag is already released (from $tag_sha); choose a higher version"
+                exit 1
+              fi
+              echo "Moving $tag, left by a failed run at $tag_sha, to $GITHUB_SHA"
+              gh api --method PATCH "repos/${GITHUB_REPOSITORY}/git/refs/tags/$tag" \
+                -f "sha=$GITHUB_SHA" -F force=true >/dev/null
             fi
           else
             gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
@@ -1012,7 +1019,7 @@ jobs:
 
           missing=()
           for file in eden-android-arm64.apk eden-windows-x86_64.zip eden-windows-x86_64-pgo.zip \
-                      eden-linux-{x86_64,aarch64}{,-pgo}.{AppImage,tar.gz}; do
+                      eden-linux-x86_64{,-pgo}.{AppImage,tar.gz} eden-linux-aarch64.{AppImage,tar.gz}; do
             [[ -e "dist/$file" ]] || missing+=("$file")
           done
           if (( ${#missing[@]} )); then
