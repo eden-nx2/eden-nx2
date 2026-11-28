@@ -1046,6 +1046,21 @@ jobs:
             echo "Release tag ${tag} points to $tag_sha instead of $GITHUB_SHA"
             exit 1
           fi
+          # A re-run of a published release (macOS built after all, say) adds the files the release
+          # lacks and leaves the rest, its notes included, as they are.
+          if existing=$(gh release view "$tag" --repo "${GITHUB_REPOSITORY}" --json assets \
+              --jq '.assets[].name' 2>/dev/null); then
+            added=0
+            for file in dist/*; do
+              if ! grep -qxF "$(basename "$file")" <<<"$existing"; then
+                gh release upload "$tag" "$file" --repo "${GITHUB_REPOSITORY}"
+                echo "Added $(basename "$file") to the published $tag"
+                added=$((added + 1))
+              fi
+            done
+            echo "::notice::$tag was already published; added $added file(s) it lacked"
+            exit 0
+          fi
           base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}"
 
           link() { [[ -e "dist/$2" ]] && echo "[$1](${base}/$2)" || true; }

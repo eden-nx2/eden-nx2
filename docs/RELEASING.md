@@ -28,7 +28,9 @@ release, tagged `v<version>` and titled "Eden NX2 <version>":
 4. Wait for the run (about 1–2 hours; the PGO and Android builds are the longest). The release
    appears under **Releases** when Windows, Linux and Android have built; if one of them fails,
    nothing is published, so start a new run. With **Build macOS** ticked, a missing macOS build
-   doesn't stop the release: it goes out without it and says so.
+   doesn't stop the release: it goes out without it and says so. **Re-run failed jobs** on that run
+   later: once macOS builds, the re-run adds its file to the published release and changes nothing
+   else.
 
 Releases are only published from these manual runs; pushes to `nx2` are build-checked but not released.
 
